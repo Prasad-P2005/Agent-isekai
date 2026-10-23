@@ -1,0 +1,48 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ISEKAI_HOST: 0.0.0.0
+      ISEKAI_PORT: 8000
+      ISEKAI_LLM_URL: http://ollama:11434
+      ISEKAI_LLM_MODEL: qwen3.5:2b
+      ISEKAI_SAVE_DIR: /data
+    volumes:
+      - game-saves:/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        server_pid=$$!
+        until ollama list >/dev/null 2>&1; do sleep 2; done
+        model=qwen3.5:2b
+        if ! ollama show "$$model" >/dev/null 2>&1; then
+          until ollama pull "$$model"; do sleep 5; done
+        fi
+        wait "$$server_pid"
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list 2>/dev/null | grep -q 'qwen3.5:2b'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  game-saves:
+  ollama-models:
+    external: true
+    name: ollama

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isekai Realms</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+</head>
+<body>
+<div id="overlay"><div class="box">
+  <h1>Isekai Realms</h1>
+  <p>You died on Earth. A god is waiting for you in the heavens.</p>
+  <div id="menu"><p class="go">Connecting to the server…</p></div>
+  <div id="controls" style="display:none">
+    <kbd>WASD</kbd> move · <kbd>Space</kbd> jump/swim · <kbd>Shift</kbd> sprint · <kbd>F</kbd> flight (if learned)<br>
+    <kbd>Left click</kbd> attack · <b>hold</b> to mine · <kbd>Right click</kbd> place · <kbd>I</kbd> inventory · <kbd>1–0</kbd> hotbar<br>
+    <kbd>E</kbd> talk (type to chat) / trade · <kbd>T</kbd> pray · <kbd>L</kbd> laws · <kbd>Q</kbd> fireball · <kbd>R</kbd> heal · <kbd>G</kbd>/<kbd>V</kbd> potions
+  </div>
+</div></div>
+
+<div id="heaven"><div class="hbox">
+  <div id="hlog"></div>
+  <div class="hrow"><input id="hin" maxlength="300" placeholder="Speak to the god… (who am I? what is this world? what powers will I have?)"><button id="hsend">Speak</button></div>
+  <button id="hdescend">I'm ready. Send me to the world ⇩</button>
+</div></div>
+<div id="fade"></div>
+<div id="card"></div>
+
+<div id="water"></div>
+<div id="cross"></div>
+<div id="hud"></div>
+<div id="realm"></div>
+<div id="blockname"></div>
+<div id="hotbar"></div>
+<div id="minebar"><div></div><span></span></div>
+<div id="bars"><div class="bar"><div id="hpfill"></div><span id="hptext"></span></div><div class="bar"><div id="mpfill"></div><span id="mptext"></span></div></div>
+<div id="abil"></div>
+<div id="status"></div>
+<div id="hurt"></div>
+<div id="toast"></div>
+<div id="dialog"></div>
+<div id="pray">🙏 Pray to the god (Enter to send, Esc to cancel)<input id="prayin" maxlength="200" placeholder="e.g. Why did you choose me? / Protect the village!"></div>
+<div id="panel"><h3 id="paneltitle"></h3><div id="panelline"></div>
+  <div id="chat"><div id="chatlog"></div><div class="chatrow"><input id="chatin" maxlength="300" placeholder="Type what you want to say… (Enter to send)"><button id="chatsend">Say</button></div></div>
+  <div id="panelbody"></div><button id="panelclose">Close (Esc)</button></div>
+<div id="story"><h3 id="wname">…</h3><div id="beats"></div><div class="quest" id="quest"></div><div id="laws"></div><div class="oracle" id="oracle"></div></div>
+
+<script type="importmap">{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

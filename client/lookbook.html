@@ -1,0 +1,23 @@
+<!doctype html><html><body style="margin:0;background:#cfe6ff">
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { buildAvatar, lookFor } from './js/avatar.js';
+const W = 1500, H = 760;
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xcfe6ff);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.6)); const d = new THREE.DirectionalLight(0xffffff, 1.2); d.position.set(2, 3, -4); scene.add(d);
+const cam = new THREE.PerspectiveCamera(28, W / H, 0.1, 100); cam.position.set(0, 1.9, -14); cam.lookAt(0, 1.05, 0);
+const cast = [
+  ['goddess', 'goddess', 'human'], ['king', 'king', 'human'], ['king', 'queen', 'human'], ['elf_royal', 'elf_queen', 'elf'], ['villager', 'receptionist', 'human'],
+  ['knight', 'guild_master', 'human'], ['adventurer', 'adventurer', 'human'], ['adventurer', 'adventurer', 'human'], ['villager', 'doctor', 'human'], ['villager', 'nurse', 'human'],
+  ['villager', 'priest', 'human'], ['merchant', 'merchant', 'human'], ['villager', 'farmer', 'human'], ['villager', 'bard', 'human'],
+  ['elf', 'herbalist', 'elf'], ['elf_guard', 'guard', 'elf'], ['beastkin', 'chief', 'beastkin'], ['beastkin', 'hunter', 'beastkin'], ['knight', 'guard', 'human'], ['demon_lord', undefined, 'demon'],
+];
+cast.forEach(([kind, job, race], i) => {
+  const { g } = buildAvatar(lookFor(kind, job, i * 17 + 3, { race: race === 'demon' ? undefined : race }), kind === 'demon_lord' ? 2.3 : 1.85, []);
+  const row = i < 10 ? 0 : 1, col = i % 10;
+  g.position.set((col - 4.5) * 1.05, row ? -0.15 : 2.45, row ? -1 : 1); scene.add(g);
+});
+r.render(scene, cam); window.done = true;
+</script></body></html>

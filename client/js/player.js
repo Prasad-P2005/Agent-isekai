@@ -31,7 +31,9 @@ function moveAxis(a, d) {
       // auto-step: walk up a single block ledge if there is room above it
       if (a !== 'y' && player.onGround && !player.fly) {
         player.pos.y += 1.01;
-        if (!collides(player.pos)) { player.vel.y = Math.max(player.vel.y, 2); continue; }
+        // Treat this as a grounded step, not a tiny jump. Adding upward velocity
+        // here made the player bob and repeatedly settle on every block edge.
+        if (!collides(player.pos)) { player.vel.y = 0; continue; }
         player.pos.y -= 1.01;
       }
       player.pos[a] -= s;
@@ -50,8 +52,10 @@ export function updatePlayer(dt) {
   if (player.fly) { player.mana -= 4 * dt; if (player.mana <= 0) { player.mana = 0; player.fly = false; toast('Your mana ran dry; flight fades.'); } }
   const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
   let mx = 0, mz = 0;
-  if (keys.KeyW) { mx += fx; mz += fz; } if (keys.KeyS) { mx -= fx; mz -= fz; }
-  if (keys.KeyA) { mx += fz; mz -= fx; } if (keys.KeyD) { mx -= fz; mz += fx; }
+  if (keys.KeyW || keys.ArrowUp) { mx += fx; mz += fz; }
+  if (keys.KeyS || keys.ArrowDown) { mx -= fx; mz -= fz; }
+  if (keys.KeyA || keys.ArrowLeft) { mx += fz; mz -= fx; }
+  if (keys.KeyD || keys.ArrowRight) { mx -= fz; mz += fx; }
   const l = Math.hypot(mx, mz) || 1;
   player.kb.multiplyScalar(Math.max(0, 1 - 6 * dt));
   player.vel.x = mx / l * speed + player.kb.x; player.vel.z = mz / l * speed + player.kb.z;

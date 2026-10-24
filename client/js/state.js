@@ -4,6 +4,7 @@ export const G = {
   profile: null,    // player profile (gold, abilities, ...) owned by the server
   phase: 'title',   // title | heaven | world
   locked: false,    // pointer lock active
+  focused: false,   // world controls active when pointer lock is unavailable
   uiOpen: false,    // a panel (shop, prayer, ...) has the mouse
   keys: {},
   objective: '',

@@ -13,7 +13,7 @@ MAP_ROWS = [
     "Eg EC H. HC H. H. P. P.",
     "Ef E. Hv H. H. Bv B. B.",
     "O. E. H. H. HC B. Bv B.",
-    "Op H. Hv H. B. Bv B. Bv",
+    "Op Hv H. H. B. Bv B. Bv",
     "O. O. H. B. B. B. B. B.",
     "O. Op O. B. Br B. B. B.",
 ]
@@ -37,7 +37,6 @@ def build_map() -> tuple[list[list[Land]], list[Settlement], tuple[int, int]]:
                 else:
                     type_ = {"E": "elf", "B": "beast"}.get(realm_c, "human")
                 s = Settlement(id=len(settlements), type=type_, lx=lx, lz=lz, cx=lx * LAND + LAND // 2, cz=lz * LAND + LAND // 2)
-                s.layout = make_layout(s)
                 settlements.append(s)
                 land.structure = SETTLEMENT_STRUCTURE[type_]
                 land.settlement = s.id
@@ -45,4 +44,13 @@ def build_map() -> tuple[list[list[Land]], list[Settlement], tuple[int, int]]:
                 demon_land = (lx, lz)
             out.append(land)
         lands.append(out)
+    shore = {(-1, 0): "west", (1, 0): "east", (0, -1): "north", (0, 1): "south"}
+    for s in settlements:
+        for (dx, dz), direction in shore.items():
+            lx, lz = s.lx + dx, s.lz + dz
+            if 0 <= lz < len(lands) and 0 <= lx < len(lands[lz]) and lands[lz][lx].realm == "ocean":
+                s.coastal = True
+                s.shore_direction = direction
+                break
+        s.layout = make_layout(s)
     return lands, settlements, demon_land

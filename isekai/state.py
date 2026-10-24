@@ -45,6 +45,8 @@ class Settlement(BaseModel):
     lz: int
     cx: int
     cz: int
+    coastal: bool = False
+    shore_direction: str | None = None
     name: str = "Nameless"
     description: str = ""
     rumor: str = ""
@@ -121,6 +123,7 @@ class FeedItem(BaseModel):
 
 class World(BaseModel):
     seed: int
+    society_version: int = 0
     genesis_done: bool = False
     name: str = "Aldervale"
     premise: str = ""

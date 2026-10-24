@@ -154,7 +154,7 @@ function updateEntity(e, dt) {
   const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.3), Math.floor(p.z)) === 5;
 
   // choose a target: the player, another creature, or nobody
-  const canHitPlayer = player.ready && G.locked && Math.abs(dy) < 16;
+  const canHitPlayer = player.ready && (G.locked || G.focused) && !G.uiOpen && Math.abs(dy) < 16;
   const flee = e.reportT > 0 || e.fleeT > 0;
   let tgt = null;
   if (!flee) {

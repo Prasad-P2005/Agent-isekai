@@ -28,9 +28,14 @@ def make_layout(s: Settlement) -> list[Building]:
         ring("house", 8, 23, math.pi / 8)
     elif s.type == "city":
         add("keep", 0, 0); add("guild", 0, -13); add("hospital", 13, 0); add("inn", 0, 13); add("church", -13, 0)
+        add("smithy", -13, -13)
         for ox, oz in ((7, 7), (-7, 7), (7, -7), (-7, -7)):
             add("stall", ox, oz)
-        ring("house", 12, 22, math.radians(15), {4: "smithy"})
+        # A broad residential quarter surrounds the civic and market center.
+        ring("house", 16, 16.5, math.radians(11))
+        ring("house", 24, 23.5, math.radians(7))
+        # Peddlers and traveling traders work beyond the city gates.
+        ring("street_stall", 4, 31)
     elif s.type == "elfcity":
         # the elven capital: a palace in the World Tree, the same institutions as a human city, built the elven way
         add("palace", 0, 0); add("guild", 0, -13); add("elfhall", 13, 0); add("inn", 0, 13); add("church", -13, 0)

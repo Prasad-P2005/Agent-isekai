@@ -16,6 +16,7 @@ from .god.planner import plan_settlement, ruler_of
 from .llm.client import LLM
 from .people.names import gen_name
 from .people.roster import make_roster
+from .people.society import migrate_world_society
 from .state import World, load, save
 from .story.stages import advance, objective
 from .world.map import LAND, build_map
@@ -28,6 +29,8 @@ class Game:
         self.llm = llm or LLM()
         self.save_path = save_path or config.SAVE_DIR / "world.json"
         self.world: World | None = load(self.save_path)
+        if self.world and migrate_world_society(self.world):
+            save(self.world, self.save_path)
         self.narrator = Narrator(self)
         self.ctx: dict = {}  # live context reported by the client (night, place, ...)
         self.last_active = 0.0
@@ -58,9 +61,11 @@ class Game:
             for s in w.settlements:
                 rj, rn = ruler_of(w, s)
                 make_roster(s, None, w.seed, rj, rn)
+            w.society_version = 4
             tidy_names(w)
             village = min(w.settlements_of("human"), key=lambda s: (s.cx - w.capital().cx) ** 2 + (s.cz - w.capital().cz) ** 2)
-            w.spawn.x, w.spawn.z = village.cx + 5.5, village.cz + 30.5
+            # Start just beyond the village work ring, not among the farmers.
+            w.spawn.x, w.spawn.z = village.cx + 5.5, village.cz + 35.5
             self.world = w
             self.save()
             self._tasks.append(asyncio.create_task(self._plan_all()))

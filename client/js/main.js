@@ -6,16 +6,19 @@ import { initNoise, ss } from './noise.js';
 import { BL, BUILT, hardness, dropOf } from './blocks.js';
 import { setWorldData, heightAt, landOf, landName, REALM, LAND, SEA } from './terrain.js';
 import { updateChunks, getBlock, setBlock, chunkReady } from './chunks.js';
-import { renderer, scene, camera, sky, sunLight, highlight, opaqueMat, transMat, SKY, UNDER, NIGHT_SKY, DEMON_SKY, skyNow, RD } from './scene.js';
+import { renderer, scene, camera, sky, sunLight, ambientLight, highlight, SKY, UNDER, NIGHT_SKY, DEMON_SKY, skyNow, RD } from './scene.js';
 import { player, updatePlayer, updateStats, raycast, collides, doubleJump, castFireball, castHeal, drink, has, maxHp } from './player.js';
 import { updateEntities, pickEntity, meleeHit, ents, hurtEntity, spawnNear } from './entities.js';
 import { updateResidents, updateLaw, talkToNearest, onBreakBlock } from './people.js';
 import { toast, updateHUD, renderStory, startFeed, openPrayer, closePanel, toggleLaws, setOracle, applyState } from './ui.js';
 import { startHeaven, renderHeaven } from './heaven.js';
 import { inventory, addBlock, takeBlock, renderHotbar, hotbarId, selectSlot, cycleSlot, openInventory } from './inventory.js';
+import { toggleWorldMap, closeWorldMap, isWorldMapOpen, updateWorldMap } from './map.js';
 
 const $ = id => document.getElementById(id);
 const overlay = $('overlay');
+let pointerLockFallback = false;
+const controlsActive = () => G.locked || G.focused;
 
 // ---------- title screen ----------
 async function title() {
@@ -33,6 +36,11 @@ async function title() {
 async function load() {
   const w = await api.world();
   G.world = w; G.profile = w.player;
+  pointerLockFallback = false;
+  G.locked = G.focused = G.uiOpen = false;
+  G.keys = {};
+  player.ready = false; player.fly = false; player.yaw = player.pitch = 0;
+  player.vel.set(0, 0, 0); player.kb.set(0, 0, 0); player.onGround = false;
   renderHotbar();
   initNoise(w.seed); setWorldData(w);
   renderStory({ beats: w.story.beats.slice(-3), objective: w.objective, law_texts: w.law_texts });
@@ -44,17 +52,46 @@ async function load() {
   if (!w.player.descended) startHeaven(enterWorld);
   else { G.phase = 'world'; enterWorld(); }
 }
-function enterWorld() {
-  $('menu').innerHTML = '<p class="go">Click to enter the world</p>';
+async function enterWorld() {
+  overlay.classList.add('in-world');
+  overlay.querySelector('h1').textContent = G.world.name;
+  overlay.querySelector('.box > p:not(.go)').textContent = 'Your new life is taking shape…';
+  $('menu').innerHTML = '<p class="go">Preparing your world…</p>';
   $('controls').style.display = 'block';
+  // Keep the heaven scene from showing through the translucent entry overlay.
+  // The world renderer needs a few frames to generate and mesh the spawn chunk.
+  overlay.style.background = 'rgba(9,14,13,.96)';
   overlay.style.display = 'flex';
+  while (!player.ready && G.phase === 'world') {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+  if (G.phase !== 'world') return;
+  // Paint the world scene before making the entry screen translucent. The
+  // last frame before this handoff may still be heaven's scene on the canvas.
+  camera.position.set(player.pos.x, player.pos.y + 1.62, player.pos.z);
+  camera.rotation.set(player.pitch, player.yaw, 0);
+  sky.position.copy(camera.position);
+  scene.background.copy(SKY);
+  scene.fog.color.copy(SKY);
+  renderer.render(scene, camera);
+  overlay.style.background = '';
+  overlay.querySelector('.box > p:not(.go)').textContent = 'Your new life begins here. Click to enter the world.';
+  $('menu').innerHTML = '<p class="go">Click anywhere to begin</p>';
 }
 
 // ---------- input ----------
 addEventListener('keydown', e => {
   G.keys[e.code] = true;
-  if (G.uiOpen) { if (e.code === 'Escape') closePanel(); return; }
-  if (!G.locked) return;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+  if (e.code === 'Escape' && G.focused && !G.locked && !G.uiOpen) {
+    G.focused = false;
+    overlay.style.display = 'flex';
+    for (const k in G.keys) G.keys[k] = false;
+    return;
+  }
+  if (e.code === 'KeyM') { e.preventDefault(); toggleWorldMap(); return; }
+  if (G.uiOpen) { if (e.code === 'Escape') { if (isWorldMapOpen()) closeWorldMap(); else closePanel(); } return; }
+  if (!controlsActive()) return;
   if (e.code === 'KeyF') { if (has('flight')) { player.fly = !player.fly; player.vel.y = 0; } else toast('You have not learned flight.', 2); }
   if (e.code === 'Space') doubleJump();
   if (e.code === 'KeyQ') castFireball();
@@ -68,25 +105,47 @@ addEventListener('keydown', e => {
   if (/^Digit\d$/.test(e.code)) selectSlot((Number(e.code[5]) + 9) % 10);
 });
 addEventListener('keyup', e => { G.keys[e.code] = false; });
-overlay.addEventListener('click', e => { if (G.phase === 'world' && player.ready && !e.target.closest('button')) renderer.domElement.requestPointerLock(); });
+overlay.addEventListener('click', e => {
+  if (G.phase !== 'world' || !player.ready || e.target.closest('button')) return;
+  G.focused = true;
+  overlay.style.display = 'none';
+  try {
+    const request = renderer.domElement.requestPointerLock;
+    if (typeof request !== 'function') throw new Error('Pointer lock is unavailable');
+    const result = request.call(renderer.domElement);
+    if (result?.catch) result.catch(() => {
+      pointerLockFallback = true;
+      G.focused = true;
+      overlay.style.display = 'none';
+      toast('Pointer lock is unavailable. Use WASD or the arrow keys to move; press Esc to pause.', 7);
+    });
+  } catch {
+    pointerLockFallback = true;
+    G.focused = true;
+    overlay.style.display = 'none';
+    toast('Pointer lock is unavailable. Use WASD or the arrow keys to move; press Esc to pause.', 7);
+  }
+});
 document.addEventListener('pointerlockchange', () => {
   G.locked = document.pointerLockElement === renderer.domElement;
-  overlay.style.display = G.locked || G.uiOpen || G.phase !== 'world' ? 'none' : 'flex';
+  if (G.locked) { G.focused = true; pointerLockFallback = false; }
+  else if (!pointerLockFallback) G.focused = false;
+  overlay.style.display = G.locked || G.focused || G.uiOpen || G.phase !== 'world' ? 'none' : 'flex';
   if (!G.locked) for (const k in G.keys) G.keys[k] = false;
 });
 document.addEventListener('mousemove', e => {
-  if (!G.locked) return;
+  if (!controlsActive()) return;
   player.yaw -= e.movementX * 0.0022;
   player.pitch = Math.max(-1.55, Math.min(1.55, player.pitch - e.movementY * 0.0022));
 });
 
 // ---------- mining (hold left mouse) and building (right mouse, uses your inventory) ----------
 let target = null, mining = null, mouseDown = false;
-addEventListener('wheel', e => { if (G.locked) cycleSlot(e.deltaY > 0 ? 1 : -1); });
+addEventListener('wheel', e => { if (controlsActive()) cycleSlot(e.deltaY > 0 ? 1 : -1); });
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('mouseup', e => { if (e.button === 0) { mouseDown = false; mining = null; } });
 addEventListener('mousedown', e => {
-  if (!G.locked) return;
+  if (!controlsActive() || G.uiOpen) return;
   if (e.button === 0) {
     mouseDown = true;
     const hit = pickEntity(4.5);
@@ -120,6 +179,7 @@ function updateMining(dt) {
 
 // ---------- main loop ----------
 let last = performance.now(), currentLand = null, realmT = 0, hudT = 0, frames = 0, fps = 0, fpsT = 0;
+const dayLightColor = new THREE.Color(0xffefd8), nightLightColor = new THREE.Color(0xa9bfd6);
 function showLand(L) {
   $('realm').innerHTML = `${landName(L).replace(/</g, '&lt;')}<small>${REALM[L.b][1]}</small>`;
   $('realm').style.opacity = 1; realmT = 4;
@@ -137,7 +197,7 @@ function frame(now) {
     let y = 159; while (y > 0 && !getBlock(Math.floor(p.x), y, Math.floor(p.z))) y--;
     p.y = y + 1; player.spawn.copy(p); player.ready = true;
   }
-  if (player.ready && G.locked) {
+  if (player.ready && controlsActive() && !G.uiOpen) {
     if (chunkReady(p.x, p.z)) updatePlayer(dt);
     let guard = 0; while (collides(p) && guard++ < 40) p.y += 1;
     const lx = Math.floor(p.x / LAND), lz = Math.floor(p.z / LAND), lk = lx + ',' + lz;
@@ -149,6 +209,7 @@ function frame(now) {
     G.dayTime = (G.dayTime + dt / 600) % 1;
   }
   updateHUD(dt);
+  updateWorldMap();
   if (realmT > 0) { realmT -= dt; if (realmT <= 0) $('realm').style.opacity = 0; }
 
   camera.position.set(p.x, p.y + 1.62, p.z);
@@ -159,14 +220,19 @@ function frame(now) {
   const light = 0.25 + 0.75 * ss(-0.25, 0.25, sunH);
   skyNow.copy(SKY).lerp(NIGHT_SKY, 1 - (light - 0.25) / 0.75);
   if (landOf(p.x, p.z).b === 6) skyNow.lerp(DEMON_SKY, 0.6);
-  opaqueMat.color.setScalar(light); transMat.color.setScalar(light); sunLight.intensity = 1.1 * light;
+  // Warm sunlight and a cooler, softer night fill make the world respond to
+  // its time of day instead of baking the same brightness into every face.
+  sunLight.position.set(Math.cos(G.dayTime * Math.PI * 2) * 0.7, Math.max(0.12, sunH), Math.sin(G.dayTime * Math.PI * 2) * 0.7);
+  sunLight.color.copy(nightLightColor).lerp(dayLightColor, light);
+  sunLight.intensity = 0.08 + 1.25 * light;
+  ambientLight.intensity = 0.28 + 0.58 * light;
   const under = getBlock(Math.floor(camera.position.x), Math.floor(camera.position.y), Math.floor(camera.position.z)) === 5;
   scene.background.copy(under ? UNDER : skyNow); scene.fog.color.copy(under ? UNDER : skyNow);
   scene.fog.near = under ? 2 : 40; scene.fog.far = under ? 28 : RD * 16 - 8;
   $('water').style.display = under ? 'block' : 'none';
 
   const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
-  target = G.locked ? raycast(camera.position, dir, 7) : null;
+  target = controlsActive() && !G.uiOpen ? raycast(camera.position, dir, 7) : null;
   highlight.visible = !!target;
   if (target) highlight.position.set(target.x + 0.5, target.y + 0.5, target.z + 0.5);
 
@@ -186,4 +252,4 @@ function teleport(a, b) {
   player.pos.set(x, heightAt(Math.floor(x), Math.floor(z)) + 2, z); player.vel.set(0, 0, 0);
   return s ? `Teleported to ${s.name}` : `Teleported to ${x}, ${z}`;
 }
-window.isekai = { G, player, ents, api, getBlock, hurtEntity, spawnNear, teleport, setLocked: v => { G.locked = v; overlay.style.display = v ? 'none' : 'flex'; } };
+window.isekai = { G, player, ents, api, getBlock, hurtEntity, spawnNear, teleport, setLocked: v => { G.locked = v; G.focused = v; overlay.style.display = v ? 'none' : 'flex'; } };

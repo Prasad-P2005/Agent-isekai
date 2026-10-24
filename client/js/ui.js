@@ -112,8 +112,15 @@ export function openPanel(mode) {
 export function closePanel() {
   G.uiOpen = false;
   $('panel').style.display = 'none'; $('pray').style.display = 'none';
-  if (!G.locked) $('overlay').style.display = 'flex';
-  renderer.domElement.requestPointerLock();
+  if (!G.locked && !G.focused) $('overlay').style.display = 'flex';
+  if (G.locked || G.focused) return;
+  try {
+    const result = renderer.domElement.requestPointerLock();
+    if (result?.catch) result.catch(() => { G.focused = true; $('overlay').style.display = 'none'; });
+  } catch {
+    G.focused = true;
+    $('overlay').style.display = 'none';
+  }
 }
 const TITLES = { trade: 'Market', smith: 'Smithy', guild: "Adventurers' Guild", doctor: 'Healer', inn: 'Inn', priest: 'Temple', bounty: 'Law Office' };
 export async function openService(type, npc, settlement, line = '') {

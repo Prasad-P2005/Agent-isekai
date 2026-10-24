@@ -53,6 +53,10 @@ Everyone is a block character designed in code (`client/js/avatar.js`): pixel-ar
 (twin-tails, ponytails, bobs, *ahoge*), outfits by job (guild uniform, royal gowns, armor, nurse cap, priest robes…),
 elf ears, beastkin cat ears and tails. Open `http://localhost:8000/lookbook.html` to see the whole cast.
 
+## Settlements & livelihoods
+
+Settlement populations use seeded occupation mixes, so each world has a consistent social layout. Human capitals have a larger wall ring, a dense residential district, an inner market, and room for 100–180 residents; villages keep their smaller footprints. Farmers work fields beyond city walls, guards patrol the gates, established merchants work inside the market, and street peddlers trade outside the gates. Fisherfolk appear only in coastal settlements and work along the shore. Rural human villages favor farming, while elven and beastkin settlements retain their forest and hunting trades.
+
 ## Building
 
 Blocks are not free: hold left click to mine (harder blocks take longer, bedrock is unbreakable, pickaxes from the

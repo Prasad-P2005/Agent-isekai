@@ -26,7 +26,9 @@ JOBS: dict[str, Job] = {
     "innkeeper": Job("Innkeeper", "inn", "inn", service="inn", body=0x8A5A2A),
     "blacksmith": Job("Blacksmith", "smithy", service="smith", body=0x3A3A3A, hair=0x111111),
     "priest": Job("Priest", "church", service="priest", body=0xF8F0D0, hair=0xDDDDDD),
-    "merchant": Job("Merchant", "stall", kind="merchant", service="trade"),
+    "merchant": Job("Market Merchant", "stall", kind="merchant", service="trade"),
+    "peddler": Job("Street Peddler", "street_stall", kind="merchant", service="trade"),
+    "fisherman": Job("Fisher", "shore", body=0x477f91, hair=0x493b32),
     "guard": Job("Guard", "gate", "gate", kind="knight"),
     "farmer": Job("Farmer", "field", body=0x6A8A3A),
     "baker": Job("Baker", "stall", body=0xF0D8A0),
@@ -46,8 +48,8 @@ ELF_KIND = {"knight": "elf_guard", "adventurer": "elf_guard", "merchant": "elf",
 BASE_KIND = {"human": "villager", "elf": "elf", "beastkin": "beastkin"}
 
 JOBS_FOR = {
-    "human": ["guild_master", "receptionist", "adventurer", "doctor", "nurse", "innkeeper", "blacksmith", "priest", "merchant", "guard", "farmer", "baker", "bard"],
-    "city": ["king", "queen", "guild_master", "receptionist", "adventurer", "doctor", "nurse", "innkeeper", "blacksmith", "priest", "merchant", "guard", "farmer", "baker", "bard"],
+    "human": ["guild_master", "receptionist", "adventurer", "doctor", "nurse", "innkeeper", "blacksmith", "priest", "merchant", "peddler", "fisherman", "guard", "farmer", "baker", "bard"],
+    "city": ["king", "queen", "guild_master", "receptionist", "adventurer", "doctor", "nurse", "innkeeper", "blacksmith", "priest", "merchant", "peddler", "fisherman", "guard", "farmer", "baker", "bard"],
     "elfcity": ["guild_master", "receptionist", "adventurer", "herbalist", "innkeeper", "priest", "merchant", "guard", "ranger", "bard", "elder"],
     "elf": ["elder", "herbalist", "ranger", "merchant", "adventurer", "bard"],
     "beast": ["chief", "shaman", "hunter", "warrior", "blacksmith", "merchant", "adventurer"],
@@ -62,10 +64,12 @@ REQUIRED = {
     "beast": ["chief", "shaman", "blacksmith", "merchant", "hunter"],
 }
 FILLER = {
-    "human": ["farmer", "farmer", "farmer", "guard", "adventurer", "baker", "merchant", "nurse"],
-    "city": ["farmer", "guard", "guard", "adventurer", "baker", "merchant", "bard", "nurse"],
+    # Weighted occupation pools: rural settlements farm and trade locally;
+    # cities support a larger guard, guild and market workforce.
+    "human": ["farmer"] * 6 + ["guard", "adventurer", "baker", "merchant", "peddler"],
+    "city": ["farmer"] * 5 + ["guard"] * 3 + ["adventurer"] * 2 + ["merchant"] * 3 + ["peddler"] * 2 + ["baker", "bard", "nurse"],
     "elfcity": ["ranger", "ranger", "guard", "bard", "merchant", "herbalist"],
     "elf": ["ranger", "ranger", "herbalist", "bard"],
     "beast": ["hunter", "hunter", "warrior", "warrior"],
 }
-POPULATION = {"city": (60, 120, 80), "elfcity": (50, 100, 70), "human": (20, 60, 40), "elf": (20, 60, 30), "beast": (20, 60, 35)}
+POPULATION = {"city": (100, 180, 130), "elfcity": (50, 100, 70), "human": (20, 60, 40), "elf": (20, 60, 30), "beast": (20, 60, 35)}

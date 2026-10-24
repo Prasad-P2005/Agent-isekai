@@ -218,6 +218,16 @@ export function stall(x, y, z, set, r) {
   for (const dx of [-2, 2]) for (const dz of [-1, 1]) for (let dy = 0; dy < 3; dy++) set(x + dx, y + dy, z + dz, 6);
   set(x, y + 1, z - 1, 22);
 }
+function streetStall(x, y, z, set, r) {
+  const awning = r() < 0.5 ? 20 : 30;
+  for (let dx = -1; dx <= 1; dx++) {
+    set(x + dx, y - 1, z, 18);
+    set(x + dx, y, z, 18);
+    if (Math.abs(dx) === 1) { set(x + dx, y + 1, z, 6); set(x + dx, y + 2, z, 6); }
+    set(x + dx, y + 3, z, awning);
+  }
+  set(x, y + 1, z, 22);
+}
 function demonCastle(x, y, z, set) {
   for (let dx = -10; dx <= 10; dx++) for (let dz = -10; dz <= 10; dz++) {
     const d = Math.hypot(dx, dz);
@@ -266,6 +276,7 @@ function building(x, y, z, set, o) {
 const BUILD = {
   house: (b, y, set, r) => house(b.x, y, b.z, set, r, true),
   stall: (b, y, set, r) => stall(b.x, y, b.z, set, r),
+  street_stall: (b, y, set, r) => streetStall(b.x, y, b.z, set, r),
   treehouse: (b, y, set, r) => giantTree(b.x, y, b.z, set, r),
   hut: (b, y, set, r) => hut(b.x, y, b.z, set, r),
   keep: () => {}, // built with the city walls
@@ -323,17 +334,20 @@ const BUILD = {
 function settlementChunk(cx, cz, S, set) {
   const bx = cx * CS, bz = cz * CS;
   for (let x = bx; x < bx + CS; x++) for (let z = bz; z < bz + CS; z++) {
-    const dx = x - S.cx, dz = z - S.cz, d = Math.hypot(dx, dz), g = groundAt(x, z), road = (Math.abs(dx) <= 1 || Math.abs(dz) <= 1) && d < 27;
+    const dx = x - S.cx, dz = z - S.cz, d = Math.hypot(dx, dz), g = groundAt(x, z);
+    const largeCity = S.type === 'city', road = (Math.abs(dx) <= 1 || Math.abs(dz) <= 1) && d < (largeCity ? 28.5 : 27);
     if (S.type === 'city' || S.type === 'elfcity') {
       const M = S.type === 'elfcity' ? { wall: 8, top: 9, road: 15, post: 8, lamp: 26 } : { wall: 19, top: 19, road: 29, post: 6, lamp: 22 };
       if (road) set(x, g, z, M.road);
-      if (d >= 26.5 && d < 28) { // wall with four gates
+      const wallInner = largeCity ? 28.5 : 26.5, wallOuter = largeCity ? 29.5 : 28;
+      if (d >= wallInner && d < wallOuter) { // wall with four gates
         const gate = Math.abs(dx) <= 2 || Math.abs(dz) <= 2;
         for (let y = g + 1; y <= g + 6; y++) if (!gate || y >= g + 5) set(x, y, z, M.wall);
         if ((x + z) % 2 === 0) set(x, g + 7, z, M.top);
         if (gate && (Math.abs(dx) === 2 || Math.abs(dz) === 2)) set(x, g + 4, z, M.lamp);
       }
-      if (d < 26 && d > 10 && (Math.abs(dx) === 2 || Math.abs(dz) === 2) && ((dx + dz) & 7) === 0) { set(x, g + 1, z, M.post); set(x, g + 2, z, M.post); set(x, g + 3, z, M.lamp); }
+      if (largeCity && d >= wallOuter && d <= 31.5 && (Math.abs(dx) <= 1 || Math.abs(dz) <= 1)) set(x, g, z, M.road);
+      if (d < wallInner - 1 && d > 10 && (Math.abs(dx) === 2 || Math.abs(dz) === 2) && ((dx + dz) & 7) === 0) { set(x, g + 1, z, M.post); set(x, g + 2, z, M.post); set(x, g + 3, z, M.lamp); }
     } else if (S.type !== 'elf' && d <= 27 && (road || d < 4.5)) set(x, g, z, S.type === 'beast' ? 25 : d < 4.5 ? 19 : 29);
   }
   if (S.type === 'city' && Math.floor(S.cx / CS) - 1 === cx && Math.floor(S.cz / CS) - 1 === cz) tower(S.cx, groundAt(S.cx, S.cz) + 1, S.cz, set);

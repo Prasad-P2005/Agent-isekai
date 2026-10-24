@@ -15,7 +15,7 @@
   <div id="controls" style="display:none">
     <kbd>WASD</kbd> move · <kbd>Space</kbd> jump/swim · <kbd>Shift</kbd> sprint · <kbd>F</kbd> flight (if learned)<br>
     <kbd>Left click</kbd> attack · <b>hold</b> to mine · <kbd>Right click</kbd> place · <kbd>I</kbd> inventory · <kbd>1–0</kbd> hotbar<br>
-    <kbd>E</kbd> talk (type to chat) / trade · <kbd>T</kbd> pray · <kbd>L</kbd> laws · <kbd>Q</kbd> fireball · <kbd>R</kbd> heal · <kbd>G</kbd>/<kbd>V</kbd> potions
+    <kbd>E</kbd> talk (type to chat) / trade · <kbd>M</kbd> map · <kbd>T</kbd> pray · <kbd>L</kbd> laws · <kbd>Q</kbd> fireball · <kbd>R</kbd> heal · <kbd>G</kbd>/<kbd>V</kbd> potions
   </div>
 </div></div>
 
@@ -37,6 +37,23 @@
 <div id="bars"><div class="bar"><div id="hpfill"></div><span id="hptext"></span></div><div class="bar"><div id="mpfill"></div><span id="mptext"></span></div></div>
 <div id="abil"></div>
 <div id="status"></div>
+<button id="maptoggle" type="button" aria-label="Open world map">World map <kbd>M</kbd></button>
+<div id="worldmap" role="dialog" aria-modal="true" aria-labelledby="maptitle">
+  <section class="map-card">
+    <header class="map-header">
+      <div><div class="map-eyebrow">ATLAS OF THE KNOWN WORLD</div><h2 id="maptitle">World map</h2></div>
+      <button id="mapclose" type="button" aria-label="Close world map">Close <kbd>Esc</kbd></button>
+    </header>
+    <div class="map-legend">
+      <span><i class="legend-player"></i>You</span><span><i class="legend-settlement"></i>Settlement</span>
+      <span><i class="legend-swatch realm-ocean"></i>Sea</span><span><i class="legend-swatch realm-human"></i>Human lands</span>
+      <span><i class="legend-swatch realm-elf"></i>Elven forest</span><span><i class="legend-swatch realm-beast"></i>Beastkin wilds</span>
+      <span><i class="legend-swatch realm-peaks"></i>Mountains</span><span><i class="legend-swatch realm-demon"></i>Demon wastes</span>
+    </div>
+    <div class="map-scroll"><div class="map-north">N ↑</div><div id="mapgrid" class="map-grid"></div></div>
+    <footer id="mapfooter">Each square represents one region.</footer>
+  </section>
+</div>
 <div id="hurt"></div>
 <div id="toast"></div>
 <div id="dialog"></div>
@@ -47,8 +64,8 @@
 <div id="story"><h3 id="wname">…</h3><div id="beats"></div><div class="quest" id="quest"></div><div id="laws"></div><div class="oracle" id="oracle"></div></div>
 
 <script type="importmap">{ "imports": {
-  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/addons/"
 } }</script>
 <script type="module" src="js/main.js"></script>
 </body>

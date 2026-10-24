@@ -64,6 +64,7 @@ export function renderHeaven(dt) {
 function say(who, text, cls) { const d = document.createElement('div'); d.className = cls; d.innerHTML = `<b>${esc(who)}:</b> ${esc(text)}`; $('hlog').appendChild(d); $('hlog').scrollTop = 1e9; }
 export function startHeaven(onDescend) {
   G.phase = 'heaven';
+  let descending = false;
   $('heaven').style.display = 'flex';
   const w = G.world;
   makeDeity(w.god_is === 'god' ? 'god' : 'goddess');
@@ -79,15 +80,77 @@ export function startHeaven(onDescend) {
   $('hsend').onclick = send;
   $('hin').onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') send(); };
   $('hdescend').onclick = async () => {
+    // This handler awaits the server and several animation steps. Without a
+    // guard, a second click starts another transition and calls onDescend
+    // twice, which can leave the heaven renderer and world overlay fighting.
+    if (descending) return;
+    descending = true;
+    const button = $('hdescend');
+    button.disabled = true;
+    button.textContent = 'Guiding you into the world…';
+    const fade = $('fade');
+    // Make the fade cover instant so the canvas never peeks through while
+    // the heaven overlay disappears. The CSS transition is restored later
+    // for the smooth fade-out into the world.
+    fade.style.transition = 'none';
+    fade.style.opacity = 1;
+    // Force a style recalc so the browser commits the instant opacity
+    // before the display change removes the heaven scene.
+    fade.offsetHeight;          // eslint-disable-line no-unused-expressions
+    fade.style.transition = '';
     $('heaven').style.display = 'none';
-    const fade = $('fade'); fade.style.opacity = 1;
-    applyState(await api.descend());
-    await new Promise(r => setTimeout(r, 1200));
-    $('card').innerHTML = `<div class="ch">Chapter I</div><h1>${esc(w.name)}</h1><p>You awaken as ${esc(w.hero)}.</p><p class="mission">Mission: slay the Demon Lord ${esc(w.demon_lord_name)}.</p>`;
-    $('card').style.opacity = 1;
-    G.phase = 'world';
-    await new Promise(r => setTimeout(r, 4000));
-    $('card').style.opacity = 0; fade.style.opacity = 0;
-    onDescend();
+    let descended = false;
+    try {
+      let state = null;
+      try {
+        state = await api.descend();
+        descended = true;
+      } catch (error) {
+        // The server may have saved the descent even if its response was lost.
+        const status = await api.status().catch(() => null);
+        if (status?.descended) descended = true;
+        else throw error;
+      }
+      if (state) applyState(state);
+      if (G.world?.player) G.world.player.descended = true;
+      // Switch scenes under the cover, then let the world renderer paint
+      // before exposing it. This avoids revealing an uninitialized canvas.
+      G.phase = 'world';
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      $('card').innerHTML = `<div class="ch">Chapter I</div><h1>${esc(w.name)}</h1><p>You awaken as ${esc(w.hero)}.</p><p class="mission">Mission: slay the Demon Lord ${esc(w.demon_lord_name)}.</p>`;
+      $('card').style.opacity = 1;
+      await new Promise(r => setTimeout(r, 2400));
+      $('card').style.opacity = 0;
+      fade.style.opacity = 0;
+      await new Promise(r => setTimeout(r, 1250));
+      await onDescend();
+    } catch (error) {
+      console.error('Descent handoff failed:', error);
+      if (descended) {
+        // Once the server accepts descent, an interface error must not send
+        // the player back to heaven. Recover to the world entry screen.
+        G.phase = 'world';
+        $('heaven').style.display = 'none';
+        $('card').style.opacity = 0;
+        const overlay = $('overlay');
+        overlay.classList.add('in-world');
+        const title = overlay.querySelector('h1');
+        const intro = overlay.querySelector('.box > p:not(.go)');
+        if (title) title.textContent = w.name;
+        if (intro) intro.textContent = 'Your new life begins here. Click to enter the world.';
+        $('menu').innerHTML = '<p class="go">Click anywhere to begin</p>';
+        $('controls').style.display = 'block';
+        overlay.style.display = 'flex';
+      } else {
+        G.phase = 'heaven';
+        $('heaven').style.display = 'flex';
+        say(w.god_name, `The passage could not open: ${error.message || 'please try again in a moment.'}`, 'god');
+      }
+    } finally {
+      fade.style.opacity = 0;
+      descending = false;
+      button.disabled = false;
+      button.textContent = "I'm ready. Send me to the world ⇩";
+    }
   };
 }

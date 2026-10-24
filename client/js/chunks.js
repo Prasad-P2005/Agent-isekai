@@ -36,12 +36,26 @@ const FACES = [
   { d: [0, 0, 1], s: 0.65, c: [[1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1]] },
   { d: [0, 0, -1], s: 0.65, c: [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]] },
 ];
+// A small amount of corner shading gives voxel forms depth without adding
+// extra meshes or expensive real-time shadow maps.
+function occludesAO(id) { return id !== 0 && id !== 5 && id !== 21; }
+function cornerAO(get, x, y, z, face, corner) {
+  const axes = [0, 1, 2].filter(axis => face.d[axis] === 0);
+  const signs = axes.map(axis => corner[axis] ? 1 : -1);
+  const offset = (a, b = 0) => [0, 0, 0].map((_, axis) => (axis === axes[0] ? signs[0] * a : axis === axes[1] ? signs[1] * b : 0));
+  const a = offset(1), b = offset(0, 1), c = offset(1, 1);
+  const sideA = occludesAO(get(x + a[0], y + a[1], z + a[2]));
+  const sideB = occludesAO(get(x + b[0], y + b[1], z + b[2]));
+  const diagonal = occludesAO(get(x + c[0], y + c[1], z + c[2]));
+  return sideA && sideB ? 0.72 : 1 - (Number(sideA) + Number(sideB) + Number(diagonal)) * 0.075;
+}
 function buildGeo(buf) {
   if (!buf.p.length) return null;
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(buf.p, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(buf.c, 3));
   g.setIndex(buf.i);
+  g.computeVertexNormals();
   g.computeBoundingSphere();
   return g;
 }
@@ -56,17 +70,22 @@ function meshChunk(ch) {
   for (let y = 0; y < H; y++) for (let z = 0; z < CS; z++) for (let x = 0; x < CS; x++) {
     const id = d[idx(x, y, z)];
     if (!id) continue;
-    const bd = BL[id], isT = !!bd.transparent, v = 0.88 + 0.12 * hash3(bx + x, y, bz + z);
+    const bd = BL[id], isT = !!bd.transparent, v = 0.93 + 0.07 * hash3(bx + x, y, bz + z);
     for (const f of FACES) {
       const n = get(x + f.d[0], y + f.d[1], z + f.d[2]);
       if (id === 5) { if (n !== 0) continue; }
       else if (isT) { if (n === id || (n !== 0 && !BL[n].transparent)) continue; }
       else if (n !== 0 && !BL[n].transparent) continue;
       const buf = isT ? tr : op, col = f.d[1] > 0 ? bd.top : f.d[1] < 0 ? bd.bot : bd.side;
-      let sh = bd.glow ? Math.max(f.s, bd.glow) * 1.15 : f.s * v;
-      if (!bd.glow && y < SEA - 2) sh *= 0.6 + 0.4 * Math.max(0, 1 - (SEA - y) / 30);
+      // Fixed side tint stays restrained; world lights handle the main shading.
+      let sh = bd.glow ? Math.max(f.s, bd.glow) * 1.1 : (f.d[1] > 0 ? 1 : f.d[1] < 0 ? 0.74 : 0.9);
+      if (!bd.glow && y < SEA - 2) sh *= 0.72 + 0.28 * Math.max(0, 1 - (SEA - y) / 30);
       const base = buf.p.length / 3, drop = (id === 5 && f.d[1] > 0) ? 0.12 : 0;
-      for (const c of f.c) { buf.p.push(x + c[0], y + c[1] - (c[1] ? drop : 0), z + c[2]); buf.c.push(col[0] * sh, col[1] * sh, col[2] * sh); }
+      for (const c of f.c) {
+        buf.p.push(x + c[0], y + c[1] - (c[1] ? drop : 0), z + c[2]);
+        const ao = cornerAO(get, x, y, z, f, c);
+        buf.c.push(col[0] * sh * v * ao, col[1] * sh * v * ao, col[2] * sh * v * ao);
+      }
       buf.i.push(base, base + 1, base + 2, base, base + 2, base + 3);
     }
   }

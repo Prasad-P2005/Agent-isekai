@@ -17,7 +17,9 @@ const pick = (r, a) => a[Math.floor(r() * a.length)];
 export function lookFor(kind, job, seed, def) {
   const r = mulberry((seed * 2654435761) >>> 0 || 7);
   const race = def.race || 'human';
-  let female = r() < 0.6;
+  // Keep the settlement population visibly mixed instead of letting the default
+  // lean heavily toward women. Job-specific characters still keep their role.
+  let female = r() < 0.5;
   if (['king', 'elf_king', 'blacksmith'].includes(job)) female = false;
   if (['queen', 'elf_queen', 'receptionist', 'nurse', 'herbalist'].includes(job) || kind === 'mermaid' || kind === 'goddess') female = true;
   if (kind === 'god') female = false;
@@ -27,7 +29,7 @@ export function lookFor(kind, job, seed, def) {
     female, race, job: job || kind,
     skin: race === 'beastkin' ? pick(r, SKIN.slice(1)) : pick(r, SKIN.slice(0, 3)),
     hair: HAIR[pick(r, hairPool)], eyes: pick(r, EYES),
-    style: female ? pick(r, ['long', 'twintails', 'ponytail', 'bob', 'long', 'side']) : pick(r, ['short', 'spiky', 'short', 'messy']),
+    style: female ? pick(r, ['long', 'twintails', 'ponytail', 'bob', 'long', 'side']) : pick(r, ['short', 'spiky', 'swept', 'messy', 'crop']),
     ahoge: r() < 0.35, glasses: false, top: 0x6a8acc, bottom: 0x3a3a5a, socks: 0xf4f4f4, shoes: 0x4a3020,
     skirt: female ? 'skirt' : null, cape: null, apron: null, armor: null, coat: null, hat: null, crown: null, bow: female && r() < 0.35 ? pick(r, [0xd83a4a, 0x3a6ae0, 0xffb0d0]) : null,
     back: null, belt: null, gown: false, tail: race === 'beastkin', catEars: race === 'beastkin', elfEars: race === 'elf', mermaid: kind === 'mermaid',
@@ -55,6 +57,9 @@ const OUTFITS = {
   herbalist: L => { L.top = 0x6ab06a; L.bottom = 0x4a8a4a; L.skirt = 'dress'; L.apron = 0xf0e8d0; L.hat = 'leaves'; },
   innkeeper: L => { L.top = 0xf0e0c0; L.bottom = 0x6a3a2a; L.apron = 0xffffff; L.skirt = L.female ? 'dress' : null; L.hat = 'bandana'; },
   blacksmith: L => { L.top = 0x5a5a5a; L.bottom = 0x3a3a3a; L.apron = 0x5a3a20; L.style = 'messy'; L.skirt = null; },
+  farmer: L => { L.top = 0x8b7652; L.bottom = 0x5b4b37; L.hat = 'straw'; L.skirt = null; },
+  fisherman: L => { L.top = 0x477f91; L.bottom = 0x354b50; L.hat = 'bandana'; L.hatColor = 0x526d78; L.back = 'fishing_rod'; L.skirt = null; },
+  peddler: L => { L.top = 0x806447; L.bottom = 0x53493c; L.coat = 0x6f5d48; L.hat = 'bandana'; L.hatColor = 0x8e624a; L.skirt = null; },
   priest: L => { L.top = 0xffffff; L.bottom = 0xf4f0e0; L.gown = true; L.belt = 0xd8b040; L.hat = L.female ? 'veil' : null; L.cape = 0x3a4a8a; },
   merchant: (L, r) => { L.top = pick(r, [0x8a3a9a, 0x3a8a6a, 0xc08a2a]); L.bottom = 0x5a4a3a; L.apron = 0xe8dcc0; L.hat = 'bandana'; L.belt = 0x3a2a1a; },
   baker: L => { L.top = 0xffffff; L.bottom = 0xd8b890; L.apron = 0xffffff; L.hat = 'chef'; },
@@ -69,7 +74,7 @@ const OUTFITS = {
   warrior: L => { L.top = 0x8a2a1a; L.bottom = 0x4a2a1a; L.armor = 0xb89a6a; L.back = 'sword'; L.skirt = null; },
   merchant_caravan: L => OUTFITS.merchant(L, Math.random),
   mermaid: L => { L.top = 0xff8fb8; L.bottom = 0x2fb5b5; L.skirt = null; L.style = 'long'; L.hair = pick(Math.random, [HAIR.pink, HAIR.mint, HAIR.blue]); },
-  bounty_hunter: L => { L.top = 0x2a2a2a; L.bottom = 0x2a2a2a; L.coat = 0x4a3a2a; L.hat = 'hood'; L.back = 'sword'; L.skirt = null; L.female = false; },
+  bounty_hunter: L => { L.top = 0x2a2a2a; L.bottom = 0x2a2a2a; L.coat = 0x4a3a2a; L.hat = 'hood'; L.back = 'sword'; L.skirt = null; L.female = false; L.style = 'short'; },
   demon_lord: L => { L.top = 0x2a0a3a; L.bottom = 0x1a0a2a; L.cape = 0x6a0a1a; L.armor = 0x3a2a4a; L.crown = 'horns'; L.hair = HAIR.silver; L.eyes = 0xff2020; L.style = 'long'; L.skin = 0xd8c8e0; L.female = false; L.skirt = null; L.bow = null; },
 };
 
@@ -83,21 +88,27 @@ function faceTexture(L) {
   const cv = document.createElement('canvas'); cv.width = cv.height = 32;
   const g = cv.getContext('2d'), px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
   px(0, 0, 32, 32, hexCss(L.skin));
-  const eyeTop = L.female ? 13 : 14, eyeH = L.female ? 8 : 6;
+  const eyeTop = L.female ? 13 : 14, eyeH = L.female ? 8 : 5;
   for (const ex of [5, 21]) {
     px(ex, eyeTop, 6, eyeH, '#ffffff');                       // sclera
     px(ex + 1, eyeTop, 4, eyeH, hexCss(L.eyes));              // iris
     px(ex + 1, eyeTop, 4, Math.ceil(eyeH / 2), shade(L.eyes, 0.6)); // darker upper iris
-    px(ex + 1, eyeTop + eyeH - 2, 4, 1, shade(L.eyes, 1.35)); // glowing lower iris
+    if (L.female) px(ex + 1, eyeTop + eyeH - 2, 4, 1, shade(L.eyes, 1.35)); // luminous lower iris
     px(ex + 2, eyeTop + 2, 2, eyeH - 4, '#1a1020');           // pupil
-    px(ex + 1, eyeTop + 1, 2, 2, '#ffffff');                  // big sparkle
-    px(ex + 4, eyeTop + eyeH - 3, 1, 1, '#ffffff');           // small sparkle
-    px(ex - 1, eyeTop - 1, 8, L.female ? 2 : 1, '#20141e');   // upper lashes
+    if (L.female) px(ex + 1, eyeTop + 1, 2, 2, '#ffffff'); // bright anime eye glint
+    if (L.female) px(ex + 4, eyeTop + eyeH - 3, 1, 1, '#ffffff'); // second sparkle
+    px(ex - 1, eyeTop - 1, 8, 2, '#20141e');   // upper lash / defined lid
     if (L.female) px(ex === 5 ? ex - 1 : ex + 6, eyeTop - 2, 1, 2, '#20141e'); // lash flick
-    px(ex, eyeTop - 4, 6, 1, shade(L.hair, 0.7));             // eyebrow
+    // Straighter, thicker brows give male faces a clearer anime read at game scale.
+    px(ex, eyeTop - (L.female ? 4 : 5), 6, L.female ? 1 : 2, shade(L.hair, 0.55));
   }
   if (L.female || L.job === 'goddess') { g.globalAlpha = 0.45; px(3, 23, 5, 2, '#ff6a8a'); px(24, 23, 5, 2, '#ff6a8a'); g.globalAlpha = 1; } // blush
-  px(15, 27, 2, 1, '#c04a5a'); px(14, 26, 1, 1, '#c04a5a'); px(17, 26, 1, 1, '#c04a5a'); // smile
+  px(15, 22, 2, 1, shade(L.skin, 0.88)); // small pixel nose adds face definition
+  if (L.female) {
+    px(15, 27, 2, 1, '#c04a5a'); px(14, 26, 1, 1, '#c04a5a'); px(17, 26, 1, 1, '#c04a5a');
+  } else {
+    px(15, 27, 2, 1, '#705448'); // understated natural mouth line
+  }
   if (L.glasses) { g.strokeStyle = '#3a2a2a'; g.lineWidth = 1; g.strokeRect(4.5, eyeTop - 1.5, 9, eyeH + 3); g.strokeRect(18.5, eyeTop - 1.5, 9, eyeH + 3); px(13, eyeTop + 1, 6, 1, '#3a2a2a'); }
   const tex = new THREE.CanvasTexture(cv);
   tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
@@ -152,9 +163,16 @@ export function buildAvatar(L, height, mats) {
     return g;
   });
   // ---- torso & everything worn on it ----
-  const torso = [
+  // A stepped silhouette adds a gentle waist and fuller hips while keeping
+  // the same clean voxel construction used by the rest of the character.
+  const torso = L.female ? [
+    [0.44, 0.22, 0.27, 0, 1.04, 0, L.top],
+    [0.36, 0.22, 0.24, 0, 0.82, 0, L.top],
+    [0.49, 0.2, 0.3, 0, 0.65, 0, L.top],
+    [0.14, 0.05, 0.14, 0, 1.17, 0, skin],
+  ] : [
     [0.42, 0.55, 0.24, 0, 0.895, 0, L.top],
-    [0.14, 0.05, 0.14, 0, 1.17, 0, skin],                                         // neck
+    [0.14, 0.05, 0.14, 0, 1.17, 0, skin],
   ];
   if (L.collar) torso.push([0.2, 0.12, 0.02, 0, 1.08, -0.125, L.collar]);
   if (L.bow) torso.push([0.16, 0.07, 0.04, 0, 1.08, -0.14, L.bow], [0.05, 0.1, 0.04, 0, 1.03, -0.14, L.bow]);
@@ -170,6 +188,7 @@ export function buildAvatar(L, height, mats) {
   if (L.back === 'sword') torso.push([0.05, 0.7, 0.05, 0.08, 0.95, 0.16, 0xc8ced6, 0.5], [0.16, 0.04, 0.06, 0.2, 1.17, 0.16, 0x8a6a2a, 0.5]);
   if (L.back === 'bow') torso.push([0.04, 0.8, 0.04, 0, 0.95, 0.16, 0x8a5a2a, -0.4], [0.02, 0.75, 0.02, 0.06, 0.95, 0.17, 0xf0f0e0, -0.4]);
   if (L.back === 'lute') torso.push([0.24, 0.3, 0.06, 0.05, 0.85, 0.17, 0xb87a3a, 0.4], [0.05, 0.3, 0.04, -0.06, 1.1, 0.17, 0x6a4a2a, 0.4]);
+  if (L.back === 'fishing_rod') torso.push([0.035, 0.9, 0.035, -0.2, 1.0, 0.18, 0x765a3d, -0.24], [0.018, 0.4, 0.018, -0.4, 1.32, 0.18, 0xc9b78e, 0.1]);
   if (L.tail) torso.push([0.07, 0.07, 0.25, 0, 0.62, 0.22, hairC], [0.07, 0.25, 0.07, 0, 0.78, 0.33, hairC], [0.08, 0.08, 0.08, 0, 0.92, 0.33, 0xffffff]);
   if (L.mermaid) torso.push([0.36, 0.4, 0.24, 0, 0.42, 0, L.bottom], [0.28, 0.25, 0.2, 0, 0.12, 0.05, L.bottom], [0.46, 0.06, 0.24, 0, 0.0, 0.12, 0x7fe0e0]);
   mesh(torso, body);
@@ -191,7 +210,9 @@ export function buildAvatar(L, height, mats) {
   if (!L.helmet) {
     headParts.push([0.6, 0.12, 0.58, 0, top + 0.02, 0.02, H]);                  // crown of the hair
     headParts.push([0.6, 0.58, 0.06, 0, hy + 0.02, HEAD / 2 + 0.03, H]);                    // back
-    headParts.push([0.04, 0.4, 0.58, -HEAD / 2 - 0.02, hy + 0.06, 0, H], [0.04, 0.4, 0.58, HEAD / 2 + 0.02, hy + 0.06, 0, H]); // sides
+    const sideHairH = L.female ? 0.4 : 0.28;
+    const sideHairY = L.female ? hy + 0.06 : hy + 0.12;
+    headParts.push([0.04, sideHairH, 0.58, -HEAD / 2 - 0.02, sideHairY, 0, H], [0.04, sideHairH, 0.58, HEAD / 2 + 0.02, sideHairY, 0, H]); // sides
     // bangs: a jagged fringe over the forehead
     const bangs = L.female ? [0.12, 0.16, 0.1, 0.17, 0.12] : [0.1, 0.14, 0.08, 0.13, 0.1];
     bangs.forEach((len, i) => headParts.push([0.12, len + 0.06, 0.05, -0.24 + i * 0.12, top - len / 2 + 0.05, front - 0.02, H]));
@@ -200,8 +221,15 @@ export function buildAvatar(L, height, mats) {
     if (L.style === 'bob') headParts.push([0.6, 0.36, 0.08, 0, hy - 0.08, 0.28, H], [0.07, 0.4, 0.5, -0.3, hy - 0.06, 0.02, H], [0.07, 0.4, 0.5, 0.3, hy - 0.06, 0.02, H]);
     if (L.style === 'ponytail') headParts.push([0.14, 0.14, 0.1, 0, top - 0.08, 0.3, L.bow || 0xd83a4a], [0.13, 0.6, 0.12, 0, hy - 0.22, 0.36, H, 0, 0.2]);
     if (L.style === 'twintails') for (const s2 of [-1, 1]) headParts.push([0.08, 0.08, 0.08, s2 * 0.29, top - 0.06, 0.06, L.bow || 0xff6ab0], [0.13, 0.7, 0.13, s2 * 0.36, hy - 0.3, 0.08, H, s2 * 0.12]);
-    if (L.style === 'spiky') for (let i = 0; i < 4; i++) headParts.push([0.1, 0.14, 0.1, -0.15 + i * 0.1, top + 0.1, 0.05, H, (i - 1.5) * 0.3]);
-    if (L.style === 'messy') headParts.push([0.56, 0.08, 0.56, 0, top + 0.06, 0.02, H], [0.12, 0.1, 0.1, 0.2, top + 0.1, 0.1, H, 0.5]);
+    if (L.style === 'spiky') {
+      for (let i = 0; i < 5; i++) headParts.push([0.12, 0.22, 0.12, -0.22 + i * 0.11, top + 0.1, 0.04, H, (i - 2) * 0.28]);
+    }
+    if (L.style === 'messy') headParts.push([0.56, 0.08, 0.56, 0, top + 0.06, 0.02, H], [0.12, 0.17, 0.1, 0.2, top + 0.12, 0.1, H, 0.5], [0.12, 0.14, 0.1, -0.17, top + 0.1, -0.03, H, -0.45]);
+    if (L.style === 'swept') headParts.push([0.18, 0.22, 0.12, 0.21, top + 0.08, -0.02, H, 0.55], [0.12, 0.14, 0.1, -0.17, top + 0.04, 0.05, H, -0.25]);
+    if (L.style === 'crop') {
+      headParts.push([0.58, 0.06, 0.56, 0, top + 0.04, 0.01, H]);
+      for (let i = 0; i < 3; i++) headParts.push([0.11, 0.12, 0.08, -0.12 + i * 0.12, top + 0.08, 0.02, H, (i - 1) * 0.18]);
+    }
     const shine = new THREE.Color(H).lerp(new THREE.Color(0xffffff), 0.45).getHex(); // the anime 'angel ring' highlight
     headParts.push([0.6, 0.03, 0.02, 0, top - 0.1, HEAD / 2 + 0.04, shine], [0.02, 0.03, 0.5, -HEAD / 2 - 0.035, top - 0.1, 0, shine], [0.02, 0.03, 0.5, HEAD / 2 + 0.035, top - 0.1, 0, shine]);
     if (L.female && L.style !== 'bob') for (const s2 of [-1, 1]) headParts.push([0.07, 0.42, 0.07, s2 * 0.27, hy - 0.06, front + 0.03, H]); // locks framing the face
@@ -219,7 +247,7 @@ export function buildAvatar(L, height, mats) {
   if (L.hat === 'nurse') headParts.push([0.36, 0.1, 0.04, 0, top + 0.02, front + 0.06, 0xffffff], [0.06, 0.06, 0.01, 0, top + 0.03, front + 0.035, 0xe03a4a]);
   if (L.hat === 'chef') headParts.push([0.5, 0.06, 0.5, 0, top + 0.05, 0, 0xffffff], [0.44, 0.24, 0.44, 0, top + 0.2, 0, 0xffffff]);
   if (L.hat === 'straw') headParts.push([0.8, 0.04, 0.8, 0, top + 0.03, 0, 0xe0c070], [0.46, 0.14, 0.46, 0, top + 0.1, 0, 0xe0c070], [0.47, 0.04, 0.47, 0, top + 0.06, 0, 0xd83a3a]);
-  if (L.hat === 'bandana') headParts.push([0.54, 0.08, 0.54, 0, top - 0.02, 0, 0xd84a3a]);
+  if (L.hat === 'bandana') headParts.push([0.54, 0.08, 0.54, 0, top - 0.02, 0, L.hatColor || 0xd84a3a]);
   if (L.hat === 'veil') headParts.push([0.56, 0.1, 0.56, 0, top + 0.03, 0, 0x2a2a4a], [0.56, 0.6, 0.04, 0, hy - 0.08, 0.28, 0x2a2a4a]);
   if (L.hat === 'leaves') for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; headParts.push([0.1, 0.05, 0.06, Math.cos(a) * 0.24, top + 0.02, Math.sin(a) * 0.24, i % 2 ? 0x5ac06a : 0xff9ac8]); }
   if (L.hat === 'feather') headParts.push([0.5, 0.1, 0.5, 0, top + 0.05, 0, 0x5a2a6a], [0.03, 0.3, 0.08, 0.2, top + 0.2, 0.1, 0xffd34d, -0.4]);

@@ -2,14 +2,8 @@
 import os
 from pathlib import Path
 
-LLM_URL = os.getenv("ISEKAI_LLM_URL", "https://openrouter.ai/api/v1")
-LLM_MODEL = os.getenv("ISEKAI_LLM_MODEL", "nvidia/nemotron-3.5-super-vl:free")
-LLM_API_KEY = os.getenv("ISEKAI_LLM_API_KEY", "").strip()
-LLM_TIMEOUT = float(os.getenv("ISEKAI_LLM_TIMEOUT", "180"))
 SAVE_DIR = Path(os.getenv("ISEKAI_SAVE_DIR", Path(__file__).resolve().parent.parent / "saves"))
 CLIENT_DIR = Path(os.getenv("ISEKAI_CLIENT_DIR", Path(__file__).resolve().parent.parent / "client"))
 CONTENT_DIR = Path(os.getenv("ISEKAI_CONTENT_DIR", Path(__file__).resolve().parent.parent / "content"))
 HOST = os.getenv("ISEKAI_HOST", "127.0.0.1")
 PORT = int(os.getenv("ISEKAI_PORT", "8000"))
-# seconds between unprompted god narrations while a player is active; long enough to leave the free daily quota for dialogue
-GOD_IDLE_INTERVAL = float(os.getenv("ISEKAI_GOD_IDLE", "600"))

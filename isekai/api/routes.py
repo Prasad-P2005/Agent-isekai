@@ -6,7 +6,8 @@ from pydantic import BaseModel
 
 from ..core import commands
 from ..systems import laws
-from ..systems.story import objective
+from ..systems.marks import quest_marks
+from ..systems.story import objective, oath_list
 
 router = APIRouter(prefix="/api")
 
@@ -25,10 +26,8 @@ def world_of(request: Request):
 # ---------- world ----------
 @router.get("/status")
 async def status(request: Request):
-    g = game(request)
-    w = g.world
-    return {"has_world": bool(w and w.genesis_done), "creating": g.creating, "llm_online": g.llm.online, "model": g.llm.model,
-            "name": w.name if w else None, "descended": w.player.descended if w else False}
+    w = game(request).world
+    return {"has_world": bool(w and w.genesis_done), "name": w.name if w else None, "descended": w.player.descended if w else False}
 
 
 class NewWorld(BaseModel):
@@ -37,18 +36,17 @@ class NewWorld(BaseModel):
 
 @router.post("/new")
 async def new_world(body: NewWorld, request: Request):
-    g = game(request)
-    if g.creating:
-        raise HTTPException(409, "A world is already being created")
-    w = await g.new_world(body.seed)
-    return {"name": w.name, "llm_online": g.llm.online}
+    w = game(request).new_world(body.seed)
+    return {"name": w.name}
 
 
 @router.get("/world")
 async def get_world(request: Request):
     g, w = world_of(request)
-    data = w.model_dump(exclude={"feed", "heaven_chat", "cooldowns", "timers"})
+    data = w.model_dump(exclude={"feed", "said", "chronicle", "cooldowns", "timers"})
     data["objective"] = objective(w)
+    data["oaths"] = oath_list(w)
+    data["marks"] = quest_marks(w)
     data["law_texts"] = [laws.law_text(l) for l in w.laws]
     data["feed_next"] = w.feed_next
     return data
@@ -67,7 +65,7 @@ async def feed(request: Request, since: int = 0):
     _, w = world_of(request)
     return {"items": [i.model_dump() for i in w.feed if i.id >= since], "next": w.feed_next,
             "laws": [l.model_dump() for l in w.laws], "law_texts": [laws.law_text(l) for l in w.laws],
-            "beats": w.story.beats[-3:], "objective": objective(w)}
+            "beats": w.story.beats[-3:], "objective": objective(w), "oaths": oath_list(w), "marks": quest_marks(w)}
 
 
 class Context(BaseModel):
@@ -82,6 +80,7 @@ class Context(BaseModel):
     mana: float | None = None
     wanted: float = 0
     day_time: float | None = None
+    boss_hp: float | None = None
 
 
 @router.post("/context")
@@ -93,13 +92,13 @@ async def context(body: Context, request: Request):
 
 # ---------- scene 1: heaven ----------
 class Say(BaseModel):
-    message: str
+    topic: str = "hello"
 
 
 @router.post("/heaven")
 async def heaven_chat(body: Say, request: Request):
     g, _ = world_of(request)
-    return {"reply": await commands.speak_to_god(g, body.message)}
+    return commands.speak_to_god(g, body.topic)
 
 
 @router.post("/descend")
@@ -111,33 +110,39 @@ async def descend(request: Request):
 @router.post("/pray")
 async def pray(body: Say, request: Request):
     g, _ = world_of(request)
-    commands.pray(g, body.message)
-    return {"ok": True}
+    return commands.pray(g, body.topic)
 
 
 # ---------- events ----------
 class Event(BaseModel):
-    type: str  # kill | death | enter_land | use
+    type: str  # kill | death | enter_land | use | boss_phase | cast
     kind: str = ""
     by_player: bool = True
     resident: dict | None = None
+    named: str = ""
     lx: int = 0
     lz: int = 0
     by: str = ""
     item: str = ""
+    phase: int = 0
+    mana: float = 0
 
 
 @router.post("/event")
 async def event(body: Event, request: Request):
     g, _ = world_of(request)
     if body.type == "kill":
-        return commands.kill(g, body.kind, body.resident, body.by_player)
+        return commands.kill(g, body.kind, body.resident, body.by_player, body.named)
     if body.type == "death":
-        return commands.death(g, body.by)
+        return commands.death(g, body.by, body.kind)
     if body.type == "enter_land":
         return commands.enter_land(g, body.lx, body.lz)
     if body.type == "use":
         return commands.use_item(g, body.item)
+    if body.type == "boss_phase":
+        return commands.boss_phase(g, body.phase)
+    if body.type == "cast":
+        return commands.cast(g, body.mana)
     raise HTTPException(400, "unknown event")
 
 
@@ -148,12 +153,13 @@ class Crime(BaseModel):
     lawmen: list[str] = []
     civilians: list[str] = []
     victim: str = ""
+    victim_id: int | None = None
 
 
 @router.post("/crime")
 async def crime(body: Crime, request: Request):
     g, _ = world_of(request)
-    out = commands.crime(g, body.crime, body.in_city, body.realm, body.lawmen, body.civilians, body.victim)
+    out = commands.crime(g, body.crime, body.in_city, body.realm, body.lawmen, body.civilians, body.victim, body.victim_id)
     if out is None:
         raise HTTPException(400, "unknown crime")
     return out
@@ -175,17 +181,18 @@ async def report(body: Report, request: Request):
 
 # ---------- people ----------
 class Talk(BaseModel):
-    message: str = ""  # what the player typed; empty = just a greeting
+    topic: str = "hello"
     settlement: int | None = None
     resident: int | None = None
-    kind: str = ""
+    creature: str = ""
     name: str = ""
+    blocks: dict[str, int] | None = None
 
 
 @router.post("/talk")
 async def talk(body: Talk, request: Request):
     g, _ = world_of(request)
-    return await commands.talk(g, body.settlement, body.resident, body.kind, body.name, body.message)
+    return commands.talk(g, body.settlement, body.resident, body.creature, body.name, body.topic, body.blocks)
 
 
 @router.get("/service")

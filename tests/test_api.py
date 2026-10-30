@@ -1,21 +1,21 @@
-"""End-to-end API tests with a fake, offline LLM (the god is silent, defaults are used)."""
+"""End-to-end API tests."""
 from fastapi.testclient import TestClient
 
-from fakes import OfflineLLM
 from isekai.app import create_app
 from isekai.core import commands
 from isekai.core.game import Game
 from isekai.persistence.saves import load
-from isekai.systems.people.succession import SUCCESSOR_DELAY
+from isekai.systems import shop
+from isekai.systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
 
 
 def test_full_flow(tmp_path):
-    app = create_app(Game(OfflineLLM(), tmp_path / "w.json"))
+    app = create_app(Game(tmp_path / "w.json"))
     with TestClient(app) as c:
         assert c.post("/api/new", json={"seed": 7}).status_code == 200
         w = c.get("/api/world").json()
         assert len(w["settlements"]) == 13 and w["laws"]
-        assert "reply" in c.post("/api/heaven", json={"message": "Who are you?"}).json()
+        assert c.post("/api/heaven", json={"topic": "who_are_you"}).json()["lines"]
         c.post("/api/descend")
         r = c.post("/api/crime", json={"crime": "kill_human", "in_city": False, "realm": "human", "civilians": ["Mia"]}).json()
         assert r["results"][0]["outcome"] == "witnessed"
@@ -23,14 +23,18 @@ def test_full_flow(tmp_path):
         assert r["effects"]["spawn"]
         king = next(p for p in w["settlements"][[s["type"] for s in w["settlements"]].index("city")]["residents"] if p["job"] == "king")
         sid = [s["type"] for s in w["settlements"]].index("city")
-        r = c.post("/api/talk", json={"settlement": sid, "resident": king["id"]}).json()
-        assert r["story"]["stage"] == 1 and r["gift"]
+        r = c.post("/api/talk", json={"settlement": sid, "resident": king["id"], "topic": "king_summons"}).json()
+        assert r["story"]["stage"] == 1 and r["gift"] and r["reached"]
         assert c.get("/api/service", params={"type": "guild", "settlement": 0}).json()["quests"]
-        # typed conversation with the elf ruler wins the elves' favor
+        # the elves set a trial, and bringing what they asked for wins their Oath
         ec = next(s for s in w["settlements"] if s["type"] == "elfcity")
         ruler = next(p for p in ec["residents"] if p["job"] in ("elf_king", "elf_queen"))
-        r = c.post("/api/talk", json={"settlement": ec["id"], "resident": ruler["id"], "message": "Will the elves help us?"}).json()
-        assert r["gift"] and "Heal" in r["gift"] and "heal" in r["player"]["abilities"]
+        at_court = {"settlement": ec["id"], "resident": ruler["id"]}
+        assert any(t["id"] == "elf_trial" for t in c.post("/api/talk", json=at_court).json()["topics"])
+        c.post("/api/talk", json={**at_court, "topic": "elf_trial"})
+        r = c.post("/api/talk", json={**at_court, "topic": "elf_oath", "blocks": {"16": 3}}).json()
+        assert "Heal" in r["gift"] and "heal" in r["player"]["abilities"] and r["player"]["max_mana"] == 150
+        assert r["effects"]["take_blocks"] == {"16": 3} and r["player"]["blocks"]["16"] == 0
         # mined blocks are saved
         c.post("/api/blocks", json={"blocks": {"3": 12, "2": 0}})
         assert c.get("/api/world").json()["player"]["blocks"] == {"3": 12}
@@ -42,9 +46,9 @@ def event(client, **body) -> dict:
     return client.post("/api/event", json=body).json()
 
 
-def talk_to(client, settlement, job: str) -> dict:
+def talk_to(client, settlement, job: str, topic: str = "hello") -> dict:
     who = next(r for r in settlement.residents if r.job == job)
-    return client.post("/api/talk", json={"settlement": settlement.id, "resident": who.id}).json()
+    return client.post("/api/talk", json={"settlement": settlement.id, "resident": who.id, "topic": topic}).json()
 
 
 def test_a_potion_can_only_be_drunk_once(client, world):
@@ -64,11 +68,18 @@ def test_an_item_that_does_not_exist_cannot_be_used(client):
     assert event(client, type="use", item="elixir")["ok"] is False
 
 
+def test_spent_mana_is_reported_and_deepens_the_well(client):
+    assert event(client, type="cast", mana=60)["player"]["max_mana"] == 100
+    r = event(client, type="cast", mana=140)
+    assert r["player"]["max_mana"] == 105 and "105" in r["messages"][0]
+
+
 def test_slaying_the_demon_lord_changes_the_world(client, world):
+    world.story.stage = 5
     r = event(client, type="kill", kind="demon_lord")
     assert world.demon_lord_dead
-    assert r["player"]["loot"] == {"Demon Lord's Crown": 1}
-    assert r["story"]["stage"] == 5
+    assert r["player"]["has_crown"] and r["player"]["loot"] == {}
+    assert r["story"]["stage"] == 6
 
 
 def test_your_kills_are_counted(client):
@@ -89,22 +100,37 @@ def test_killing_a_resident_gives_no_loot_or_kill_count(client, world):
 
 
 def test_dying_is_counted(client, world):
-    event(client, type="death", by="a Dire Wolf")
+    event(client, type="death", by="a Dire Wolf", kind="wolf")
     assert world.player.deaths == 1
 
 
+def test_the_monster_that_kills_you_becomes_your_nemesis(client, world):
+    event(client, type="death", by="a Dire Wolf", kind="wolf")
+    assert world.nemesis.kind == "wolf" and world.pending("nemesis")
+    event(client, type="death", by=world.nemesis.name, kind="wolf")
+    assert world.nemesis.level == 2
+    gold = world.player.gold
+    event(client, type="kill", kind="wolf", named="nemesis")
+    assert world.nemesis is None and world.player.gold == gold + 80 and not world.pending("nemesis")
+
+
+def test_a_fall_makes_no_nemesis(client, world):
+    event(client, type="death", by="a fall")
+    assert world.nemesis is None
+
+
 def test_the_king_gives_his_reward_only_once(client, world):
-    talk_to(client, world.capital(), "king")
+    talk_to(client, world.capital(), "king", "king_summons")
     assert world.player.gold == 130
-    assert talk_to(client, world.capital(), "king")["gift"] is None
+    assert talk_to(client, world.capital(), "king", "king_summons")["gift"] is None
     assert world.player.gold == 130
 
 
 def test_the_king_rewards_the_returning_hero_only_once(client, world):
-    world.demon_lord_dead, world.story.stage = True, 5
-    r = talk_to(client, world.capital(), "king")
-    assert r["story"]["stage"] == 6 and r["player"]["gold"] == 1030
-    assert talk_to(client, world.capital(), "king")["player"]["gold"] == 1030
+    world.demon_lord_dead, world.story.stage, world.player.has_crown = True, 6, True
+    r = talk_to(client, world.capital(), "king", "king_crown")
+    assert r["story"]["stage"] == 7 and r["player"]["gold"] == 1030 and world.ending == "hero"
+    assert talk_to(client, world.capital(), "king", "king_crown")["player"]["gold"] == 1030
 
 
 def test_an_unknown_crime_is_rejected(client):
@@ -203,42 +229,61 @@ def kill_resident(game, s, job):
 
 def test_dead_shopkeeper_gets_a_successor(game):
     s = game.world.settlements_of("human")[0]
-    before = {r.id for r in s.residents}
+    before = len(s.residents)
     m = kill_resident(game, s, "merchant")
     game.tick(SUCCESSOR_DELAY)
-    heir = next(r for r in s.residents if r.id not in before)
-    assert m.dead and not heir.dead
+    heir = next(r for r in s.residents if r.id == m.id)
+    assert m.dead and not heir.dead and len(s.residents) == before
     assert (heir.job, heir.service, heir.work) == ("merchant", "trade", m.work)
 
 
 def test_a_successor_takes_time_to_arrive(game):
     s = game.world.settlements_of("human")[0]
-    before = len(s.residents)
-    kill_resident(game, s, "merchant")
+    m = kill_resident(game, s, "merchant")
     game.tick(SUCCESSOR_DELAY - 1)
-    assert len(s.residents) == before
+    assert m in s.residents and m.dead
 
 
 def test_a_successor_arrives_even_if_the_server_restarts(game, tmp_path):
     s = game.world.capital()
-    king = kill_resident(game, s, "king")
-    restarted = Game(OfflineLLM(), game.save_path)
+    kill_resident(game, s, "king")
+    restarted = Game(game.save_path)
     restarted.tick(SUCCESSOR_DELAY)
-    heir = next(r for r in restarted.world.capital().residents if r.job == "king" and not r.dead)
-    assert heir.id != king.id
+    assert any(r.job == "king" and not r.dead for r in restarted.world.capital().residents)
 
 
 def test_a_new_king_takes_the_throne(game):
     s = game.world.capital()
-    king = kill_resident(game, s, "king")
+    kill_resident(game, s, "king")
     game.tick(SUCCESSOR_DELAY)
     heir = next(r for r in s.residents if r.job == "king" and not r.dead)
-    assert game.world.king_name == heir.name and heir.id != king.id
+    assert game.world.king_name == heir.name == s.ruler
 
 
-def test_a_farmer_is_not_replaced(game):
+def test_a_new_elven_ruler_takes_over_in_the_objective_too(game):
+    s = game.world.settlements_of("elfcity")[0]
+    game.world.story.stage = 1
+    kill_resident(game, s, game.world.elf_ruler_title)
+    game.tick(SUCCESSOR_DELAY)
+    heir = next(r for r in s.residents if r.job == game.world.elf_ruler_title and not r.dead)
+    assert game.world.elf_ruler_name == heir.name == s.ruler
+
+
+def test_a_blessing_stays_spent_when_the_priest_is_replaced(game):
+    s, p = game.world.settlements_of("human")[0], game.world.player
+    p.gold = 1000
+    priest = next(r for r in s.residents if r.job == "priest")
+    shop.use_service(game.world, "priest", "bless", priest.id)
+    kill_resident(game, s, "priest")
+    game.tick(SUCCESSOR_DELAY)
+    shop.use_service(game.world, "priest", "bless", priest.id)
+    assert p.max_hp == 25
+
+
+def test_a_newcomer_moves_into_a_farmers_home_after_a_while(game):
     s = game.world.settlements_of("human")[0]
-    before = len(s.residents)
     farmer = kill_resident(game, s, "farmer")
     game.tick(SUCCESSOR_DELAY)
-    assert farmer.dead and len(s.residents) == before and game.world.timers == []
+    assert farmer in s.residents
+    game.tick(NEWCOMER_DELAY - SUCCESSOR_DELAY)
+    assert farmer not in s.residents and not next(r for r in s.residents if r.id == farmer.id).dead

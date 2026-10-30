@@ -8,9 +8,12 @@ import { stopAiming } from './sim/mining.js';
 import { player, settlePlayer } from './sim/player.js';
 import { heightAt } from './sim/terrain.js';
 import { stepWorld } from './sim/world.js';
+import { updateCompass } from './ui/compass.js';
 import { renderHeaven } from './ui/heaven.js';
 import { updateHUD } from './ui/hud.js';
 import './ui/input.js';
+import { updateWorldMap } from './ui/map.js';
+import { updateMinimap } from './ui/minimap.js';
 import { title } from './ui/title.js';
 import { chunkShown, meshChunks } from './view/chunkmesh.js';
 import { renderWorld } from './view/world.js';
@@ -30,9 +33,13 @@ function frame(now) {
   if (G.phase !== 'world') return;
   if (!player.ready && chunkReady(p.x, p.z) && chunkShown(p.x, p.z)) settlePlayer();
   const running = player.ready && !isPaused();
-  if (running) simulate(dt); else stopAiming();
+  const blend = running ? simulate(dt) : 1;
+  if (!running) stopAiming();
   updateHUD(dt);
-  renderWorld(running ? dt : 0);
+  updateCompass();
+  updateMinimap(dt);
+  updateWorldMap(dt);
+  renderWorld(running ? dt : 0, blend);
 }
 requestAnimationFrame(frame);
 title();

@@ -3,7 +3,6 @@ from collections import Counter
 from pathlib import Path
 
 from isekai.persistence.saves import load, save
-from isekai.systems.people.roster import make_roster
 from isekai.world.map import LAND, build_map
 
 TERRAIN_WORLD = Path(__file__).parent / "client" / "world.json"
@@ -37,16 +36,6 @@ def test_every_settlement_has_its_required_jobs(world):
             assert jobs["elf_king"] + jobs["elf_queen"] == 1 and jobs["guild_master"] == 1 and jobs["receptionist"] == 1
             assert all(r.kind in ("elf", "elf_guard", "elf_royal") for r in s.residents)
         assert 20 <= len(s.residents) <= 180
-
-
-def test_llm_plan_is_validated(world):
-    s = world.settlements_of("human")[0]
-    plan = {"population": 999, "notable_people": [{"name": "Mia", "job": "receptionist", "personality": "cheerful"},
-                                                  {"name": "Bob", "job": "dragon_tamer", "personality": "?"}]}
-    make_roster(s, plan, world.seed)
-    assert len(s.residents) == 60  # population clamped
-    assert any(r.name == "Mia" and r.job == "receptionist" for r in s.residents)
-    assert not any(r.job == "dragon_tamer" for r in s.residents)
 
 
 def test_buildings_do_not_overlap(world):

@@ -1,0 +1,19 @@
+{
+  "fetch": [
+    { "block": 6, "count": [6, 10], "pay": 4 },
+    { "block": 19, "count": [8, 14], "pay": 3 },
+    { "block": 2, "count": [10, 16], "pay": 2 },
+    { "block": 4, "count": [8, 14], "pay": 3 },
+    { "block": 25, "count": [6, 10], "pay": 5 },
+    { "block": 17, "count": [4, 8], "pay": 7 },
+    { "block": 16, "count": [1, 2], "pay": 40 }
+  ],
+  "hunt": [
+    { "kind": "slime", "count": [3, 5], "pay": 6 },
+    { "kind": "goblin", "count": [2, 4], "pay": 10 },
+    { "kind": "wolf", "count": [2, 4], "pay": 10 },
+    { "kind": "orc", "count": [1, 3], "pay": 25 }
+  ],
+  "deliver_pay": 30,
+  "visit_pay": 35
+}

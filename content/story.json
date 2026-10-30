@@ -1,0 +1,339 @@
+{
+  "chapters": [
+    { "id": "arrive", "act": 1, "objective": "Travel to {capital} and speak with King {king}", "done": { "needs": ["met_king"] }, "marks": [{ "at": "king" }] },
+    { "id": "oaths", "act": 2, "card": { "title": "Act II", "subtitle": "The Four Oaths" },
+      "objective": "Win the four Oaths ({sworn}/4). Still needed: {remaining}. See your journal (J)", "done": { "all_oaths": true } },
+    { "id": "ruins", "act": 3, "card": { "title": "Act III", "subtitle": "The One Who Came Before" },
+      "objective": "Find the cairn in the ruins, far south in the Beastkin Wilds", "done": { "needs": ["read_note"] }, "marks": [{ "at": "cairn" }] },
+    { "id": "confess", "act": 3, "objective": "Pray to {god} (T) and demand the truth", "done": { "needs": ["god_confessed"] } },
+    { "id": "amend", "act": 3, "objective": "Reach a Crystal Spire in the Dragonspine Peaks and amend the First Law at its Law Stone", "done": { "needs": ["law_amended"] }, "marks": [{ "at": "law_stone" }] },
+    { "id": "throne", "act": 4, "card": { "title": "Act IV", "subtitle": "The Throne" },
+      "objective": "Cross into {demon_realm} and face {demon_lord} in his castle", "done": { "needs": ["lord_slain"] }, "marks": [{ "at": "demon_lord" }] },
+    { "id": "crown", "act": 5, "card": { "title": "Act V", "subtitle": "The Crown" },
+      "objective": "Decide the crown's fate: give it to King {king}, break it at a Law Stone, or put it on (pray, T)", "done": { "needs": ["ended"] }, "marks": [{ "at": "king" }, { "at": "law_stone" }] },
+    { "id": "after", "act": 6, "card": { "title": "Epilogue", "subtitle": "A Borrowed Life" }, "objective": "The story is yours now. Live your new life as you wish" }
+  ],
+
+  "oaths": {
+    "oath_crown": { "name": "the Crown", "steps": [
+      [null, "Speak with King {king} in {capital}"],
+      ["met_king", "Complete 2 Adventurers' Guild quests ({guild}/2), then return to King {king}"]
+    ], "marks": [
+      { "at": "guild", "guild_below": 2, "lacks": ["active_quest"] },
+      { "at": "king", "guild_done": 2 }
+    ] },
+    "oath_elves": { "name": "the Elves", "steps": [
+      [null, "Seek out {elf_title} {elf_ruler} in {elf_capital}, or any elven elder"],
+      ["elf_trial", "Bring 3 Mana Crystals from the Dragonspine Peaks to an elven ruler or elder ({crystals}/3)"]
+    ], "marks": [
+      { "at": "elf", "not": ["elf_trial"] },
+      { "at": "crystals", "needs": ["elf_trial"], "blocks_below": { "16": 3 } },
+      { "at": "elf", "needs": ["elf_trial"], "blocks": { "16": 3 } }
+    ] },
+    "oath_tribes": { "name": "the Tribes", "steps": [
+      [null, "Find a beastkin chief, such as the one at {beast_village}"],
+      ["tribe_trial", "Hunt 3 Orcs, then return to a beastkin chief ({orcs}/3)"]
+    ], "marks": [
+      { "at": "chief", "not": ["tribe_trial"] },
+      { "hunt": "orc", "needs": ["tribe_trial"], "counts_below": { "orcs": 3 } },
+      { "at": "chief", "needs": ["tribe_trial"], "counts": { "orcs": 3 } }
+    ] },
+    "oath_sea": { "name": "the Sea", "steps": [
+      [null, "Dive to a mermaid palace in the southwestern sea and find the Voice of the Deep"],
+      ["sea_trial", "Ask {second_ruler} of {second_city} for the Drowned Treaty"],
+      ["has_treaty", "Carry the Drowned Treaty to the Voice of the Deep"]
+    ], "marks": [
+      { "at": "mermaid_queen", "not": ["sea_trial", "has_treaty"] },
+      { "at": "queen", "needs": ["sea_trial"], "not": ["has_treaty"] },
+      { "at": "mermaid_queen", "needs": ["has_treaty"] }
+    ] }
+  },
+
+  "places": {
+    "mermaid_queen": { "structure": "mermaid_palace", "creature": "mermaid_queen", "label": "The Voice of the Deep" },
+    "cairn": { "structure": "ruins", "creature": "cairn", "label": "The cairn" },
+    "law_stone": { "structure": "crystal_spire", "creature": "law_stone", "label": "A Law Stone" },
+    "crystals": { "structure": "crystal_spire", "label": "Mana Crystals" },
+    "demon_lord": { "structure": "demon_castle", "creature": "demon_lord", "label": "{demon_lord}" }
+  },
+
+  "hunts": [
+    { "kind": "orc", "flag": "tribe_trial", "count": "orcs", "needed": 3, "progress": "The chief's hunt: {done}/{needed} Orcs" }
+  ],
+
+  "beats": {
+    "king_summons": {
+      "speaker": "king", "not": ["met_king"], "label": "I was told you'd have work for me, Your Majesty.",
+      "lines": [
+        "So you're the one the sky dropped on us. {god}'s new favourite. Forgive me if I don't kneel. My family has done this before.",
+        "Here is what the bards leave out. {demon_lord} cannot be killed. Not 'is hard to kill'. Cannot. There is a Law older than this kingdom, the First Law, and it says no mortal hand may wound the Throne. Swords slide off him. Fire forgets to burn.",
+        "But a Law can be amended, if every people of the world swears to it. The Crown, the Elves, the Tribes and the Sea. Four Oaths, spoken at a Law Stone. In three hundred years nobody has managed all four. Mostly we have argued about fishing rights.",
+        "Take this writ and this purse. Make yourself useful to the Guild, and when they vouch for you, come back and I will swear for the Crown. Then go and win the others. Try not to die. Or at least, try not to make a habit of it."
+      ],
+      "sets": ["met_king"], "gold": 100, "renown": 2, "gift": "+100 {currency} and the Royal Writ"
+    },
+    "king_wait": {
+      "speaker": "king", "needs": ["met_king"], "not": ["oath_crown"], "guild_below": 2, "label": "About the Crown's Oath...",
+      "lines": ["The Guild has not vouched for you yet. Two quests, finished and paid. I can't swear a kingdom to a stranger, however dramatically you arrived."]
+    },
+    "king_oath": {
+      "speaker": "king", "needs": ["met_king"], "not": ["oath_crown"], "guild_done": 2, "label": "The Guild vouches for me. Will you swear?",
+      "lines": [
+        "The guild master tells me you're either very brave or very bad at reading contracts. Either will do.",
+        "Then hear me. I, {king}, for {kingdom}, for the living and the buried, swear to the Amendment. There. Three hundred years of my ancestors just rolled over in their tombs.",
+        "That's one. The others will not come so cheap."
+      ],
+      "sets": ["oath_crown"], "renown": 5, "deed": "oath", "gift": "The Oath of the Crown"
+    },
+    "king_crown": {
+      "speaker": "king", "has": ["has_crown"], "open_ending": true, "label": "Give him the Demon Lord's crown.",
+      "lines": [
+        "So that's it. I imagined it bigger. Set it on the table. No, not on the table. Set it on the floor.",
+        "We'll bury it in the deepest vault we have, and I'll have the door walled up, and the masons will not be told why. You've done what no one has, and {kingdom} will sing about it until the walls fall down.",
+        "Three hundred years is a long time. Long enough for someone to forget why the door was bricked over. But that will not be our problem, will it? Come. There is a feast. Take your reward. You look like you've never slept."
+      ],
+      "sets": ["ended"], "gold": 1000, "renown": 30, "ending": "hero", "deed": "ending_hero", "gift": "+1000 {currency} and eternal glory"
+    },
+
+    "queen_treaty": {
+      "speaker": "queen", "not": ["has_treaty", "oath_sea"], "label": "Do you know anything about the sea folk?",
+      "lines": [
+        "The mermaids? They stopped answering my family's letters a century ago. We did something rude with a harbour. It's a long story and we come out of it badly.",
+        "Here. The Drowned Treaty, the original, with the salt still in the seal. Whoever brings it back to the Voice of the Deep is admitting we were wrong. I can't do it, I have a city to run and a reputation to keep. You, however, are a nobody with excellent lungs."
+      ],
+      "sets": ["has_treaty"], "renown": 1, "gift": "The Drowned Treaty"
+    },
+
+    "elf_trial": {
+      "speaker": "elf", "not": ["elf_trial", "oath_elves"], "label": "The King says the Elves must swear to amend the First Law.",
+      "lines": [
+        "Humans. You blink, and it is a new king, and he wants something. We were here when the First Law was spoken. We remember the sound.",
+        "The Elder Tree has grown thin. It has been drinking the same three hundred years as the rest of us. Bring it three Mana Crystals from the Dragonspine, and it will wake long enough to hear your request.",
+        "Do not ask me whether it will say yes. It is a tree. It has opinions, and it takes its time."
+      ],
+      "sets": ["elf_trial"]
+    },
+    "elf_wait": {
+      "speaker": "elf", "needs": ["elf_trial"], "not": ["oath_elves"], "blocks_below": { "16": 3 }, "label": "About the Mana Crystals...",
+      "lines": ["Three crystals. They grow in the Dragonspine, and the Spires are made of them. A pickaxe helps. The tree can wait. It is very good at that."]
+    },
+    "elf_oath": {
+      "speaker": "elf", "needs": ["elf_trial"], "not": ["oath_elves"], "blocks": { "16": 3 }, "label": "Here are the crystals.",
+      "lines": [
+        "You feel that? The ground just took a breath. It has been a while.",
+        "The Tree says: 'small', and 'quick', and then a word we have not heard since before the Law. We believe it means 'again'. Whatever that means, it has agreed.",
+        "We swear. And take this as well, since you will need it: a healing word. Say it with your whole chest. It is older than your kingdom, so please do not get it dirty.",
+        "The Tree has left a little of its sap in you, too. You will find you can hold more mana than you could. Try not to let it go to your head. It has been known to."
+      ],
+      "sets": ["oath_elves"], "take": { "16": 3 }, "learn": "heal", "max_mana": 50, "renown": 5, "deed": "oath", "gift": "The Oath of the Elves, max mana +50, and you learned Heal (R)"
+    },
+
+    "tribe_trial": {
+      "speaker": "chief", "not": ["tribe_trial", "oath_tribes"], "label": "I've come to ask the Tribes for their Oath.",
+      "lines": [
+        "HA! Listen to it! It stands on two legs and asks for an oath! Sit, sit. You smell like a city.",
+        "We don't swear for words. Words are what the Crown has instead of teeth. Orcs have been coming down onto the grass at night. Bring down three, with your own hands, and we will see what your Law is worth."
+      ],
+      "sets": ["tribe_trial"]
+    },
+    "tribe_wait": {
+      "speaker": "chief", "needs": ["tribe_trial"], "not": ["oath_tribes"], "counts_below": { "orcs": 3 }, "label": "About the hunt...",
+      "lines": ["The grass doesn't lie, and it says you are not done. Three. Orcs walk at night. Go when it's dark, and keep your back to something."]
+    },
+    "tribe_oath": {
+      "speaker": "chief", "needs": ["tribe_trial"], "not": ["oath_tribes"], "counts": { "orcs": 3 }, "label": "The hunt is done. Three orcs.",
+      "lines": [
+        "I know! The scouts ran here faster than you did. You fight badly, but you don't stop, and that is the only part I care about.",
+        "The Tribes swear. Not to your Crown. To you. If you betray it, we'll eat you, and that is also an oath.",
+        "Now stand still. This doesn't hurt. Run with the grass under you, and it will carry you."
+      ],
+      "sets": ["oath_tribes"], "learn": "swift", "renown": 5, "deed": "oath", "gift": "The Oath of the Tribes, and you learned Swift"
+    },
+
+    "sea_trial": {
+      "speaker": "mermaid_queen", "not": ["sea_trial", "has_treaty", "oath_sea"], "label": "I've come to ask for the Oath of the Sea.",
+      "lines": [
+        "We are the Voice of the Deep. We have been many, and we are one, and all of us remember the taste of a harbour wall going up where a reef used to be.",
+        "The land folk signed a treaty with us, once. They broke it, and they have never said so. {second_ruler} of {second_city} keeps it in a box. Bring it to us. Not to swear on. Just so that someone will have brought it."
+      ],
+      "sets": ["sea_trial"]
+    },
+    "sea_oath": {
+      "speaker": "mermaid_queen", "needs": ["has_treaty"], "not": ["oath_sea"], "label": "Give her the Drowned Treaty.",
+      "lines": [
+        "Oh. It is so small. We had thought it would be larger, the thing that hurt us.",
+        "Hear us, then. The Sea swears. We swear because you came down here, and because you are the second one who ever did.",
+        "Yes. The second. There was another, three hundred years ago, with the same strange way of breathing, and the same look of having lost something. He left a cairn in the southern ruins, past the tribes' last fires. We could not read what he carved there. Perhaps you can."
+      ],
+      "sets": ["oath_sea", "heard_cairn"], "max_hp": 10, "heal": 999, "renown": 5, "deed": "oath", "gift": "The Oath of the Sea, and the Pearl of the Deep: max HP +10"
+    },
+
+    "cairn_read": {
+      "speaker": "cairn", "not": ["read_note"], "label": "Read the carving.",
+      "lines": [
+        "The stone is carved in a script nobody in this world has ever used. You read it without trying. It's English. The handwriting is somehow terrible, even in granite.",
+        "\"If you can read this, something hit you too. For me it was a bus, on a Tuesday. Hi. My name is {old_hero}.\"",
+        "\"She told me I was the first hero in three hundred years. She did the little laugh. Isn't she nice about it? I liked her so much. I still do, which is the worst part.\"",
+        "\"I got the Crown and the Elves. I couldn't get the others, so I found a way around the Law, and I killed the Demon Lord anyway. There was a crown. It was so heavy. I picked it up, and then I read the rest of the First Law.\"",
+        "\"Go and read it too. Go to a Law Stone. But ask her first. Make her say it out loud.\"",
+        "\"If you're reading this, I have probably forgotten I wrote it. I'm sorry about the raids.\""
+      ],
+      "sets": ["read_note"]
+    },
+
+    "god_truth": {
+      "speaker": "god", "needs": ["read_note"], "not": ["god_confessed"], "label": "Who is {old_hero}?",
+      "lines": [
+        "...Ah. You found the note. He always did have terrible handwriting.",
+        "Okay. Okay okay okay. No jokes for a minute. I'm really bad at this part.",
+        "The First Law has two lines, and everyone remembers the first one. No mortal hand shall wound the Throne. The second line is: whoever unseats the Throne shall sit upon it. The world must have a Demon Lord. The gods who wrote it thought a shared enemy would stop the peoples from killing each other. And it worked. That's the horrible thing. It worked.",
+        "When a Demon Lord falls, the crown takes whoever beat them. People here stopped trying, after the first few. So we started borrowing heroes from Earth, where nobody had heard the story. You. {old_hero}. Eleven before him. I was the youngest, so I got the job of saying 'congratulations, you've been reborn!' in a nice voice.",
+        "I can't unsay a Law. I've tried, I've tried for so long. But the Oaths can amend it, and you're the first one who's ever gotten this close. Go to a Law Stone in the Dragonspine.",
+        "I should have told you in heaven. I was scared you'd say no."
+      ],
+      "sets": ["god_confessed"]
+    },
+    "god_wear": {
+      "speaker": "god", "has": ["has_crown"], "open_ending": true, "label": "Put on the crown.",
+      "lines": [
+        "Wait. Wait wait wait, don't, please, listen to me, you don't have to...",
+        "It fits. Of course it fits.",
+        "It's very quiet, and then it isn't. Every monster in the world turns its head toward you at the same moment, and lowers it. In every city, every guard draws a sword without knowing why.",
+        "...oh, kiddo."
+      ],
+      "sets": ["ended"], "player": { "crowned": true }, "ending": "crown", "renown": -60, "deed": "ending_crown", "gift": "You are the Demon Lord now"
+    },
+
+    "stone_read": {
+      "speaker": "law_stone", "not": ["stone_read"], "label": "Read the Law Stone.",
+      "lines": [
+        "The letters are older than the stone they're cut into. Your eyes slide over them twice before they agree to hold still.",
+        "THE FIRST LAW. No mortal hand shall wound the Throne. Whoever unseats the Throne shall sit upon it. So it is spoken. So it is kept.",
+        "Below that are four blank lines, waiting. A fifth has been scratched at, again and again, by someone with a sword and no hope."
+      ],
+      "sets": ["stone_read"]
+    },
+    "stone_amend": {
+      "speaker": "law_stone", "needs": ["god_confessed"], "not": ["law_amended"], "all_oaths": true, "label": "Speak the four Oaths.",
+      "lines": [
+        "You speak for the Crown. For the Elves. For the Tribes. For the Sea. Your voice is not much, but the stone isn't listening to your voice.",
+        "Four lines of letters climb up out of the blank rock. The first sentence of the First Law cracks from end to end, and the sound goes out over the mountains.",
+        "It is done. Any hand sworn by the four peoples may wound the Throne. The second sentence remains, and it glows a little, as if it's looking at you.",
+        "Far to the northeast, very faintly, someone starts to clap."
+      ],
+      "sets": ["law_amended"], "player": { "oathbound": true }, "renown": 10, "deed": "amended", "gift": "The First Law is amended. You can wound the Demon Lord"
+    },
+    "stone_break": {
+      "speaker": "law_stone", "has": ["has_crown"], "open_ending": true, "all_oaths": true, "label": "Break the crown on the Law Stone.",
+      "lines": [
+        "You bring it down on the second sentence with both hands. The crown screams. You hadn't known metal could do that.",
+        "It breaks. The stone breaks. And then, one after another, every Law in the world goes quiet. In the cities, the golems stop mid-step and sit down. No one will be cursed again, or protected, except by each other.",
+        "Above you, the sky gives a small hiccup. Something very surprised falls out of it, a long way off, in the general direction of a hay cart.",
+        "Nobody's voice is in your head. For the first time since you woke up here, it's just you."
+      ],
+      "sets": ["ended"], "renown": 40, "ending": "broken", "deed": "ending_broken", "gift": "The First Law is ended"
+    }
+  },
+
+  "scenes": {
+    "lord_voice_early": {
+      "lacks": ["oathbound"], "title": "A Voice from the Throne",
+      "lines": [
+        ["{demon_lord}", "Ah. Another one. You walk like someone who died tired."],
+        ["{demon_lord}", "Go home, little hero. The First Law still holds. Swing at me all you like, it tickles. Come back when you've read the rest of it."]
+      ]
+    },
+    "lord_voice_ready": {
+      "has": ["oathbound"], "title": "A Voice from the Throne",
+      "lines": [
+        ["{demon_lord}", "There you are. I felt the line crack. I spent eleven years failing to do that. How long did it take you? No. Don't tell me."],
+        ["{demon_lord}", "So you read my note. I'm sorry about the handwriting. I'm sorry about most of it."],
+        ["{demon_lord}", "I can't let you pass without a fight. That isn't me, that's the crown. It wears my hands. It has for a long time now, and every year there is a little less of me to argue with it."],
+        ["{demon_lord}", "So come on up and do what I couldn't. Hit hard. And when it's over, whatever else you do, don't put it on."]
+      ]
+    },
+    "lord_falls": {
+      "title": "The Throne Is Empty",
+      "lines": [
+        ["{demon_lord}", "...oh. It's quiet."],
+        ["{old_hero}", "It's off. I can feel my hands. What day is it? Is it a Tuesday?"],
+        ["{old_hero}", "I would have liked to see the sea again."],
+        ["{god}", "{old_hero}. Hey. I'm here. I've got you. It's okay."],
+        ["", "The crown rolls across the floor and stops at your feet, upright, and it waits. It is very patient. It has done this many times."],
+        ["{god}", "Don't... okay, you picked it up. That's fine. It can't take you unless you put it on. I think there are three ways this ends."],
+        ["{god}", "Give it to the King, and it sleeps for a while. Maybe three hundred years. Wear it, and... please don't. Or take it to a Law Stone with the four Oaths behind you, and break it. Nobody knows what happens then. I think it might take me with it."],
+        ["{god}", "That's not me asking. I just thought you should finally get the whole truth up front."]
+      ]
+    }
+  },
+
+  "topics": {
+    "chat": ["How are things?", "What's on your mind?", "How's life around here?", "Anything happening today?", "You look like you've got a story."],
+    "rumor": ["Heard any news?", "What are people saying?", "Any rumours lately?", "Anything I should know about?"],
+    "self": ["Tell me about yourself.", "How did you end up here?", "What's your story?"],
+    "place": ["What's this place like?", "Tell me about this town.", "What should a stranger know here?"],
+    "mission": ["I'm on a mission. Any advice?", "What do you make of all this?", "Do you know anything that could help me?"],
+    "help": ["Need a hand with anything?", "Is there anything I can do for you?", "Got any work?"],
+    "favor_accept": ["I'll do it.", "Consider it done.", "All right, leave it to me."],
+    "favor_decline": ["Not right now.", "Sorry, I can't.", "Maybe later."],
+    "favor_check": ["About that favor...", "Remind me what you needed?"],
+    "favor_done": ["It's done.", "I've got what you asked for.", "That's taken care of."],
+    "pray_guide": ["What should I do next?", "Guide me.", "Where do I go from here?"],
+    "pray_talk": ["Just talk to me for a bit.", "Are you there?", "How's heaven?"],
+    "pray_aid": ["Can you help me?", "I need something. Anything.", "Send help, please."],
+    "bye": ["Goodbye.", "I should go.", "Take care.", "Until next time."]
+  },
+
+  "heaven": {
+    "hello": [
+      "Sooo, you'll be reborn as {hero}! Little problem though: {demon_lord} of {demon_realm} is giving {kingdom} a really hard time, and I'm not allowed to meddle down there myself. That's where you come in!"
+    ],
+    "nothing_more": ["Ehehe, that's everything I've got on that one. Anything else, or are you ready?"],
+    "first": ["what_happened", "who_are_you", "where", "go_home"],
+    "topics": {
+      "what_happened": {
+        "label": "Wait. What happened to me?", "opens": ["hurt"],
+        "lines": ["You died! Sorry. Is there a good way to say that? I've tried a few. It was quick, you were on your way home, and honestly the paperwork was very clean."]
+      },
+      "hurt": {
+        "label": "Did it hurt?",
+        "lines": ["Nope! I checked. I always check. That's one of the few things I'm allowed to do."]
+      },
+      "who_are_you": {
+        "label": "Who are you?", "opens": ["cant_act", "why_me"],
+        "lines": ["I'm {god}, the {godkind} of {world}! Well, a {godkind} of it. I'm the youngest one left. I do the souls, the greetings, and most of the snacks."]
+      },
+      "cant_act": {
+        "label": "If you're a {godkind}, why don't you fix it yourself?", "opens": ["laws"],
+        "lines": ["Because I can't touch anything down there! Gods don't get hands. We get Laws. If I say a Law out loud, the world enforces it forever, and that's it, that's the entire job. It's like being a very powerful sign on a wall."]
+      },
+      "laws": {
+        "label": "What do these Laws actually do?",
+        "lines": [
+          "Golems wake up. Curses land. People who would've gotten away with it, don't. Some Laws only bite if someone sees you, and some see everything. Check your book, and don't hit the locals where the guards can watch.",
+          "The world really does run on them. There's one very old one in particular you'll hear about. The King can explain it better than I can."
+        ]
+      },
+      "why_me": {
+        "label": "Why me?", "opens": ["others"],
+        "lines": ["You've got a good soul, and you were available! Also nobody down there can do it. It has to be someone from outside. You'll see why."]
+      },
+      "others": {
+        "label": "Have you sent other people before me?",
+        "lines": ["Ehehe! Hey, look at the time! Not that we have time here. Ha ha. Do you want a snack? There are snacks."]
+      },
+      "where": {
+        "label": "Where are you sending me?", "opens": ["world_map"],
+        "lines": ["{world}! Humans in the middle with the King in {capital}, elves in the great forest to the west, the beastkin out on the savanna to the south and east, and the sea folk under the water in the southwest. And in the far northeast, past the Dragonspine Peaks, the demon lands."]
+      },
+      "world_map": {
+        "label": "What should I do first when I get there?",
+        "lines": ["Go and see King {king}! You'll land right near {capital}. Oh, and if you get hurt or lost, press T and talk to me. I can't do much, but I'm a very good listener and I know where all the loopholes are."]
+      },
+      "go_home": {
+        "label": "Can I go home?",
+        "lines": ["...No. I'm really sorry. I'd tell you if there was a way. But you get a whole new life, and that's not nothing, right? Right! It's a lot, actually. You'll see."]
+      }
+    }
+  }
+}

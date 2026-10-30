@@ -1,13 +1,14 @@
-// Scene 1: heaven. The soul talks with the god (LLM), then descends into the world.
+// Scene 1: heaven. The soul talks with the god, then descends into the world.
 import * as THREE from 'three';
 import { G } from '../core/state.js';
 import { api } from '../net/api.js';
 import { applyState } from '../sim/effects.js';
 import { renderer, camera } from '../view/scene.js';
 import { buildAvatar, lookFor } from '../view/avatar.js';
+import { newMotion } from '../view/pose.js';
+import { esc, rich } from './art.js';
 
 const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const heavenScene = new THREE.Scene();
 heavenScene.background = new THREE.Color(0xfff2d8);
 heavenScene.fog = new THREE.Fog(0xfff2d8, 20, 90);
@@ -31,15 +32,15 @@ for (let i = 0; i < 8; i++) {
   p.position.set(Math.cos(a) * 6.4, 3, Math.sin(a) * 6.4); heavenScene.add(p);
 }
 // the god
-let god = new THREE.Group(), godArms = null; // built when we know whether the deity is a goddess or a god
+let god = new THREE.Group(), godBones = null, godPose = null; // built when we know whether the deity is a goddess or a god
+const godMotion = newMotion();
 function makeDeity(kind) {
   heavenScene.remove(god);
-  const { g, extra } = buildAvatar(lookFor(kind, kind, 11, { race: 'human' }), 4.2, []);
+  const { g, extra, pose } = buildAvatar(lookFor(kind, kind, 11, { race: 'human' }), 4.2, []);
   g.position.set(0, 0, -3.5); g.rotation.y = Math.PI; // face the camera
   heavenScene.add(g);
-  god = g; godArms = extra.arms; godHead = extra.head;
+  god = g; godBones = extra; godPose = pose;
 }
-let godHead = null;
 const halo = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.08, 12, 40), new THREE.MeshBasicMaterial({ color: 0xffd36b }));
 halo.position.set(0, 4.9, -3.75); heavenScene.add(halo);
 const aura = new THREE.Mesh(new THREE.SphereGeometry(3.2, 32, 16), new THREE.MeshBasicMaterial({ color: 0xfff6c0, transparent: true, opacity: 0.25, depthWrite: false }));
@@ -49,10 +50,13 @@ let t = 0;
 export function renderHeaven(dt) {
   t += dt;
   god.position.y = Math.sin(t * 1.2) * 0.15;
-  if (godArms) { // a cheerful wave
-    godArms[1].rotation.z = -2.4 + Math.sin(t * 6) * 0.35; godArms[1].rotation.x = 0;
-    godArms[0].rotation.z = 0.15;
-    godHead.rotation.z = Math.sin(t * 1.5) * 0.08;
+  if (godBones) { // a cheerful wave, from the elbow and the wrist
+    godMotion.t = t;
+    godPose(godBones, godMotion);
+    godBones.arms[1].rotation.set(0, 0, 2.55);
+    godBones.fores[1].rotation.set(0, 0, 0.35 + Math.sin(t * 6) * 0.3);
+    godBones.hands[1].rotation.z = Math.sin(t * 6 - 0.8) * 0.3;
+    godBones.head.rotation.z = Math.sin(t * 1.5) * 0.08;
   }
   halo.position.y = 4.9 + Math.sin(t * 1.2) * 0.12; halo.rotation.z += dt * 0.5;
   aura.scale.setScalar(1 + Math.sin(t * 2) * 0.04);
@@ -61,7 +65,7 @@ export function renderHeaven(dt) {
   renderer.render(heavenScene, camera);
 }
 
-function say(who, text, cls) { const d = document.createElement('div'); d.className = cls; d.innerHTML = `<b>${esc(who)}:</b> ${esc(text)}`; $('hlog').appendChild(d); $('hlog').scrollTop = 1e9; }
+function say(who, text, cls) { const d = document.createElement('div'); d.className = cls; d.innerHTML = `<b>${esc(who)}:</b> ${rich(text)}`; $('hlog').appendChild(d); $('hlog').scrollTop = 1e9; }
 export function startHeaven(onDescend) {
   G.phase = 'heaven';
   let descending = false;
@@ -69,16 +73,22 @@ export function startHeaven(onDescend) {
   const w = G.world;
   makeDeity(w.god_is === 'god' ? 'god' : 'goddess');
   $('hlog').innerHTML = '';
-  say(w.god_name, w.god_intro, 'god');
-  say(w.god_name, `Sooo, you'll be reborn as ${w.hero}! Little problem though: the Demon Lord ${w.demon_lord_name} of ${w.demon_realm_name} is giving ${w.kingdom} a really hard time, and I'm not allowed to meddle down there myself. That's where you come in! ✨`, 'god');
-  const send = async () => {
-    const msg = $('hin').value.trim(); if (!msg) return;
-    $('hin').value = ''; say('You', msg, 'me');
-    const wait = document.createElement('div'); wait.className = 'god'; wait.textContent = '✨ …'; $('hlog').appendChild(wait);
-    try { const r = await api.heaven(msg); wait.remove(); say(w.god_name, r.reply, 'god'); } catch { wait.textContent = 'The light flickers…'; }
+  $('hname').textContent = w.god_name;
+  const hear = async topic => {
+    try {
+      const r = await api.heaven(topic);
+      for (const line of r.lines) say(w.god_name, line, 'god');
+      $('htopics').innerHTML = r.topics.map(t => `<button data-topic="${esc(t.id)}">${esc(t.label)}</button>`).join('');
+    } catch { say(w.god_name, 'The light flickers…', 'god'); }
   };
-  $('hsend').onclick = send;
-  $('hin').onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') send(); };
+  $('htopics').onclick = e => {
+    const b = e.target.closest('button[data-topic]');
+    if (!b) return;
+    say('You', b.textContent, 'me');
+    $('htopics').innerHTML = '';
+    hear(b.dataset.topic);
+  };
+  hear('hello');
   $('hdescend').onclick = async () => {
     // This handler awaits the server and several animation steps. Without a
     // guard, a second click starts another transition and calls onDescend
@@ -134,12 +144,9 @@ export function startHeaven(onDescend) {
         $('card').style.opacity = 0;
         const overlay = $('overlay');
         overlay.classList.add('in-world');
-        const title = overlay.querySelector('h1');
-        const intro = overlay.querySelector('.box > p:not(.go)');
-        if (title) title.textContent = w.name;
-        if (intro) intro.textContent = 'Your new life begins here. Click to enter the world.';
+        overlay.querySelector('h1').textContent = w.name;
+        $('lede').textContent = 'Your new life begins here. Click to enter the world.';
         $('menu').innerHTML = '<p class="go">Click anywhere to begin</p>';
-        $('controls').style.display = 'block';
         overlay.style.display = 'flex';
       } else {
         G.phase = 'heaven';
@@ -150,7 +157,7 @@ export function startHeaven(onDescend) {
       fade.style.opacity = 0;
       descending = false;
       button.disabled = false;
-      button.textContent = "I'm ready. Send me to the world ⇩";
+      button.textContent = "I'm ready. Send me to the world";
     }
   };
 }

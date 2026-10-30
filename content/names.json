@@ -1,0 +1,35 @@
+{
+  "worlds": ["Aldervale", "Voxeloria", "Elaris", "Thornmere", "Luminara", "Eredane", "Valdris", "Sunhollow", "Ostrava Reach", "Marrowmere", "Calyndra", "Ashenfall"],
+  "gods": [
+    { "name": "Aurelia", "is": "goddess" }, { "name": "Selune", "is": "goddess" }, { "name": "Mirael", "is": "goddess" }, { "name": "Ninsara", "is": "goddess" },
+    { "name": "Ilyana", "is": "goddess" }, { "name": "Oren", "is": "god" }, { "name": "Caelum", "is": "god" }, { "name": "Tobiah", "is": "god" }
+  ],
+  "kingdoms": ["the Kingdom of Aldoria", "the Crownlands of Veyne", "the Kingdom of Hallowmark", "the Realm of Brightwater", "the Kingdom of Eastmere", "the Marches of Corwyn"],
+  "kings": ["Aldric III", "Brennan IV", "Oswin the Patient", "Harlan II", "Theobald V", "Edmund the Late", "Casimir II", "Rowan I"],
+  "queens": ["Seraphine", "Isolde", "Maren", "Ysolde Vane", "Corisande", "Beatrix", "Odalys"],
+  "elf_rulers": [
+    { "name": "Sylwen", "is": "queen" }, { "name": "Thalionwen", "is": "queen" }, { "name": "Aerindel", "is": "queen" },
+    { "name": "Caladhiel", "is": "queen" }, { "name": "Faelar", "is": "king" }, { "name": "Eldrion", "is": "king" }
+  ],
+  "demon_lords": ["Malzareth", "Vorathiel", "Azgorath", "Nihilex", "Morvaine", "Xal'tharen", "Ozryn the Hollow", "Keldrath"],
+  "demon_realms": ["the Ashen Throne", "the Cinder Court", "the Blackglass Dominion", "the Hollow Crown", "the Ember Wastes", "the Last Keep"],
+  "currencies": ["gold", "crowns", "marks", "florins", "silvers", "suns"],
+  "earth_names": ["Daniel Okafor", "Ren Takeda", "Tom Reyes", "Haruto Mori", "Sam Whitlock", "Mateus Silva", "Jonah Pike", "Arjun Nair"],
+  "human_places": ["Millbrook", "Ashford", "Greenhollow", "Stonebridge", "Wrenfield", "Harrowgate", "Oakmere", "Tallowby", "Fernwick", "Larkspur", "Dunmarrow", "Quillby"],
+  "city_places": ["Aldoria", "Port Valen", "Highmarket", "Castellane", "Saltgate", "Ravensreach", "Kingsferry"],
+  "elf_places": ["Lothariel", "Sylvanesti", "Eldergrove", "Mirrowen", "Silverbough", "Aelindor", "Whisperleaf"],
+  "elfcity_places": ["Ithilwen", "Caras Lorien", "Aranel", "Vanyarion", "Mallorwen"],
+  "beast_places": ["Fangrock", "Sunpaw Den", "Thunderhoof", "Whisker Hollow", "Redmane Rest", "Longclaw Camp", "Dustwhistle", "Tusk Ridge", "Stripefall"],
+  "foes": {
+    "names": ["Gorrak", "Skarn", "Ulgra", "Vex", "Morgash", "Thrak", "Brisk", "Old Nettle", "Kessik", "Grimjaw", "Rusk", "Mother Ash", "Dreg", "Hollowtooth", "Sorrel", "Nix"],
+    "titles": ["the Unbroken", "Hero-Bane", "Who Waits", "of the Long Night", "the Patient", "Twice-Buried", "the Smiling", "Ironhide", "the Grave-Walker", "Who Remembers", "the Last of Its Pack", "the Hungry"]
+  },
+  "travellers": [
+    { "role": "pilgrim", "title": "Wandering Pilgrim" },
+    { "role": "deserter", "title": "Road-Worn Deserter" },
+    { "role": "mapmaker", "title": "Lost Mapmaker" },
+    { "role": "storyteller", "title": "Travelling Storyteller" },
+    { "role": "runaway", "title": "Runaway Noble" },
+    { "role": "widow", "title": "Grey Widow" }
+  ]
+}

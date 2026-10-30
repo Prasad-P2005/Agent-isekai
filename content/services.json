@@ -4,13 +4,14 @@
   "guild": { "title": "Adventurers' Guild" },
   "doctor": { "title": "Healer", "options": [
     { "action": "treat", "label": "Full treatment (restore all HP)", "price": 10 },
-    { "action": "cure", "label": "Lift a curse (restore max HP to 20)", "price": 60 }
+    { "action": "cure", "label": "Lift a curse (restores what it took)", "price": 60 }
   ] },
   "inn": { "title": "Inn", "options": [
     { "action": "rest", "label": "Rest until morning (full HP and mana)", "price": 8 }
   ] },
   "priest": { "title": "Temple", "options": [
-    { "action": "bless", "label": "Blessing (+5 max HP, once per priest)", "price": 80 },
+    { "action": "bless", "label": "Blessing (+5 max HP, once per temple)", "price": 80 },
+    { "action": "attune", "label": "Attune to a Mana Crystal (+20 max mana, uses up one crystal, dearer each time)", "price": 25 },
     { "action": "pray", "label": "Prayer for healing (+10 HP)", "price": 5 }
   ] },
   "bounty": { "title": "Law Office", "options": [

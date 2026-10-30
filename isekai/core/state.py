@@ -32,12 +32,14 @@ class Resident(BaseModel):
     service: str | None = None
     body: int | None = None
     hair: int | None = None
-    personality: str = ""
     notable: bool = False
     work: Pos
     night: Pos
     dead: bool = False
-    memory: list[str] = Field(default_factory=list)
+    role: str | None = None  # someone the story placed here, who speaks from their own lines
+    met: int = 0  # how many times the hero has spoken with them
+    told: int = 0  # how much of their life they have shared
+    grudge: bool = False  # the hero hurt them and they remember
 
 
 class Settlement(BaseModel):
@@ -51,9 +53,7 @@ class Settlement(BaseModel):
     shore_direction: str | None = None
     name: str = "Nameless"
     description: str = ""
-    rumor: str = ""
     ruler: str | None = None
-    planned: bool = False
     version: int = 0
     layout: list[Building] = Field(default_factory=list)
     residents: list[Resident] = Field(default_factory=list)
@@ -85,10 +85,42 @@ class GuildQuest(BaseModel):
     settlement: int = -1
 
 
+class Favor(BaseModel):
+    """A small errand from one person. Separate from guild quests: anyone can ask, and it ends with them."""
+    kind: str  # fetch | hunt | deliver | visit
+    giver: int
+    giver_name: str
+    settlement: int
+    summary: str
+    target: str = ""  # block id, creature kind, 'lx,lz', or the id of the person to find
+    target_name: str = ""
+    count: int = 1
+    progress: int = 0
+    reward: int = 0
+
+
+class Nemesis(BaseModel):
+    """The monster that killed the hero, and has not forgotten."""
+    kind: str
+    name: str
+    title: str
+    level: int = 1
+
+
+class Deed(BaseModel):
+    """Something that happened. People pass it on, and it travels outward at walking pace."""
+    kind: str
+    lx: int = 0
+    lz: int = 0
+    at: float = 0
+    blanks: dict[str, str] = Field(default_factory=dict)
+
+
 class Player(BaseModel):
     gold: int = 30
     bounty: int = 0
     notoriety: int = 0
+    renown: int = 0  # how the world sees the hero; crimes lower it
     potions: int = 1
     mana_potions: int = 0
     loot: dict[str, int] = Field(default_factory=dict)
@@ -101,12 +133,21 @@ class Player(BaseModel):
     blocks: dict[str, int] = Field(default_factory=dict)  # block id -> count
     abilities: list[str] = Field(default_factory=list)
     max_hp: int = 20
+    max_mana: int = 100
+    mana_practice: float = 0  # mana spent on spells since the well last deepened
     kills: int = 0
     deaths: int = 0
     guild_rank: int = 0
     guild_done: int = 0
     active_quest: GuildQuest | None = None
+    favor: Favor | None = None
+    favors_done: int = 0
     blessed_by: list[int] = Field(default_factory=list)
+    cursed_hp: int = 0  # what curses took, so that lifting them can give it back
+    cursed_abilities: list[str] = Field(default_factory=list)
+    oathbound: bool = False  # the First Law is amended: this hero can wound the Demon Lord
+    has_crown: bool = False
+    crowned: bool = False
     descended: bool = False
     # where the session stood; None until the client has reported, and the world spawn is used instead
     pos: Vec3 | None = None
@@ -118,12 +159,13 @@ class Player(BaseModel):
 class Story(BaseModel):
     stage: int = 0
     flags: dict[str, bool] = Field(default_factory=dict)
+    counts: dict[str, int] = Field(default_factory=dict)  # what a trial is tallying
     beats: list[str] = Field(default_factory=list)
 
 
 class FeedItem(BaseModel):
     id: int
-    type: str  # narration | decree | event | settlement | toast
+    type: str  # narration | decree | event | settlement | toast | scene | act
     text: str = ""
     data: dict = Field(default_factory=dict)
 
@@ -131,7 +173,7 @@ class FeedItem(BaseModel):
 class Timer(BaseModel):
     """Something due later on the game clock. Saved with the world, so a restart cannot lose it."""
     due: float
-    kind: str  # successor
+    kind: str  # successor | omen | nemesis
     data: dict = Field(default_factory=dict)
 
 
@@ -152,8 +194,11 @@ class World(BaseModel):
     demon_lord_name: str = "Malzareth"
     demon_realm_name: str = "the Ashen Throne"
     demon_lord_dead: bool = False
+    boss_hp: float | None = None  # the Demon Lord's wounds; None until he has been hurt
+    ending: str | None = None  # hero | crown | broken
     raid_every: float = 480
     raid_level: int = 0
+    war_pressure: float = 0  # how hard the war presses on prices; rises with each raid and eases in quiet times
     prosperity: str = "normal"
     currency: str = "gold"
     laws: list[Law] = Field(default_factory=list)
@@ -163,7 +208,9 @@ class World(BaseModel):
     demon_land: tuple[int, int] = (7, 0)
     player: Player = Field(default_factory=Player)
     story: Story = Field(default_factory=Story)
-    heaven_chat: list[tuple[str, str]] = Field(default_factory=list)
+    nemesis: Nemesis | None = None
+    chronicle: list[Deed] = Field(default_factory=list)
+    said: dict[str, list[int]] = Field(default_factory=dict)  # line pool -> what was said lately, so that nothing repeats soon
     visited: list[str] = Field(default_factory=list)
     clock: float = 0  # seconds played; everything scheduled runs on this, so a pause pauses it all
     day_time: float = 0.08  # 0 sunrise, 0.25 noon, 0.5 sunset, 0.75 midnight
@@ -204,3 +251,6 @@ class World(BaseModel):
 
     def after(self, seconds: float, kind: str, **data) -> None:
         self.timers.append(Timer(due=self.clock + seconds, kind=kind, data=data))
+
+    def pending(self, kind: str) -> bool:
+        return any(t.kind == kind for t in self.timers)

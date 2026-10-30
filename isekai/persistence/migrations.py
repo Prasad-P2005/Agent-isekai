@@ -4,7 +4,8 @@ from __future__ import annotations
 from ..core.state import World
 from ..systems.people.jobs import POPULATION
 from ..systems.people.roster import rebalance_roster, rehome
-from ..systems.people.succession import SUCCESSOR_DELAY
+from ..systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
+from ..systems.story import BEATS, advance
 from ..world.layouts import make_layout
 from ..world.map import LAND
 
@@ -74,7 +75,37 @@ def _to_5(world: World) -> None:
     _replace_the_lost_dead(world)
 
 
-STEPS = {4: _to_4, 5: _to_5}
+def _to_6(world: World) -> None:
+    """The story became chapters and oaths, curses became reversible, and everyone who dies is now replaced."""
+    f, p = world.story.flags, world.player
+    f["oath_elves"] = f.pop("elf_trust", False)
+    f["oath_tribes"] = f.pop("beast_trust", False)
+    won = f.pop("victory", False)
+    if world.demon_lord_dead:  # an old hero who already won keeps that win
+        f.update(met_king=True, oath_crown=True, oath_elves=True, oath_tribes=True, oath_sea=True, read_note=True, god_confessed=True, law_amended=True, lord_slain=True)
+        p.oathbound = True
+        if won:
+            world.ending, f["ended"] = "hero", True
+        else:
+            p.has_crown = True
+    world.story.stage = 0
+    advance(world)
+    p.loot.pop("Demon Lord's Crown", None)
+    p.cursed_hp = max(0, 20 - p.max_hp)
+    world.war_pressure = min(0.3, world.raid_level * 0.02)
+    for s in world.settlements:
+        for r in s.residents:
+            if r.dead and not r.service:
+                world.after(NEWCOMER_DELAY, "successor", settlement=s.id, resident=r.id)
+
+
+def _to_7(world: World) -> None:
+    """The Elder Tree now gives mana, so anyone who has already sworn the Oath of the Elves is owed it."""
+    if world.story.flags.get("oath_elves"):
+        world.player.max_mana += BEATS["elf_oath"]["max_mana"]
+
+
+STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7}
 CURRENT_VERSION = max(STEPS)
 
 

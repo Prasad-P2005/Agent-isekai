@@ -26,7 +26,7 @@ test('every service a job offers has a panel', () => {
 });
 
 test('every friendly race can be murdered under the law', () => {
-  const races = new Set(Object.values(CREATURES).filter(c => c.friendly).map(c => c.race));
+  const races = new Set(Object.values(CREATURES).filter(c => c.friendly && !c.sacred).map(c => c.race));
   assert.deepEqual([...races].filter(r => !LAWS.crimes[`kill_${r}`]), []);
 });
 
@@ -39,5 +39,10 @@ test('every guild quest hunts a real creature', () => {
 });
 
 test('every ability the game grants is listed', () => {
-  for (const name of ['fireball', 'heal', 'flight', 'double_jump', 'swift', 'giant_strength']) assert.ok(ABILITIES[name], name);
+  for (const name of ['fireball', 'heal', 'frost_nova', 'chain_lightning', 'blink', 'mana_ward', 'meteor', 'flight', 'double_jump', 'swift', 'giant_strength']) assert.ok(ABILITIES[name], name);
+});
+
+test('every spell says what it costs and what it does', () => {
+  assert.deepEqual(Object.entries(ABILITIES).filter(([, a]) => !a.about).map(([id]) => id), []);
+  assert.deepEqual(['fireball', 'heal', 'frost_nova', 'chain_lightning', 'blink', 'mana_ward', 'meteor'].filter(id => !ABILITIES[id].mana), []);
 });

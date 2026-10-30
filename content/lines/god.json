@@ -1,0 +1,310 @@
+{
+  "tell:descend": [
+    "Annnd you're in! Don't look down, there's nothing down there, I just like saying it. Go find the King!",
+    "There you go! All your fingers? Great. {capital} is close. Off you pop!",
+    "Welcome to {world}, {hero}! Fair warning: everyone here is much more dramatic than they need to be."
+  ],
+  "tell:raid": [
+    "Wave {wave}. {demon_lord}'s armies don't get tired, and I can't get in the way. You can, though!",
+    "Heads up! That's raid number {wave}. They always seem to know where you are. I don't love that.",
+    "Here they come. Wave {wave}! Every one you drop is a village that sleeps tonight.",
+    "Raid {wave}, and I'm told the prices just went up again. War is so rude."
+  ],
+  "tell:death": [
+    "Ow. {by}. I saw that. Up you get, I've put you back where we started. Don't tell anyone that's allowed.",
+    "That was {by}, and that was a bad one. Your soul's still attached! I checked. Twice.",
+    "Sooo, {by}. We won't talk about it. Have a stretch and try again.",
+    "The Law says a borrowed soul goes back to where it was lent. It's the one nice thing it says. Hello again.",
+    "{by}. Noted. I'm keeping a list. It's a supportive list.",
+    "You died. It happens. It happens to you more than most, but it happens."
+  ],
+  "tell:successor": [
+    "{dead} is gone, and {heir} is the new {post} of {place}. Life doesn't wait, down there.",
+    "{place} has a new {post}: {heir}. They'll remember {dead} for a while. People do.",
+    "{heir} has taken up {dead}'s work in {place}. The bread gets baked either way. I find that comforting, somehow."
+  ],
+  "tell:kills": [
+    "That's {kills} monsters! I don't want to alarm you, but people are starting to notice.",
+    "{kills} down. You're getting scarily good at this.",
+    "I'm counting, by the way. {kills}! I made a little chart.",
+    "{kills} monsters. Remember when a slime scared you? I do. I wrote it down."
+  ],
+  "tell:dragon": [
+    "YOU KILLED A DRAGON?! Okay. Okay! I'm being very calm and very professional. YOU KILLED A DRAGON!",
+    "A dragon. You. With your hands. They'll be singing about this one before you've wiped your blade.",
+    "Dragons are not supposed to lose. I'm going to have to tell the other gods. There aren't any other gods. I'm still telling them."
+  ],
+  "tell:punished": [
+    "You {deed}, and {by} enforced \"{law}\". I did warn you. I think. I meant to.",
+    "\"{law}\". {by} saw to it. That's the thing about Laws: they don't care how nice your eyes are.",
+    "I wrote that one down ages ago, and {by} just read it out loud to you. {victim} won't be forgetting this.",
+    "The world keeps its Laws whether I like it or not. \"{law}\" just bit you."
+  ],
+  "tell:unseen": [
+    "Nobody saw that. I saw that. But nobody saw that.",
+    "Oh, that was quiet. You got away with it. I wish you hadn't done it, but you got away with it.",
+    "The Law looks away if nobody's watching. I can't. I never can.",
+    "{victim}. I'll remember, even if nobody else does."
+  ],
+  "tell:reported": [
+    "{by} ran all the way and told them everything. \"{law}\" applies. I'd start moving.",
+    "You missed one. {by} got to the watch, and \"{law}\" has you now.",
+    "Word's out. {by} has a good memory and a fast pair of legs."
+  ],
+  "tell:nemesis_named": [
+    "⚡ {god}: Whatever killed you just got a name out of it. They're calling it {foe} {title}. It'll come back for more.",
+    "⚡ {god}: Oh no. It liked that. The creature that got you has a name now: {foe} {title}. Watch your back.",
+    "⚡ {god}: The stories are already spreading about {foe} {title}, the thing that killed the hero. You might want to fix that."
+  ],
+  "tell:nemesis_slain": [
+    "{foe} {title} is dead. Nobody's going to tell that story any more. You win!",
+    "That's the end of {foe} {title}! I'm taking it off the list. I'm crossing it out extra hard.",
+    "{foe} {title} thought it knew how this ended. It did not."
+  ],
+  "tell:idle:1": [
+    "Psst. The King's still waiting in {capital}. He's very good at waiting, but it's a little rude.",
+    "How's the new body? You're doing great. I mean, you're walking. It's a start!",
+    "You know you can press T and talk to me, right? It's fine, I'm not busy. I am extremely not busy.",
+    "Fun fact: this whole world is cubes. Nobody down here has noticed. Please don't tell them."
+  ],
+  "tell:idle:2": [
+    "Four Oaths. You know what's harder than slaying a Demon Lord? Getting four groups to agree on anything.",
+    "Your journal has all the Oaths in it, if you've lost track. I lost track once. Very embarrassing.",
+    "The Elves won't hurry, the Tribes won't talk, and the Sea won't forgive. Good luck!",
+    "Don't forget to rest. The inns here are cheap, and the sleep is real.",
+    "You're getting known around here. The people talk about you, you know. Go and ask them!"
+  ],
+  "tell:idle:3": [
+    "It's quiet up here today. I keep picking things up and putting them down.",
+    "You've gone very quiet with me. That's fair.",
+    "If you want to shout at me, you can. I'd understand.",
+    "The Spires are older than I am. I don't go near them much."
+  ],
+  "tell:idle:4": [
+    "He can feel you getting closer, you know. So can I.",
+    "Bring potions. Bring every potion. I'm not your mother, but bring every potion.",
+    "He used to hum, when he was walking. I keep thinking about that.",
+    "Whatever happens up there, I'm here. For whatever that's worth."
+  ],
+  "tell:idle:5": [
+    "You don't have to decide today. It's been waiting for a very long time. It can wait a bit longer.",
+    "It's heavier than it looks, isn't it? That's how it starts.",
+    "Whichever way you go, I won't be angry. I don't think I've earned that."
+  ],
+  "tell:idle:6": [
+    "Look at that. The sun came up anyway.",
+    "You did it, you know. Whatever happens now, you really did it.",
+    "I never asked what you wanted to do, afterwards. What do you want to do?",
+    "Nothing to do but live now. It's harder than it sounds. You'll be great at it."
+  ],
+  "tell:chapter:oaths": [
+    "Four Oaths! The Crown's waiting on your Guild work, and the rest are out there somewhere. This is the fun part. Probably!",
+    "So now you know about the First Law. Four peoples, four Oaths, and nobody's ever gotten all of them. No pressure!"
+  ],
+  "tell:chapter:ruins": [
+    "All four! You got all four! Nobody has... that hasn't... Wow. Hey. The Voice mentioned a cairn, didn't she? You could probably skip that. It's probably nothing. It's fine.",
+    "Four Oaths. I honestly didn't think... Anyway! There's a thing in the southern ruins. You don't need to go. I mean, you can. If you want."
+  ],
+  "tell:chapter:confess": [
+    "...You read it.",
+    "So. You've got a question for me. I know. I'm here. Press T whenever you're ready."
+  ],
+  "tell:chapter:amend": [
+    "Now you know. Go to a Law Stone, in the Dragonspine. I'll be right here. I'm not going anywhere. I can't.",
+    "The Spires are in the northeast, on the high ground. Speak the Oaths there. I'll be listening. I'll always be listening. That's kind of the whole problem."
+  ],
+  "tell:chapter:throne": [
+    "The Law's cracked. For the first time in three hundred years, he can bleed. Go on, then. Go and see him.",
+    "You can hurt him now. Which means he can finally stop. Be careful up there."
+  ],
+  "tell:chapter:crown": [
+    "It's over. It isn't over. Take a breath. Then we'll talk about what's in your hands.",
+    "He's at rest. I saw to that, at least. Now there's just the crown."
+  ],
+  "tell:chapter:after": [
+    "That's it. That's the end of the story I was given. From here it's all yours.",
+    "Well. I've never gotten this far before. I don't have anything written down for this part."
+  ],
+  "tell:arrive:human": [
+    "{place}! Farms, gossip and very opinionated chickens. Say hi to people, they'll talk your ear off.",
+    "This is {place}. Small town, big memory. Be nice.",
+    "{place} has a Guild hall, a doctor and an inn. Those are the three things heroes need, and in that order, usually backwards."
+  ],
+  "tell:arrive:city": [
+    "{place}! Mind your pockets, your manners and your swords. The watch here is awake.",
+    "Big walls, big markets, big opinions. Welcome to {place}.",
+    "{place}. Everything's for sale in there, and every wall has eyes."
+  ],
+  "tell:arrive:elf": [
+    "{place}. Keep your voice down. They've been having the same conversation here for four hundred years.",
+    "Elves! {place} is lovely. Don't touch anything. And I mean don't touch anything.",
+    "This is {place}. The trees are listening. That's not a metaphor."
+  ],
+  "tell:arrive:elfcity": [
+    "{place}, in the arms of the great tree. The elves were here before the Law. They'll be sure to mention it.",
+    "Ooh, {place}. Try to look older than you are. They respect that."
+  ],
+  "tell:arrive:beast": [
+    "{place}! Loud, warm and honest. If somebody challenges you to a wrestling match, that's a compliment.",
+    "The tribes of {place} will judge you by your grip and your appetite. Eat everything.",
+    "This is {place}. Say what you mean here. They can smell it when you don't."
+  ],
+  "tell:arrive:demon": [
+    "The ground's warmer here. I can't see as well in these lands. Stay close to the light.",
+    "These are the demon lands. I'd say 'be careful', but I think that ship has sailed and then burned."
+  ],
+  "tell:arrive:treehouse_grove": ["A grove of the old trees. They grew up with the world. Be polite.", "It's peaceful here. Enjoy it. It's rare."],
+  "tell:arrive:crystal_spire": ["A Crystal Spire. They were here before me. I don't really come here.", "That's a Spire. The Law Stones stand at their feet. They hum, if you stand close."],
+  "tell:arrive:demon_castle": ["There it is. Be careful. I mean it this time.", "That's his home. I remember when it had a garden."],
+  "tell:arrive:mermaid_palace": ["Oh, this is beautiful! Don't tell the sea I said so, it's already insufferable.", "The palaces are older than any kingdom on land. Mind the Voice. She remembers everything."],
+  "tell:arrive:ruins": ["Nobody remembers who built these. Well. Nobody down there does.", "These ruins are older than the tribes. Somebody's been here, though, and not so long ago."],
+  "tell:boss_phase:1": [
+    "He's bleeding! He's actually bleeding! Keep going, he's calling the fire now!",
+    "He's stopped holding back. Move! Don't stand still up there!"
+  ],
+  "tell:boss_phase:2": [
+    "Almost! The crown's panicking, it's driving him harder! Finish it!",
+    "This is the last of him. Please. Please, end it."
+  ],
+
+  "event:demon_raid": [
+    "🔥 The armies of {demon_lord} attack! (wave {wave})",
+    "🔥 Horns on the wind. {demon_lord}'s raiders are here. (wave {wave})",
+    "🔥 The sky goes the colour of old rust. They're coming! (wave {wave})"
+  ],
+  "event:merchant_caravan": [
+    "🐎 A merchant caravan arrives nearby, its wagons full of goods.",
+    "🐎 Wheels on the road! A caravan has stopped close by, and they're open for trade.",
+    "🐎 A line of wagons pulls in, smelling of spice and far-off places. Go and see what they've got."
+  ],
+  "event:festival": [
+    "🎉 A festival begins! Merchants lower their prices for a while.",
+    "🎉 Someone's found a reason to celebrate. Drums in the square, and the merchants are feeling generous.",
+    "🎉 It's a saint's day. Probably. Nobody's checking. Prices are down!"
+  ],
+  "event:monster_horde": [
+    "🌑 A horde of monsters stirs in the darkness…",
+    "🌑 Something's moving out there, and there's a lot of it.",
+    "🌑 The night's gone very quiet, and then very loud…"
+  ],
+  "event:traveller": [
+    "✨ A traveller is on the road nearby. They look like they have a story.",
+    "✨ Someone's coming along the road, alone. You might want to say hello.",
+    "✨ A lone figure on the road raises a hand to you."
+  ],
+  "event:named_foe": [
+    "⚠ Something with a name is hunting nearby: {foe} {title}.",
+    "⚠ The locals have been whispering about {foe} {title}. It's close.",
+    "⚠ {foe} {title} is here. There's a price on that head, if you're brave."
+  ],
+  "event:nemesis": [
+    "⚠ {foe} {title} has found you. It remembers how you fell.",
+    "⚠ You know that sound. {foe} {title} has come back to finish it.",
+    "⚠ It's {foe} {title} again. It looks bigger than you remember."
+  ],
+
+  "pray:hello": [
+    "Hi! I'm here. I'm always here. What's up?",
+    "Oh, you called! I was just, um. Nothing. I don't really have anything else to do. Hi!",
+    "Yes? Yes! Hello!",
+    "I'm listening. It's one of the three things I can do."
+  ],
+  "pray:bye": ["Okay. I'll be here. Be careful!", "Go on, then. Eat something.", "Bye! Call me any time. I mean it.", "Off you go. I'll watch. It's all I can do, but I'll do it."],
+  "pray:wait": [
+    "I already bent one rule for you recently! If I do it again so soon, somebody will notice. Nobody's up here to notice, but still.",
+    "Give it a little while. A loophole's like a muscle. You can't use it twice in a row.",
+    "Not yet. Sorry. Ask me again in a bit."
+  ],
+  "pray:no_loophole": [
+    "I've been through every Law, and there's nothing I can lean on right now. I'm sorry.",
+    "I can't, not right now. The rules are all facing the wrong way. I checked. I always check.",
+    "Nothing. I'm so sorry. Try somewhere with more people around?"
+  ],
+  "pray:loophole": [
+    "Ehehe. Okay. There's nothing that says I can't suggest to someone that today's a nice day to travel. Keep your eyes open!",
+    "Found one! Nobody can say I touched anything. I just, you know, leaned on a rule until something fell out.",
+    "Watch this. And by 'this' I mean nothing, officially. I didn't do anything. Hi, Law!",
+    "I can't help you. I definitely can't help you. But wouldn't it be funny if something happened near you, entirely by coincidence?"
+  ],
+  "pray:silence": [
+    "Nobody answers. Somewhere in the distance, someone drops a tray of bread and swears.",
+    "You listen for a long time. There's just the wind, and it isn't saying anything.",
+    "There's no voice any more. You find you still look up when you ask.",
+    "Nothing. But you know where she lives now, if you want to talk."
+  ],
+  "pray:guide": [
+    "Check your journal! Press J. I wrote it all down for you, in very neat handwriting.",
+    "The people down there know a lot more than they let on. Ask them. They love being asked.",
+    "When in doubt, sleep at an inn, buy a potion, and go and bother someone important."
+  ],
+  "pray:arrive": ["The King's in {capital}, right in the middle of the walled city. You spawned just up the road. Go on, it'll take you a minute!", "Head for {capital}! Big walls. You can't miss it. The map's on M."],
+  "pray:oaths": [
+    "Press J to see all four Oaths and what each one needs. The Guild will sort out the Crown. The elves are west, the tribes are south and east, and the sea's in the southwest.",
+    "You'll want a pickaxe for the elves' crystals, a good blade for the tribes' orcs, and a very long breath for the sea.",
+    "{second_ruler} in {second_city} has something the sea folk want. And she knows it."
+  ],
+  "pray:ruins": ["Do you really need to go to the ruins? ...Yes. Okay. They're far south, in the Wilds. The Voice wasn't wrong.", "The ruins are on the map, in the south. I won't stop you. I can't. I'm not sure I'd want to."],
+  "pray:confess": ["You've got a question. Pick it. Go on. I know which one.", "I'm listening. Ask me."],
+  "pray:amend": ["The Spires are in the northeast of the Dragonspine. The Law Stone's at the base. You'll know it. It knows you.", "All four Oaths, spoken at the stone. That's all it takes. That's all it ever took."],
+  "pray:throne": ["Northeast corner of the world. You'll feel it before you see it. Bring armor, bring potions, and don't stand still when he calls the fire.", "He'll try to wear you down. Three stages, I think. I've only seen this go one way before."],
+  "pray:crown": ["The King's vault, the Law Stone, or your own head. That's it. Those are all the endings I know about.", "You don't have to tell me what you'll do. I just want you to know you've got a choice. He didn't."],
+  "pray:after": ["There's nothing left on the list. Isn't that strange?", "I don't have any advice. You're past the part I know about."],
+  "pray:chatter": [
+    "Did you know heaven doesn't have a smell? I've been thinking about bread a lot.",
+    "I tried to make a Law about being nice to cats. It didn't take. Very sad.",
+    "How's the food? I've never had any. Describe it. Slowly.",
+    "I spend most of my time watching people wait for things. You're much more interesting.",
+    "Is it weird having a body again? I always wonder.",
+    "You've got a nice walk. I don't know if I've mentioned that. It's very determined.",
+    "Sometimes I say a word out loud just to hear it not do anything.",
+    "The other gods left, you know. A long time ago. I don't really talk about it.",
+    "Knock knock. ...Oh, right, I can't do those, you have to say who's there. Never mind."
+  ],
+  "pray:act1": ["You're doing great! Probably! I've got nothing to compare it to! Ha ha.", "New world, new you. How's it going so far?"],
+  "pray:act2": ["People are starting to say your name, you know. Well. They say 'that one'. It's a start.", "You're really doing it, aren't you? The Oaths."],
+  "pray:act3": ["I know I owe you more than I can pay. I'm still glad you're talking to me.", "Are we okay? No, don't answer that."],
+  "pray:act4": ["I can feel you getting closer to him. Please be careful.", "You could still stop, you know. I wouldn't blame you. I'd only be scared."],
+  "pray:act5": ["How does it feel, carrying it? Don't answer if you don't want to.", "It's quiet in the demon lands now. I never thought I'd miss the noise."],
+  "pray:act6": ["We did it. You did it. I mostly talked.", "I think I'm going to learn to be okay with this."],
+
+  "favor:fetch": [
+    "If you're offering, I could use {count} {thing}. I'd pay {pay} {currency} for that, and be glad of it.",
+    "You look like you can swing a pick. Bring me {count} {thing} and there's {pay} {currency} in it.",
+    "It's a small thing. {count} {thing}. I'd get them myself, but #small_trouble#, and I can't leave. {pay} {currency}?",
+    "I need {count} {thing}, and nobody else will go. Say {pay} {currency}?"
+  ],
+  "favor:hunt": [
+    "Something's been getting at the edge of town. Kill {count} {thing} for me and I'll give you {pay} {currency}. It's not much, but I'll sleep.",
+    "{count} {thing}. That's all it'd take for me to stop worrying. {pay} {currency}, if you can do it.",
+    "There's a nest of them out past the last house. {count} {thing}, and {pay} {currency} is yours.",
+    "I'd do it myself, but look at me. {count} {thing}, friend. For {pay} {currency}."
+  ],
+  "favor:deliver": [
+    "Could you carry a letter to {target}? I've been meaning to send it for a long time. They'll pay you {pay} {currency} on my behalf.",
+    "This has to reach {target}. Don't read it. Well, you can read it, but don't tell me. There's {pay} {currency} waiting at the other end.",
+    "I owe {target} an apology, and I've gotten it down on paper at last. Will you take it? They'll see you right, {pay} {currency}."
+  ],
+  "favor:visit": [
+    "I've got family out in {target}, and I've heard nothing in months. Go and look, then come back and tell me it's still standing? {pay} {currency}.",
+    "Would you go to {target} for me and see how things are? Just walk through and come back. I'd give you {pay} {currency} for the peace of mind.",
+    "Everyone says {target} isn't what it was. I want to hear it from someone who's seen it. {pay} {currency}, if you'll go."
+  ],
+  "favor:accepted": ["You will? Thank you. Truly.", "Good. I knew you had a kind face. Well. A face.", "Bless you. Don't take too long.", "That's a weight off. I'll be right here."],
+  "favor:declined": ["No, I understand. You've got bigger things to do.", "Ah well. It was worth asking.", "Fair enough. Offer stands.", "Of course. Forget I said anything."],
+  "favor:waiting": [
+    "I'm still waiting on that. {summary}, remember? No hurry. Some hurry.",
+    "You haven't forgotten me, have you? {summary}, that was the deal.",
+    "Any luck yet? {summary}. I'm not going anywhere."
+  ],
+  "favor:thanks": [
+    "You did it! Here, {pay} {currency}, and my thanks. You're all right, you know that?",
+    "Bless you. Truly. {pay} {currency}, as promised, and you've got a friend here.",
+    "Well, look at that. A hero who keeps their word. Here's your {pay} {currency}.",
+    "That's the best thing that's happened all week. {pay} {currency}. Take it before I cry."
+  ],
+  "favor:delivered": [
+    "From {giver}? After all this time? ...Thank you. Here, {pay} {currency}. Give me a moment.",
+    "{giver} wrote to me? Oh. Oh, I see. Take this, {pay} {currency}, you've earned it.",
+    "So {giver} remembered. Here, {pay} {currency}. And if you see them, tell them I read it twice."
+  ]
+}

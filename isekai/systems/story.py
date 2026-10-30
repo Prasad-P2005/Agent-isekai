@@ -1,76 +1,161 @@
-"""The main storyline. Objectives are tracked by the engine; the god only narrates them."""
+"""The main storyline. The chapters and every story conversation are data (content/story.json):
+each beat says who speaks it, what it needs, and what it changes. This module only reads those rules."""
 from __future__ import annotations
 
+import random
+
+from ..content import STORY
 from ..core.state import Resident, World
+from . import chronicle
+from .lines import fill
+
+CHAPTERS = STORY["chapters"]
+BEATS = STORY["beats"]
+SCENES = STORY["scenes"]
+OATHS = STORY["oaths"]
+SPEAKERS = {"king": "king", "queen": "queen", "elf_king": "elf", "elf_queen": "elf", "elder": "elf", "chief": "chief"}
+STAGE_RAIDS = 1  # the Demon Lord turns on the world once the hero has been named
 
 
-def _elf(w: World) -> str:
-    s = w.settlements_of("elfcity")
-    return f"{'the Elf Queen' if w.elf_ruler_title == 'elf_queen' else 'the Elf King'} {w.elf_ruler_name} of {s[0].name}" if s else "an Elven Elder"
+def speaker_of(who: Resident | None, creature: str) -> str | None:
+    if who:
+        return SPEAKERS.get(who.job)
+    return creature if creature in ("mermaid_queen", "cairn", "law_stone", "god") else None
 
 
-def _beast(w: World) -> str:
-    return w.settlements_of("beast")[0].name
+def oaths_sworn(world: World) -> list[str]:
+    return [o for o in OATHS if world.story.flags.get(o)]
 
 
-STAGES = [
-    (lambda w: f"Travel to the capital {w.capital().name} and speak with King {w.king_name}", lambda w: w.story.flags.get("met_king", False)),
-    (lambda w: f"Win the favor of {_elf(w)} and a Beastkin Chief (e.g. {_beast(w)})",
-     lambda w: w.story.flags.get("elf_trust", False) and w.story.flags.get("beast_trust", False)),
-    (lambda w: f"Prove your strength: complete 2 Adventurers' Guild quests ({min(2, w.player.guild_done)}/2)", lambda w: w.player.guild_done >= 2),
-    (lambda w: f"Cross the Dragonspine Peaks into {w.demon_realm_name}", lambda w: w.story.flags.get("reached_demon_land", False)),
-    (lambda w: f"Slay the Demon Lord {w.demon_lord_name} in his castle", lambda w: w.demon_lord_dead),
-    (lambda w: f"The Demon Lord is dead. Return to King {w.king_name} as a hero", lambda w: w.story.flags.get("victory", False)),
-    (lambda w: "You saved the world. Live your new life as you wish.", lambda w: False),
-]
-
-
-STORY_TALKS = {"king": "met_king", "queen": None, "elf_king": "elf_trust", "elf_queen": "elf_trust", "elder": "elf_trust", "chief": "beast_trust"}
-ELVEN = ("elder", "elf_king", "elf_queen")
-
-
-def _learn(world: World, ability: str) -> None:
-    if ability not in world.player.abilities:
-        world.player.abilities.append(ability)
-
-
-def meet(world: World, who: Resident | None) -> tuple[str, str | None]:
-    """What talking to someone means for the story right now. Returns the situation they act out, and any gift."""
-    w, situation, gift = world, "a casual conversation", None
-    if who and who.job in STORY_TALKS:
-        flag = STORY_TALKS[who.job]
-        if who.job == "king" and w.demon_lord_dead and not w.story.flags.get("victory"):
-            w.story.flags["victory"] = w.story.flags["met_king"] = True
-            w.player.gold += 1000
-            situation, gift = "the hero returns victorious after slaying the Demon Lord; reward them as a legend", "+1000 gold and eternal glory"
-        elif flag and not w.story.flags.get(flag):
-            w.story.flags[flag] = True
-            if who.job == "king":
-                w.player.gold += 100
-                situation, gift = f"you meet the hero for the first time, give them a royal writ and 100 {w.currency}, and charge them to slay the Demon Lord", f"+100 {w.currency}, Royal Writ"
-            elif who.job in ELVEN:
-                _learn(w, "heal")
-                situation, gift = "you decide to trust the hero and teach them the elven healing magic", "learned Heal (R)"
-            else:
-                _learn(w, "swift")
-                situation, gift = "you accept the hero as a friend of the tribe and grant them the swiftness of the beasts", "learned Swift"
-    if who and who.service == "guild" and w.player.active_quest:
-        q = w.player.active_quest
-        situation = f"the hero's guild quest: {q.title} ({q.progress}/{q.count})"
-    return situation, gift
+def act(world: World) -> int:
+    return CHAPTERS[world.story.stage]["act"]
 
 
 def objective(world: World) -> str:
-    return STAGES[world.story.stage][0](world)
+    chapter = CHAPTERS[world.story.stage]
+    remaining = ", ".join(fill(world, spec["name"]) for o, spec in OATHS.items() if not world.story.flags.get(o))
+    return fill(world, chapter["objective"], sworn=len(oaths_sworn(world)), remaining=remaining)
 
 
-def advance(world: World) -> list[str]:
-    """Advance through every completed stage. Returns the new objectives reached."""
+def oath_list(world: World) -> list[dict]:
+    """Where each oath stands, for the journal: the furthest step reached is the one to show."""
+    p, f, counts = world.player, world.story.flags, world.story.counts
+    if not f.get("met_king"):  # the hero has not heard of the Oaths yet
+        return []
+    blanks = {"guild": min(2, p.guild_done), "crystals": min(3, p.blocks.get("16", 0)), "orcs": counts.get("orcs", 0)}
+    out = []
+    for oath, spec in OATHS.items():
+        step = next(text for flag, text in reversed(spec["steps"]) if flag is None or f.get(flag))
+        out.append({"name": fill(world, spec["name"]), "done": bool(f.get(oath)), "hint": fill(world, step, **blanks)})
+    return out
+
+
+def _met(world: World, needs: dict) -> bool:
+    f, p, counts = world.story.flags, world.player, world.story.counts
+    return (all(f.get(k) for k in needs.get("needs", []))
+            and not any(f.get(k) for k in needs.get("not", []))
+            and all(getattr(p, k) for k in needs.get("has", []))
+            and not any(getattr(p, k) for k in needs.get("lacks", []))
+            and (not needs.get("open_ending") or world.ending is None)
+            and (not needs.get("all_oaths") or len(oaths_sworn(world)) == len(OATHS))
+            and p.guild_done >= needs.get("guild_done", 0)
+            and p.guild_done < needs.get("guild_below", p.guild_done + 1)
+            and all(p.blocks.get(b, 0) >= n for b, n in needs.get("blocks", {}).items())
+            and all(p.blocks.get(b, 0) < n for b, n in needs.get("blocks_below", {}).items())
+            and all(counts.get(k, 0) >= n for k, n in needs.get("counts", {}).items())
+            and all(counts.get(k, 0) < n for k, n in needs.get("counts_below", {}).items()))
+
+
+def wanted(world: World) -> list[dict]:
+    """The chapter's marks that stand right now, and those of each unsworn oath once the hero has heard of them."""
+    f = world.story.flags
+    rules = CHAPTERS[world.story.stage].get("marks", []) + [m for oath, spec in OATHS.items() if f.get("met_king") and not f.get(oath) for m in spec["marks"]]
+    return [m for m in rules if _met(world, m)]
+
+
+def offered(world: World, speaker: str | None) -> list[str]:
+    """The story conversations this person can have right now."""
+    return [beat for beat, spec in BEATS.items() if spec["speaker"] == speaker and _met(world, spec)]
+
+
+def label(world: World, beat: str) -> str:
+    return fill(world, BEATS[beat]["label"])
+
+
+def play(world: World, beat: str, rng: random.Random | None = None) -> dict:
+    """Speak a beat and apply what it changes. Returns its lines, any gift, and what the client must do."""
+    spec, p, f = BEATS[beat], world.player, world.story.flags
+    fx: dict = {}
+    for flag in spec.get("sets", []):
+        f[flag] = True
+    for field, value in spec.get("player", {}).items():
+        setattr(p, field, value)
+    if "take" in spec:
+        for block, n in spec["take"].items():
+            p.blocks[block] = p.blocks.get(block, 0) - n
+        fx["take_blocks"] = spec["take"]
+    p.gold += spec.get("gold", 0)
+    p.max_hp += spec.get("max_hp", 0)
+    p.max_mana += spec.get("max_mana", 0)
+    if "heal" in spec:
+        fx["heal"] = spec["heal"]
+    if (ability := spec.get("learn")) and ability not in p.abilities:
+        p.abilities.append(ability)
+    chronicle.fame(world, spec.get("renown", 0))
+    if spec.get("deed"):
+        chronicle.record(world, spec["deed"])
+    if spec.get("ending"):
+        _end(world, spec["ending"])
+    return {"lines": [fill(world, line, rng) for line in spec["lines"]], "gift": fill(world, spec["gift"]) if spec.get("gift") else None, "fx": fx}
+
+
+def _end(world: World, ending: str) -> None:
+    """How the story's choice changes the world from here on."""
+    world.ending = ending
+    world.player.has_crown = False
+    if ending == "broken":
+        world.laws = []  # every Law falls silent, so people only have each other now
+        _god_falls(world)
+
+
+def _god_falls(world: World) -> None:
+    """The god lands in the village nearest the hero's first steps, and has to learn how to be a person."""
+    village = min(world.settlements_of("human"), key=lambda s: (s.cx - world.spawn.x) ** 2 + (s.cz - world.spawn.z) ** 2)
+    someone = next(r for r in village.residents if not r.notable and not r.dead)
+    someone.name, someone.role, someone.notable = world.god_name, "fallen_god", True
+    village.version += 1
+    world.push("settlement", "", id=village.id, version=village.version)
+
+
+def on_kill(world: World, kind: str) -> str | None:
+    """A trial may be counting this creature."""
+    for trial in STORY["hunts"]:
+        if trial["kind"] == kind and world.story.flags.get(trial["flag"]):
+            done = world.story.counts.get(trial["count"], 0)
+            if done < trial["needed"]:
+                world.story.counts[trial["count"]] = done + 1
+                return fill(world, trial["progress"], done=done + 1, needed=trial["needed"])
+    return None
+
+
+def scene_for(world: World, name: str) -> dict | None:
+    """A scene plays once: it interrupts the world, so it has to earn that."""
+    flag, spec = f"scene_{name}", SCENES[name]
+    if world.story.flags.get(flag) or not _met(world, spec):
+        return None
+    world.story.flags[flag] = True
+    return {"title": fill(world, spec.get("title", "")), "lines": [{"who": fill(world, who), "text": fill(world, text)} for who, text in spec["lines"]]}
+
+
+def play_scene(world: World, name: str) -> None:
+    if scene := scene_for(world, name):
+        world.push("scene", scene["title"], lines=scene["lines"])
+
+
+def advance(world: World) -> list[dict]:
+    """Move through every finished chapter. Returns the chapters reached."""
     reached = []
-    if world.demon_lord_dead and world.story.stage < 5:  # a hero who rushes the final boss skips the middle chapters
-        world.story.stage = 5
-        reached.append(objective(world))
-    while world.story.stage < len(STAGES) - 1 and STAGES[world.story.stage][1](world):
+    while world.story.stage < len(CHAPTERS) - 1 and _met(world, CHAPTERS[world.story.stage]["done"]):
         world.story.stage += 1
-        reached.append(objective(world))
+        reached.append(CHAPTERS[world.story.stage])
     return reached

@@ -1,5 +1,5 @@
 from isekai.core.state import GuildQuest, Law
-from isekai.systems import guild, laws, shop
+from isekai.systems import guild, laws, magic, shop
 from isekai.systems.story import advance, objective
 
 
@@ -32,12 +32,6 @@ def test_divine_law_needs_no_witness(world):
 
 def test_scope_limits_laws(world):
     assert laws.judge(world, "attack_civilian", in_city=False, realm="human", lawmen=["x"], civilians=[]) == []
-
-
-def test_validate_law_rejects_garbage():
-    assert laws.validate_law({"crime": "jaywalking"}) is None
-    l = laws.validate_law({"crime": "vandalism", "scope": "moon", "punishment": "death", "severity": 99})
-    assert (l.scope, l.punishment, l.severity) == ("everywhere", "bounty", 4)
 
 
 def test_shop_and_loot(world):
@@ -119,8 +113,18 @@ def test_you_cannot_sell_what_you_do_not_have(world):
 
 
 def test_the_war_raises_prices(world):
-    world.raid_level = 5
-    assert shop.price(world, "potion") == 21
+    world.war_pressure = 0.2
+    assert shop.price(world, "potion") == 18
+
+
+def test_the_war_can_only_raise_prices_so_far(world):
+    world.war_pressure = 5
+    assert shop.price(world, "potion") == 20
+
+
+def test_traders_charge_what_they_think_of_you(world):
+    world.player.renown = -40
+    assert shop.price(world, "potion") == 20
 
 
 def test_a_festival_lowers_prices(world):
@@ -151,6 +155,22 @@ def test_a_service_nobody_offers_is_refused(world):
     assert world.player.gold == 100 and effects == {}
 
 
+def test_a_curse_can_be_lifted_and_gives_back_what_it_took(world):
+    world.player.gold = 100
+    world.player.max_hp, world.player.abilities = 25, ["heal"]
+    laws.punish(world, law("curse"), "the gods themselves")
+    laws.punish(world, law("curse"), "the gods themselves")
+    assert (world.player.abilities, world.player.max_hp) == ([], 21)
+    shop.use_service(world, "doctor", "cure", None)
+    assert (world.player.abilities, world.player.max_hp, world.player.gold) == (["heal"], 25, 40)
+
+
+def test_you_are_not_charged_to_lift_a_curse_you_do_not_have(world):
+    world.player.gold = 100
+    shop.use_service(world, "doctor", "cure", None)
+    assert world.player.gold == 100
+
+
 def test_a_priest_blesses_you_only_once(world):
     world.player.gold = 1000
     shop.use_service(world, "priest", "bless", 7)
@@ -163,6 +183,36 @@ def test_a_second_priest_can_bless_you_too(world):
     shop.use_service(world, "priest", "bless", 7)
     shop.use_service(world, "priest", "bless", 8)
     assert world.player.max_hp == 30
+
+
+def test_a_mana_crystal_deepens_the_well_at_a_temple(world):
+    world.player.gold, world.player.blocks = 1000, {"16": 2}
+    _, effects = shop.use_service(world, "priest", "attune", 7)
+    assert (world.player.max_mana, world.player.blocks["16"], world.player.gold) == (120, 1, 975)
+    assert effects == {"mana": 999, "take_blocks": {"16": 1}}
+
+
+def test_each_attunement_costs_more_than_the_last(world):
+    world.player.gold, world.player.blocks = 1000, {"16": 2}
+    shop.use_service(world, "priest", "attune", 7)
+    shop.use_service(world, "priest", "attune", 7)
+    assert (world.player.max_mana, world.player.gold) == (140, 1000 - 25 - 45)
+
+
+def test_you_cannot_attune_without_a_crystal_or_the_money(world):
+    world.player.gold = 1000
+    shop.use_service(world, "priest", "attune", 7)
+    assert (world.player.max_mana, world.player.gold) == (100, 1000)
+    world.player.gold, world.player.blocks = 0, {"16": 1}
+    shop.use_service(world, "priest", "attune", 7)
+    assert (world.player.max_mana, world.player.blocks["16"]) == (100, 1)
+
+
+def test_casting_slowly_deepens_the_well(world):
+    assert magic.practice(world, 199) is None
+    assert "105" in magic.practice(world, 1)
+    assert (world.player.max_mana, world.player.mana_practice) == (105, 0)
+    assert magic.practice(world, 209) is None  # a deeper well takes longer
 
 
 def test_paying_your_bounty_clears_it_for_a_fee(world):
@@ -223,17 +273,9 @@ def test_story_advances_on_flags(world):
     assert advance(world) and world.story.stage == 1
 
 
-def test_llm_names_are_cleaned():
-    from isekai.god.genesis import clean_name
-    assert clean_name("King King Thorne-Brick, ruler of Nebula") == "Thorne-Brick"
-    assert clean_name("Ironwood Marshes (East)") == "Ironwood Marshes"
-    assert clean_name('"Queen Seraphine"') == "Seraphine"
-    assert clean_name('demon_lord_name": "Lich-King O') == ""
-
-
 def test_no_demon_raids_before_the_story_starts(world):
     from isekai.core.game import Game
-    from isekai.god.narrator import allowed_events
+    from isekai.systems.storyteller import allowed_events
     g = Game.__new__(Game)
     g.world, g.ctx = world, {}
     assert "demon_raid" not in allowed_events(g)
@@ -241,21 +283,3 @@ def test_no_demon_raids_before_the_story_starts(world):
     assert "demon_raid" in allowed_events(g)
 
 
-def test_slaying_the_demon_lord_early_skips_to_the_ending(world):
-    world.demon_lord_dead = True
-    assert advance(world) and "Return to King" in objective(world)
-    world.story.flags["victory"] = True
-    advance(world)
-    assert "saved the world" in objective(world)
-
-
-def test_narration_debris_is_removed():
-    from isekai.god.narrator import clean_text
-    assert clean_text('"The sky cracks open.",') == "The sky cracks open."
-
-
-def test_prose_debris_is_removed():
-    from isekai.god.genesis import clean_prose
-    assert clean_prose('"I saw your spark.", "first_words": ["Welcome"] }, {') == "I saw your spark."
-    assert clean_prose("Hero Name (Original): Marcus Thorne") == "Marcus Thorne"
-    assert clean_prose("a young knight-errant: brave but clumsy") == "a young knight-errant: brave but clumsy"

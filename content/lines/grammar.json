@@ -1,0 +1,18 @@
+{
+  "you_legend": ["legend", "great one", "hero of all the realms", "saviour", "the one from the songs"],
+  "you_famous": ["hero", "champion", "friend of the realm", "famous one", "hero of the hour"],
+  "you_known": ["adventurer", "friend", "good traveller", "hero-in-training", "you with the Guild"],
+  "you_stranger": ["stranger", "traveller", "friend", "newcomer", "wanderer"],
+  "you_infamous": ["you", "cutthroat", "troublemaker", "villain", "scoundrel"],
+  "you_feared": ["monster", "butcher", "you, of all people", "killer", "nightmare"],
+
+  "swear": ["by the Crown", "gods' teeth", "stars above", "by my mother's ladle", "salt and iron", "by the First Law", "sweet rot", "by every saint and sinner", "old bones", "hell's own laundry"],
+  "food": ["onion stew", "black bread", "smoked trout", "barley porridge", "honey cakes", "a heel of hard cheese", "turnip pie", "spiced plums", "salt pork", "mushroom soup", "fried dough", "pickled eggs"],
+  "relative": ["my sister", "my uncle", "my cousin", "my old mother", "my brother", "my eldest", "my aunt", "my late husband", "my late wife", "my grandfather", "my youngest", "my neighbour's boy"],
+  "small_trouble": ["the well's gone sour", "the roof leaks again", "someone keeps stealing the eggs", "the goat got out", "the bridge wants mending", "the mill wheel's cracked", "the rats are back", "the bees have left", "my knee says rain", "the cart lost a wheel", "the dog won't stop howling", "the cellar flooded"],
+  "beast": ["a slime the size of a cow", "a goblin in a stolen hat", "a dire wolf with one eye", "an orc with a child's toy tied to its belt", "an imp that could count", "a slime that hummed", "a pack of wolves that wouldn't cross the road", "a goblin who knew my name"],
+  "far_place": ["the Dragonspine", "the far side of the savanna", "the southern ruins", "the deep forest", "the western shallows", "the old king's road", "the Ashen border", "the salt flats"],
+  "omen": ["the crows flew backwards", "the milk went sour overnight", "the moon looked at me funny", "every dog in town howled at once", "the bells rang with nobody pulling", "I dreamed of a crown three nights running", "the river ran warm", "a star fell and nobody heard it land"],
+  "saying": ["A closed mouth catches no flies.", "Never trust a bridge you didn't pay for.", "The road remembers.", "You can't salt a cloud.", "A Law's a Law, even in the dark.", "Every crown is somebody's headache.", "Dead heroes pay no tabs.", "Fish and guests go off by the third day.", "Sharpen it before you need it.", "There's always a bigger slime."],
+  "small_joy": ["a good fire", "the first honey of spring", "a dry pair of boots", "a song nobody's ruined yet", "fresh bread on a cold morning", "the smell after rain", "a dog that likes you", "an honest game of dice"]
+}

@@ -9,6 +9,7 @@ export const G = {
   keys: {},
   mouseDown: false,
   objective: '',
+  marks: [],        // what the hero is after, from the server; sim/marks.js says where it is now
   dayTime: 0.08,    // 0 sunrise, 0.25 noon, 0.5 sunset, 0.75 midnight
 };
 export const controlsActive = () => G.locked || G.focused;

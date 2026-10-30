@@ -4,15 +4,15 @@ from pathlib import Path
 
 import pytest
 
-from fakes import OfflineLLM
 from isekai.core.game import Game
 from isekai.core.state import World
 from isekai.persistence.migrations import CURRENT_VERSION, migrate
 from isekai.persistence.saves import load, save
-from isekai.systems.people.succession import SUCCESSOR_DELAY
+from isekai.systems.story import CHAPTERS
+from isekai.systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
 
 
-def old_save(world, version=CURRENT_VERSION - 1):
+def old_save(world, version=5):
     world.save_version = version
     return world
 
@@ -83,13 +83,14 @@ def test_every_upgrade_runs_for_a_very_old_save(world):
 
 def test_upgrading_keeps_the_king_and_the_players_progress(world):
     old_save(world, 3)
-    world.player.gold, world.story.stage = 500, 2
+    world.player.gold = 500
+    world.story.flags["met_king"] = True
     king = next(r for r in world.capital().residents if r.job == "king")
-    king.memory = ['Hero: "Hello"']
+    king.met = 3
     migrate(world)
     kept = next(r for r in world.capital().residents if r.job == "king")
-    assert (kept.id, kept.name, kept.memory) == (king.id, king.name, ['Hero: "Hello"'])
-    assert (world.player.gold, world.story.stage) == (500, 2)
+    assert (kept.id, kept.name, kept.met) == (king.id, king.name, 3)
+    assert (world.player.gold, world.story.stage) == (500, 1)
 
 
 def test_upgrading_moves_the_old_port_village_to_the_coast(world):
@@ -111,7 +112,7 @@ def test_upgrading_rebuilds_city_layouts_and_rehomes_people(world):
     untouched = list(village.layout)
     king = next(r for r in city.residents if r.job == "king")
     king.work.x = -1
-    old_save(world)
+    old_save(world, 4)
     migrate(world)
     keep = next(b for b in city.layout if b.kind == "keep")
     assert (keep.x, keep.z) == (city.cx, city.cz) and king.work.x > 0
@@ -121,7 +122,7 @@ def test_upgrading_rebuilds_city_layouts_and_rehomes_people(world):
 def test_upgrading_clears_times_from_the_old_wall_clock(world):
     world.cooldowns["demon_raid"] = 1_700_000_000
     world.festival_until = 1_700_000_000
-    old_save(world)
+    old_save(world, 4)
     migrate(world)
     assert world.cooldowns == {} and world.festival_until == 0
 
@@ -130,7 +131,7 @@ def test_upgrading_replaces_people_a_restart_lost(world):
     capital = world.capital()
     king = next(r for r in capital.residents if r.job == "king")
     king.dead = True
-    old_save(world)
+    old_save(world, 4)
     migrate(world)
     assert [(t.kind, t.data) for t in world.timers] == [("successor", {"settlement": capital.id, "resident": king.id})]
     assert world.timers[0].due == world.clock + SUCCESSOR_DELAY
@@ -139,7 +140,7 @@ def test_upgrading_replaces_people_a_restart_lost(world):
 def test_upgrading_does_not_replace_a_job_someone_still_does(world):
     s = world.settlements_of("human")[0]
     next(r for r in s.residents if r.job == "doctor").dead = True  # the village has a second doctor
-    old_save(world)
+    old_save(world, 4)
     migrate(world)
     assert world.timers == []
 
@@ -147,10 +148,63 @@ def test_upgrading_does_not_replace_a_job_someone_still_does(world):
 def test_an_upgraded_save_is_written_back(world, tmp_path):
     path = tmp_path / "w.json"
     save(old_save(world), path)
-    Game(OfflineLLM(), path)
+    Game(path)
     assert load(path).save_version == CURRENT_VERSION
 
 
-async def test_a_new_world_needs_no_upgrade(tmp_path):
-    world = await Game(OfflineLLM(), tmp_path / "w.json").new_world(seed=7)
+def test_a_new_world_needs_no_upgrade(tmp_path):
+    world = Game(tmp_path / "w.json").new_world(seed=7)
     assert migrate(world) is False
+
+
+def test_an_old_story_carries_over_to_the_oaths(world):
+    world.story.flags.update(met_king=True, elf_trust=True, reached_demon_land=True)
+    world.story.stage = 1
+    old_save(world)
+    migrate(world)
+    assert world.story.stage == 1 and world.story.flags["oath_elves"]
+
+
+def test_a_hero_who_already_won_keeps_the_win(world):
+    world.demon_lord_dead = True
+    world.story.flags["victory"] = True
+    old_save(world)
+    migrate(world)
+    assert world.ending == "hero" and world.story.stage == len(CHAPTERS) - 1
+
+
+def test_a_hero_who_killed_the_lord_still_has_the_crown_to_decide(world):
+    world.demon_lord_dead = True
+    world.player.loot["Demon Lord's Crown"] = 1
+    old_save(world)
+    migrate(world)
+    assert world.player.has_crown and world.ending is None and "Demon Lord's Crown" not in world.player.loot
+
+
+def test_an_oath_sworn_before_the_tree_gave_mana_still_earns_it(world):
+    world.story.flags["oath_elves"] = True
+    old_save(world, 6)
+    migrate(world)
+    assert world.player.max_mana == 150
+
+
+def test_upgrading_gives_no_mana_for_an_oath_not_sworn(world):
+    old_save(world, 6)
+    migrate(world)
+    assert world.player.max_mana == 100
+
+
+def test_upgrading_keeps_an_old_curse_liftable(world):
+    world.player.max_hp = 16
+    old_save(world)
+    migrate(world)
+    assert world.player.cursed_hp == 4
+
+
+def test_upgrading_queues_newcomers_for_the_empty_homes(world):
+    s = world.settlements_of("human")[0]
+    farmer = next(r for r in s.residents if not r.service)
+    farmer.dead = True
+    old_save(world)
+    migrate(world)
+    assert [(t.kind, t.data, t.due) for t in world.timers] == [("successor", {"settlement": s.id, "resident": farmer.id}, world.clock + NEWCOMER_DELAY)]

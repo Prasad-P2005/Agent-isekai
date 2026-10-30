@@ -4,63 +4,152 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Isekai Realms</title>
+<link rel="preload" href="vendor/fonts/jersey-10.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/fonts/jacquard-24.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/icons.css">
 <link rel="stylesheet" href="css/style.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+<link rel="icon" href="img/ui/favicon.png">
 </head>
 <body>
-<div id="overlay"><div class="box">
-  <h1>Isekai Realms</h1>
-  <p>You died on Earth. A god is waiting for you in the heavens.</p>
-  <div id="menu"><p class="go">Connecting to the server…</p></div>
-  <div id="controls" style="display:none">
-    <kbd>WASD</kbd> move · <kbd>Space</kbd> jump/swim · <kbd>Shift</kbd> sprint · <kbd>F</kbd> flight (if learned)<br>
-    <kbd>Left click</kbd> attack · <b>hold</b> to mine · <kbd>Right click</kbd> place · <kbd>I</kbd> inventory · <kbd>1–0</kbd> hotbar<br>
-    <kbd>E</kbd> talk (type to chat) / trade · <kbd>M</kbd> map · <kbd>T</kbd> pray · <kbd>L</kbd> laws · <kbd>Q</kbd> fireball · <kbd>R</kbd> heal · <kbd>G</kbd>/<kbd>V</kbd> potions
-  </div>
+<div id="overlay"><div class="book" id="titlebook"><div class="spread">
+  <section class="page left">
+    <h1>Isekai Realms</h1>
+    <p id="lede">You died on Earth. A god is waiting for you in the heavens.</p>
+    <div id="moves"></div>
+  </section>
+  <section class="page right">
+    <div id="menu"><p class="go">Connecting to the server…</p></div>
+    <div id="controls"></div>
+  </section>
+  <i class="clasp"></i>
 </div></div>
+  <div id="pausecard" role="dialog" aria-labelledby="pausetitle">
+    <h2 id="pausetitle">Paused</h2>
+    <p id="pausename"></p>
+    <button id="resume" type="button" class="gold">Resume</button>
+    <div class="pausemenu">
+      <button type="button" data-open="bag"><i class="ic ic-bag"></i>Bag</button>
+      <button type="button" data-open="journal"><i class="ic ic-journal"></i>Journal</button>
+      <button type="button" data-open="map"><i class="ic ic-map"></i>Map</button>
+      <button type="button" data-open="keys"><i class="ic ic-gear"></i>Controls</button>
+    </div>
+    <p class="note">Click anywhere to resume</p>
+  </div>
+</div>
 
-<div id="heaven"><div class="hbox">
+<div id="heaven"><div class="dialogue">
+  <div class="nameplate" id="hname"></div>
   <div id="hlog"></div>
-  <div class="hrow"><input id="hin" maxlength="300" placeholder="Speak to the god… (who am I? what is this world? what powers will I have?)"><button id="hsend">Speak</button></div>
-  <button id="hdescend">I'm ready. Send me to the world ⇩</button>
+  <div id="htopics"></div>
+  <button id="hdescend" class="gold">I'm ready. Send me to the world</button>
 </div></div>
 <div id="fade"></div>
 <div id="card"></div>
 
-<div id="water"></div>
-<div id="cross"></div>
-<div id="hud"></div>
-<div id="realm"></div>
-<div id="blockname"></div>
-<div id="hotbar"></div>
-<div id="minebar"><div></div><span id="minetext"></span></div>
-<div id="bars"><div class="bar"><div id="hpfill"></div><span id="hptext"></span></div><div class="bar"><div id="mpfill"></div><span id="mptext"></span></div></div>
-<div id="abil"></div>
-<div id="status"></div>
-<button id="maptoggle" type="button" aria-label="Open world map">World map <kbd>M</kbd></button>
-<div id="worldmap" role="dialog" aria-modal="true" aria-labelledby="maptitle">
-  <section class="map-card">
-    <header class="map-header">
-      <div><div class="map-eyebrow">ATLAS OF THE KNOWN WORLD</div><h2 id="maptitle">World map</h2></div>
-      <button id="mapclose" type="button" aria-label="Close world map">Close <kbd>Esc</kbd></button>
-    </header>
-    <div class="map-legend">
-      <span><i class="legend-player"></i>You</span><span><i class="legend-settlement"></i>Settlement</span>
-      <span><i class="legend-swatch realm-ocean"></i>Sea</span><span><i class="legend-swatch realm-human"></i>Human lands</span>
-      <span><i class="legend-swatch realm-elf"></i>Elven forest</span><span><i class="legend-swatch realm-beast"></i>Beastkin wilds</span>
-      <span><i class="legend-swatch realm-peaks"></i>Mountains</span><span><i class="legend-swatch realm-demon"></i>Demon wastes</span>
+<div id="hudroot">
+  <div id="water"></div>
+  <div id="hurt"></div>
+  <div id="cross"></div>
+  <div id="hud"></div>
+  <div id="compass">
+    <div id="compasstape"></div>
+    <div id="compassnote"></div>
+  </div>
+  <div id="realm"></div>
+  <div id="toast"></div>
+  <div id="prompt"></div>
+  <div id="minebar"><div class="track"><div id="minefill"></div></div><span id="minetext"></span></div>
+  <button id="maptoggle" type="button" aria-label="Open world map">
+    <span class="minimap-face"><canvas id="minimap"></canvas><span class="minimap-north">N</span><kbd>M</kbd></span>
+    <span id="mapplace"></span><small id="maprealm"></small>
+  </button>
+  <nav id="shortcuts" aria-label="Menus">
+    <i id="dayicon" class="ic ic-sun" title="Time of day"></i>
+    <button type="button" data-open="bag" aria-label="Bag"><i class="ic ic-bag"></i><kbd>I</kbd></button>
+    <button type="button" data-open="journal" aria-label="Journal"><i class="ic ic-journal"></i><kbd>J</kbd></button>
+  </nav>
+  <aside id="story">
+    <h3 id="wname">…</h3>
+    <div class="quest" id="quest"></div>
+    <div class="quest" id="guildq"></div>
+    <div class="lawline" id="lawline"></div>
+  </aside>
+  <div id="status"></div>
+  <div id="dock">
+    <div id="blockname"></div>
+    <div id="dockbody">
+      <div id="bars">
+        <div class="bar" id="hpbar"><i class="ic ic-heart"></i><div class="track"><div id="hpfill"></div></div><span id="hptext"></span></div>
+        <div class="bar" id="mpbar"><i class="ic ic-mana"></i><div class="track"><div id="mpfill"></div></div><span id="mptext"></span></div>
+        <div id="purse"></div>
+      </div>
+      <div class="dockrow">
+        <div class="dockset">
+          <div class="slot" id="quickpot" title="Health potion"><i class="num">G</i><i class="ic ic-potion"></i><b id="potcount"></b></div>
+          <div class="slot" id="quickmana" title="Mana potion"><i class="num">V</i><i class="ic ic-manapotion"></i><b id="manacount"></b></div>
+        </div>
+        <div class="dockset" id="hotbar"></div>
+        <div class="dockset" id="spells"></div>
+      </div>
     </div>
-    <div class="map-scroll"><div class="map-north">N ↑</div><div id="mapgrid" class="map-grid"></div></div>
-    <footer id="mapfooter">Each square represents one region.</footer>
-  </section>
+  </div>
 </div>
-<div id="hurt"></div>
-<div id="toast"></div>
-<div id="pray">🙏 Pray to the god (Enter to send, Esc to cancel)<input id="prayin" maxlength="200" placeholder="e.g. Why did you choose me? / Protect the village!"></div>
-<div id="panel"><h3 id="paneltitle"></h3><div id="panelline"></div>
-  <div id="chat"><div id="chatlog"></div><div class="chatrow"><input id="chatin" maxlength="300" placeholder="Type what you want to say… (Enter to send)"><button id="chatsend">Say</button></div></div>
-  <div id="panelbody"></div><button id="panelclose">Close (Esc)</button></div>
-<div id="story"><h3 id="wname">…</h3><div id="beats"></div><div class="quest" id="quest"></div><div id="laws"></div><div class="oracle" id="oracle"></div></div>
+
+<div id="scrim">
+  <div id="book" class="book" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="paneltitle">
+    <nav id="tabs" aria-label="Book sections">
+      <button type="button" data-page="bag" title="Bag (I)" aria-label="Bag"><i class="ic ic-bag"></i></button>
+      <button type="button" data-page="journal" title="Journal (J)" aria-label="Journal"><i class="ic ic-journal"></i></button>
+      <button type="button" data-page="map" title="Map (M)" aria-label="Map"><i class="ic ic-map"></i></button>
+      <button type="button" data-page="keys" title="Controls" aria-label="Controls"><i class="ic ic-gear"></i></button>
+    </nav>
+    <div class="spread">
+      <section class="page left">
+        <h2 id="paneltitle"></h2>
+        <div id="panelline"></div>
+        <div id="chat"><div id="chatlog"></div><div id="chattopics"></div></div>
+        <div id="pageleft" class="pagebody"></div>
+      </section>
+      <section class="page right"><div id="pageright" class="pagebody"></div></section>
+      <i class="clasp"></i>
+    </div>
+    <div id="bag">
+      <div class="bag-side">
+        <div class="bag-hero">
+          <div class="gear" id="gear"></div>
+          <div class="hero-pane"><canvas id="herocanvas" width="96" height="120" aria-label="Your character"></canvas></div>
+        </div>
+        <div id="bagstats"></div>
+      </div>
+      <div class="bag-main">
+        <div id="bagname"></div>
+        <div id="bagitems"></div>
+        <div class="groove"></div>
+        <div id="baghot"></div>
+      </div>
+    </div>
+    <div id="mapview">
+      <div id="mappane">
+        <canvas id="worldcanvas" aria-label="Map of the world"></canvas>
+        <div id="mapmarks"></div>
+        <div id="mapnote"><h3 id="mapname"></h3><p id="mapwhere"></p><p id="mapgoal"></p><div id="mapquests"></div></div>
+        <div id="mapreadout"></div>
+        <div id="maptools">
+          <button type="button" id="mapall" title="Whole world" aria-label="Show the whole world"><i class="ic ic-map"></i></button>
+          <button type="button" id="mapfind" title="Find me" aria-label="Find me"><i class="ic ic-you"></i></button>
+          <button type="button" id="mapzoomout" title="Zoom out (-)" aria-label="Zoom out">-</button>
+          <button type="button" id="mapzoomin" title="Zoom in (+)" aria-label="Zoom in">+</button>
+        </div>
+      </div>
+    </div>
+    <nav id="ribbons" aria-label="Journal pages">
+      <button type="button" data-page="journal" class="ribbon-red" title="Story and quests" aria-label="Story and quests"><i class="ic ic-quest"></i></button>
+      <button type="button" data-page="laws" class="ribbon-blue" title="Laws (L)" aria-label="Laws"><i class="ic ic-scales"></i></button>
+      <button type="button" data-page="powers" class="ribbon-amber" title="Powers" aria-label="Powers"><i class="ic ic-bluestar"></i></button>
+    </nav>
+    <button id="panelclose" type="button" title="Close (Esc)" aria-label="Close"></button>
+  </div>
+</div>
 
 <script type="importmap">{ "imports": {
   "three": "./vendor/three.module.js",

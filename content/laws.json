@@ -21,5 +21,24 @@
     { "name": "Pact of the Elder Trees", "crime": "kill_elf", "scope": "everywhere", "needs_witness": false, "punishment": "curse", "severity": 2 },
     { "name": "Blood Price of the Tribes", "crime": "kill_beastkin", "scope": "everywhere", "needs_witness": true, "punishment": "bounty", "severity": 2 },
     { "name": "City Stones", "crime": "vandalism", "scope": "cities", "needs_witness": true, "punishment": "fine", "severity": 1 }
+  ],
+  "local_laws": [
+    { "name": "Oath of the Tide", "crime": "kill_mermaid", "scope": "everywhere", "needs_witness": false, "punishment": "curse", "severity": 2 },
+    { "name": "The Forest Ward", "crime": "attack_civilian", "scope": "elven_forest", "needs_witness": true, "punishment": "exile", "severity": 2 },
+    { "name": "Tribal Reckoning", "crime": "attack_civilian", "scope": "beastkin_savanna", "needs_witness": true, "punishment": "bounty", "severity": 1 },
+    { "name": "The Hearthstone Accord", "crime": "vandalism", "scope": "human_kingdom", "needs_witness": true, "punishment": "fine", "severity": 2 },
+    { "name": "Silver Bough Edict", "crime": "vandalism", "scope": "elven_forest", "needs_witness": false, "punishment": "curse", "severity": 1 }
+  ],
+  "decrees": [
+    { "when": { "stage": 1 }, "law": { "name": "Writ of the Watch", "crime": "attack_civilian", "scope": "human_kingdom", "needs_witness": true, "punishment": "fine", "severity": 2 },
+      "line": "⚡ {god}: The King asked nicely, so now it's a Law. Be polite to people! I can't make you, but the Law can." },
+    { "when": { "notoriety": 2 }, "law": { "name": "The Hero's Restraint", "crime": "attack_civilian", "scope": "everywhere", "needs_witness": true, "punishment": "bounty", "severity": 1 },
+      "line": "⚡ {god}: Okay. I can't stop you. But I CAN write this down, and now it's illegal. Everywhere. Hi." },
+    { "when": { "raids": 4 }, "law": { "name": "Law of Shared Walls", "crime": "kill_human", "scope": "cities", "needs_witness": false, "punishment": "guards", "severity": 2 },
+      "line": "⚡ {god}: The raids have everyone frightened, so the cities asked me for this one. Murder inside the walls is seen, whether anyone's looking or not." },
+    { "when": { "notoriety": 5 }, "law": { "name": "The Long Memory", "crime": "kill_beastkin", "scope": "everywhere", "needs_witness": false, "punishment": "curse", "severity": 2 },
+      "line": "⚡ {god}: I've been keeping count. I wish I hadn't had to. This one's for the tribes." },
+    { "when": { "stage": 3 }, "law": { "name": "Peace of the Oaths", "crime": "kill_mermaid", "scope": "everywhere", "needs_witness": true, "punishment": "bounty", "severity": 3 },
+      "line": "⚡ {god}: Four peoples just agreed on something for the first time in three centuries. I'm writing it down before they change their minds." }
   ]
 }

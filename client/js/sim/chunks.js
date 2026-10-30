@@ -25,6 +25,7 @@ export function setBlock(wx, y, wz, id) {
   const lx = wx - cx * CS, lz = wz - cz * CS, i = idx(lx, y, lz);
   ch.d[i] = id; ch.dirty = true;
   recordEdit(k, i, id);
+  emit('chunk:edited', { cx, cz });
   const mark = (a, b) => { const n = chunks.get(key(a, b)); if (n) n.dirty = true; };
   if (lx === 0) mark(cx - 1, cz); if (lx === CS - 1) mark(cx + 1, cz);
   if (lz === 0) mark(cx, cz - 1); if (lz === CS - 1) mark(cx, cz + 1);

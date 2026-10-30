@@ -1,23 +1,60 @@
-<!doctype html><html><body style="margin:0;background:#cfe6ff">
+<!doctype html><html><body style="margin:0;background:#f7caa0;font:16px sans-serif;color:#3f2029">
+<div style="position:fixed;left:12px;top:10px;z-index:1">
+  <select id="motion"><option>idle</option><option>walk</option><option>run</option><option>strike</option><option>scared</option><option>jump</option></select>
+</div>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }</script>
 <script type="module">
 import * as THREE from 'three';
 import { buildAvatar, lookFor } from './js/view/avatar.js';
-const W = 1500, H = 760;
+import { buildCreature } from './js/view/creatures.js';
+import { OUTFITS } from './js/view/outfits.js';
+import { newMotion } from './js/view/pose.js';
+const W = innerWidth, H = innerHeight;
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); document.body.appendChild(r.domElement);
-const scene = new THREE.Scene(); scene.background = new THREE.Color(0xcfe6ff);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.6)); const d = new THREE.DirectionalLight(0xffffff, 1.2); d.position.set(2, 3, -4); scene.add(d);
-const cam = new THREE.PerspectiveCamera(28, W / H, 0.1, 100); cam.position.set(0, 1.9, -14); cam.lookAt(0, 1.05, 0);
-const cast = [
-  ['goddess', 'goddess', 'human'], ['king', 'king', 'human'], ['king', 'queen', 'human'], ['elf_royal', 'elf_queen', 'elf'], ['villager', 'receptionist', 'human'],
-  ['knight', 'guild_master', 'human'], ['adventurer', 'adventurer', 'human'], ['adventurer', 'adventurer', 'human'], ['villager', 'doctor', 'human'], ['villager', 'nurse', 'human'],
-  ['villager', 'priest', 'human'], ['merchant', 'merchant', 'human'], ['villager', 'farmer', 'human'], ['villager', 'bard', 'human'],
-  ['elf', 'herbalist', 'elf'], ['elf_guard', 'guard', 'elf'], ['beastkin', 'chief', 'beastkin'], ['beastkin', 'hunter', 'beastkin'], ['knight', 'guard', 'human'], ['demon_lord', undefined, 'demon'],
+r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.08;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xa9c8d0);
+scene.add(new THREE.HemisphereLight(0xf4f3ec, 0x62645b, 1.3)); const d = new THREE.DirectionalLight(0xfff0d8, 1.35); d.position.set(2, 3, -4); scene.add(d);
+const cam = new THREE.PerspectiveCamera(24, W / H, 0.1, 200); cam.position.set(0, 7, -42); cam.lookAt(0, 4.6, 0);
+
+const creatures = await (await fetch('/content/creatures.json')).json();
+const OWN_LINE = ['god', 'goddess', 'guard', 'mermaid', 'mermaid_queen', 'bounty_hunter', 'demon_lord']; // not plain jobs: listed by hand below
+const RACE = { elf_king: 'elf', elf_queen: 'elf', elf_guard: 'elf', herbalist: 'elf', elder: 'elf', ranger: 'elf', chief: 'beastkin', shaman: 'beastkin', hunter: 'beastkin', warrior: 'beastkin' };
+const people = [
+  ...Object.keys(OUTFITS).filter(j => !OWN_LINE.includes(j)).map(j => ['villager', j, RACE[j] || 'human']),
+  ['knight', 'guard', 'human'], ['mermaid', undefined, 'mermaid'], ['mermaid_queen', undefined, 'mermaid'], ['god', 'god', 'human'], ['goddess', 'goddess', 'human'], ['bounty_hunter', undefined, 'human'],
 ];
-cast.forEach(([kind, job, race], i) => {
-  const { g } = buildAvatar(lookFor(kind, job, i * 17 + 3, { race: race === 'demon' ? undefined : race }), kind === 'demon_lord' ? 2.3 : 1.85, []);
-  const row = i < 10 ? 0 : 1, col = i % 10;
-  g.position.set((col - 4.5) * 1.05, row ? -0.15 : 2.45, row ? -1 : 1); scene.add(g);
+const shown = [];
+const place = ({ g, extra, pose }, x, y, seed) => { g.position.set(x, y, 0); g.rotation.y = Math.PI; scene.add(g); shown.push({ extra, pose, m: newMotion(seed) }); };
+const PER_ROW = 14, GAP = 1.5;
+people.forEach(([kind, job, race], i) => {
+  const def = creatures[kind] || {}, height = def.h || 1.85;
+  place(buildAvatar(lookFor(kind, job, i * 17 + 3, { race }), height, []), (i % PER_ROW - (PER_ROW - 1) / 2) * GAP, 7 - Math.floor(i / PER_ROW) * 3, i);
 });
-r.render(scene, cam); window.done = true;
+let x = -13;
+for (const kind of Object.keys(creatures).filter(k => !creatures[k].avatar)) {
+  const def = creatures[kind], wide = Math.max(1.6, def.w * (def.quad ? 2.6 : 1.5));
+  place(buildCreature(kind, def, []), x + wide / 2, -3.6, x);
+  x += wide + 0.5;
+}
+place(buildAvatar(lookFor('demon_lord', undefined, 3, {}), creatures.demon_lord.h, []), x + 1, -3.6, 5);
+
+const motion = document.getElementById('motion');
+const STATES = {
+  idle: {}, walk: { walk: 1 }, run: { walk: 1, run: 1 }, scared: { walk: 1, run: 1, scared: 1 }, jump: { air: 1, rise: 0.4 },
+};
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = (now - last) / 1000, kind = motion.value; last = now;
+  for (const { extra, pose, m } of shown) {
+    Object.assign(m, { walk: 0, run: 0, air: 0, rise: 0, scared: 0, strike: 0 }, STATES[kind]);
+    m.t += dt;
+    m.phase += dt * m.walk * (m.run ? 14 : 7);
+    if (kind === 'strike') m.strike = (m.t % 1.2) / 1.2;
+    pose(extra, m);
+  }
+  r.render(scene, cam);
+}
+requestAnimationFrame(frame);
+window.done = true;
 </script></body></html>

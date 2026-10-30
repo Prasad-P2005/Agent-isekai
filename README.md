@@ -1,61 +1,57 @@
 # Isekai Realms
 
 You die on Earth, meet a god in heaven, and are reborn into a voxel fantasy world to slay the Demon Lord.
-The world, its people, its laws and its story are written by an LLM (through OpenRouter) acting as a god who
-**cannot touch the world directly**: he acts only through the world's rules.
+The god **cannot touch the world directly**. Gods have no hands, only Laws, and the world enforces those whether anyone likes it or not.
+Nothing here needs an AI service or a key: the story, the people and every line of dialogue are written and shipped with the game.
 
 ## Run it
-
-Create an [OpenRouter API key](https://openrouter.ai/keys), then copy the example settings and paste the key into `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Then run the app with Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
-Open `http://localhost:8000`. Compose keeps world saves in a named volume and publishes the game on this machine only, because the game has no login and anyone who can reach it can spend your OpenRouter credits. Stop with `docker compose down`.
+Open `http://localhost:8000`. Compose keeps world saves in a named volume and publishes the game on this machine only, because the game has no login. Stop with `docker compose down`.
 
 You can also run the app directly:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # first time only
-export ISEKAI_LLM_API_KEY=sk-or-...
 .venv/bin/python -m isekai         # http://localhost:8000
-.venv/bin/pytest                   # tests (no LLM needed)
+.venv/bin/pytest                   # tests
 node --test "tests/client/*.test.mjs"   # the game simulation, terrain and shared data (Node 21+)
 ```
 
-Settings come from environment variables: `ISEKAI_LLM_API_KEY`, `ISEKAI_LLM_URL`, `ISEKAI_LLM_MODEL`, `ISEKAI_PORT`, `ISEKAI_SAVE_DIR`.
-`ISEKAI_LLM_MODEL` can be any OpenRouter model with a provider that supports both structured outputs and temperature.
-The default model is free, but OpenRouter caps free use at 20 requests a minute and 50 a day (1,000 a day once you have bought 10 credits). A new world uses 14 requests, and every person's reply and god narration uses one. Past the cap, the god goes quiet and people only answer "…" until the quota resets at midnight UTC. `ISEKAI_GOD_IDLE` sets the seconds between unprompted narrations (default 600); raise it to save requests.
+Settings come from environment variables: `ISEKAI_PORT`, `ISEKAI_SAVE_DIR`.
 The world is saved to `saves/world.json` after every action, including the blocks you mine and place, where you stand and the time of day.
 
 ## How a playthrough goes
 
-1. **Heaven**: chat with the god (LLM), then descend. A "Chapter I" card introduces the world.
+1. **Heaven**: talk with the god, then descend. A "Chapter I" card introduces the world.
 2. **The finite world**: an 8×8 grid of 64×64-block lands: 4 human villages, 2 walled human cities with rulers,
    the walled elven capital with its Elf King or Queen, 2 elven villages, 4 beastkin villages, mermaid seas, the Dragonspine Peaks and the Demon Lord's castle.
-3. **The storyline**, tracked by the engine, narrated by the god:
-   meet the King → win the favor of the Elf King/Queen and a Beastkin Chief → finish 2 guild quests →
-   enter the demon lands → slay the Demon Lord → return to the King.
+3. **The storyline**, in `content/story.json`:
+   - **Act I**: the King explains the First Law: no mortal hand can wound the Demon Lord, unless every people swears to amend it.
+   - **Act II, The Four Oaths**: prove yourself to the Guild for the Crown, gather Mana Crystals for the Elves, hunt orcs for the Tribes, and carry a broken treaty from the port queen to the Sea. The order is yours.
+   - **Act III, The One Who Came Before**: a cairn in the southern ruins, carved in a language only you can read. Make the god tell you the truth, then amend the First Law at a Law Stone.
+   - **Act IV, The Throne**: a three-stage fight with a Demon Lord who keeps his wounds, and who remembers being someone else.
+   - **Act V, The Crown**: give it to the King, break it on a Law Stone, or put it on. Each ending changes the world you keep playing in.
 
 ## Systems
 
 | System | Where | What it does |
 |---|---|---|
-| Genesis | `isekai/god/genesis.py` | The god names the world, rulers, settlements, Demon Lord, and writes the laws |
-| Settlement plans | `isekai/god/planner.py`, `isekai/systems/people/` | The god plans each settlement's population and notable people (guild master, receptionist, doctors…); the engine guarantees required jobs, homes and workplaces |
-| Laws & crimes | `isekai/systems/laws.py`, `client/js/sim/people.js` | Crimes need a law covering the place; witnessed crimes are punished (golems, guards, bounty, fine, exile, curse); civilian witnesses run to report you, so silence them or flee |
-| The god in the world | `isekai/god/narrator.py` | Narrates events, may decree new laws, may trigger only the world events the rules allow (raids, caravans, festivals, hordes) |
-| Economy & guild | `isekai/systems/shop.py`, `isekai/systems/guild.py` | Loot → merchants; potions, weapons, armor, skill scrolls; doctors, inns, priests; guild quests and ranks |
-| Dialogue | `isekai/god/dialogue.py` | Every person speaks in character with memory of past conversations |
+| Genesis | `isekai/world/genesis.py` | Each seed draws its own world: names, rulers, economy, raid pace and two local laws |
+| Settlements | `isekai/systems/people/` | Everyone has a job, a workplace and a home. The dead are replaced, so towns live on |
+| Laws & crimes | `isekai/systems/laws.py`, `client/js/sim/people.js` | Crimes need a law covering the place; witnessed crimes are punished (golems, guards, bounty, fine, exile, curse); civilian witnesses run to report you, so silence them; adventurers and guards fight back |
+| The god | `isekai/systems/storyteller.py` | Narrates, decrees new laws as you earn them, and sets off the world events the rules allow (raids, caravans, festivals, hordes, travellers, named foes) |
+| Story | `isekai/systems/story.py`, `content/story.json` | Chapters, oaths, scenes, and three endings |
+| Dialogue | `isekai/systems/dialogue.py`, `content/lines/` | Thousands of combinations of hand-written lines, chosen by job, people, temperament, the hour and the war. Nothing repeats soon, and everyone has a life they will tell you about |
+| World memory | `isekai/systems/chronicle.py` | What you do becomes gossip that spreads town by town. Your renown changes how people greet you and what traders charge |
+| Favors | `isekai/systems/favors.py` | Anyone can ask for help: fetch, hunt, deliver or go and look |
+| Nemesis | `isekai/systems/storyteller.py` | The monster that kills you gets a name, gets stronger, and comes back |
+| Economy & guild | `isekai/systems/shop.py`, `isekai/systems/guild.py` | Loot to merchants; potions, weapons, armor, skill scrolls; doctors, inns, priests; guild quests and ranks |
 | Client | `client/js/` | `sim/` is the game (terrain, physics, combat, creature AI), `view/` draws it with three.js, `ui/` is the page, `net/` talks to the server |
-| Game data | `content/` | Blocks, creatures, items, jobs and laws, shared by the server and the client |
+| Game data | `content/` | Blocks, creatures, items, jobs, laws, the story and the line library |
 
 ## Characters
 
@@ -70,11 +66,13 @@ Settlement populations use seeded occupation mixes, so each world has a consiste
 ## Building
 
 Blocks are not free: hold left click to mine (harder blocks take longer, bedrock is unbreakable, pickaxes from the
-blacksmith speed it up). Mined blocks go to your inventory (`I`) and are spent when you build.
+blacksmith speed it up). Mined blocks go to your bag (`I`) and are spent when you build.
 
 ## Controls
 
-WASD move · Space jump · Shift sprint · E talk to whoever is under the crosshair (type to chat; shops and services open alongside) ·
-T pray · L laws · I inventory · Q fireball · R heal · G/V potions · F flight · click attack · hold click mine · right click place.
+WASD move · Space jump · Shift sprint · E talk to whoever is under the crosshair (pick what to say with a click or 1–9; shops and services open alongside) ·
+T pray to the god · I bag · J journal · L laws · M map · Q fireball · R heal · Z frost nova · X chain lightning · C blink · B mana ward · H meteor · G/V potions · F flight · click attack · hold click mine · right click place · F3 position and frame rate.
+
+Spells come from scrolls at a market. Your maximum mana starts at 100 and grows three ways: attune to a Mana Crystal at a temple, keep casting, and swear the Oath of the Elves. A meteor costs 120, so it has to wait until you have grown it.
 
 Browser console helpers: `isekai.teleport('Crownstone')`, `isekai.G.profile`, `isekai.ents`.

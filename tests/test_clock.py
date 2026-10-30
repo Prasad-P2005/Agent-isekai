@@ -1,6 +1,6 @@
 """The game clock: everything scheduled runs on it, so pausing the game pauses all of it."""
-from isekai.god.narrator import run_event
 from isekai.systems import guild, shop
+from isekai.systems.storyteller import QUIET_SPELL, WAR_EASE, WAR_PER_RAID, omen, run_event
 
 
 def test_raids_come_on_schedule(game):
@@ -47,21 +47,32 @@ def test_an_event_can_happen_again_after_its_cooldown(game):
     assert run_event(game, "merchant_caravan") is True
 
 
+def spoken(game) -> list[str]:
+    return [i.text for i in game.world.feed if i.type == "narration"]
+
+
 def test_the_god_speaks_up_after_a_quiet_spell(game):
     game.world.mark("narration")
-    game.tick(599)
-    assert game.narrator.queue.empty()
+    game.tick(QUIET_SPELL - 1)
+    assert spoken(game) == []
     game.tick(1)
-    assert game.narrator.queue.qsize() == 1
+    assert len(spoken(game)) == 1
 
 
-async def test_a_turn_of_the_god_restarts_the_quiet_spell(game):
-    game.tick(1000)
-    while not game.narrator.queue.empty():
-        game.narrator.queue.get_nowait()
-    await game.narrator.turn("something happened")
-    game.tick(599)
-    assert game.narrator.queue.empty()
+def test_world_events_happen_with_no_one_to_cause_them(game):
+    game.ctx = {"in_settlement": True}
+    omen(game)
+    assert [i.data["event"] for i in game.world.feed if i.type == "event"]
+    assert game.world.pending("omen")
+
+
+def test_a_raid_presses_on_prices_and_quiet_times_ease_them(game):
+    w = game.world
+    w.story.stage = 1
+    run_event(game, "demon_raid", cause="the rules")
+    assert w.war_pressure == WAR_PER_RAID
+    game.tick(60)
+    assert w.war_pressure == WAR_PER_RAID - WAR_EASE
 
 
 def test_the_quest_board_changes_with_play_time(game):

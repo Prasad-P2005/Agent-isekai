@@ -61,6 +61,7 @@ export function biomeAt(x, z, h) {
 }
 
 // spawn hints for creatures that live in structures (mermaids in palaces, the Demon Lord in his castle)
+const DRAGON_PERCH = 13; // blocks above the ground: a dragon starts on the wing, not walking out of a mountainside
 export const hintQueue = [];
 const hintSeen = new Set();
 function hint(kind, x, y, z) { const k = kind + x + ',' + y + ',' + z; if (hintSeen.has(k)) return; hintSeen.add(k); hintQueue.push({ kind, x, y, z }); }
@@ -192,7 +193,7 @@ function palace(x, y, z, set, r) {
   }
   for (let dy = 0; dy < 4; dy++) set(x, y + dy, z, dy === 3 ? 16 : 15);
   set(x, y + 4, z, 22);
-  hint('mermaid', x + 2, y + 1, z); hint('mermaid', x - 2, y + 1, z + 1);
+  hint('mermaid', x + 2, y + 1, z); hint('mermaid', x - 2, y + 1, z + 1); hint('mermaid_queen', x, y + 1, z + 2);
   for (const [dx, dz] of [[-5, -5], [5, -5], [-5, 5], [5, 5]]) { for (let dy = -1; dy < 8; dy++) set(x + dx, y + dy, z + dz, 15); set(x + dx, y + 8, z + dz, 16); }
   for (let i = 0; i < 12; i++) set(x + Math.floor(r() * 15) - 7, y, z + Math.floor(r() * 15) - 7, 11 + Math.floor(r() * 3), true);
 }
@@ -202,6 +203,7 @@ function spire(x, y, z, set) {
     for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) if (dx * dx + dz * dz <= rad * rad + 0.5) set(x + dx, y + dy, z + dz, dy < 3 ? 15 : 16);
   }
   set(x, y + 26, z, 22);
+  hint('law_stone', x + 5, heightAt(x + 5, z) + 1, z);
 }
 function ruins(x, y, z, set, r) {
   for (let dx = -5; dx <= 5; dx++) for (let dz = -5; dz <= 5; dz++) {
@@ -378,11 +380,16 @@ function features(cx, cz, set) {
   } else {
     const hx = bx + 16, hz = bz + 16;
     switch (L.structure) {
+      // Every open land of the Peaks keeps a dragon. The spires have none, or the Law Stones would be guarded by something the story can't get past.
+      case 'none': if (heart && L.b === B.PEAKS) hint('dragon', hx, heightAt(hx, hz) + DRAGON_PERCH, hz); break;
       case 'treehouse_grove': if (sh > SEA + 1 && roll < 0.45) { giantTree(sx, sh + 1, sz, set, r); big = true; } break;
       case 'mermaid_palace': if (heart && sh < SEA - 9) { palace(sx, sh + 1, sz, set, r); big = true; } break;
       case 'crystal_spire': if (heart) { spire(hx, heightAt(hx, hz) + 1, hz, set); big = true; } break;
       case 'demon_castle': if (heart) { demonCastle(hx, heightAt(hx, hz) + 1, hz, set); big = true; } break;
-      case 'ruins': if (roll < 0.4) { ruins(sx, sh, sz, set, r); big = true; } break;
+      case 'ruins':
+        if (heart) hint('cairn', sx + 1, heightAt(sx + 1, sz) + 1, sz); // the story needs it, so it can't depend on the roll
+        if (roll < 0.4) { ruins(sx, sh, sz, set, r); big = true; }
+        break;
     }
   }
   const base = [12, 1, 6, 2, 2, 3, 4][biomeAt(bx + 8, bz + 8, heightAt(bx + 8, bz + 8))];

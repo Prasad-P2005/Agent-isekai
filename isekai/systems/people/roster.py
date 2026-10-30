@@ -1,4 +1,4 @@
-"""Turn a settlement plan (from the god, or none) into a full roster of residents with jobs, workplaces and homes."""
+"""Fill a settlement with a full roster of residents with jobs, workplaces and homes."""
 from __future__ import annotations
 
 import math
@@ -7,7 +7,7 @@ import random
 from ...content import WORLD
 from ...core.state import Pos, Resident, Settlement
 from ...world.map import LAND
-from .jobs import BASE_KIND, ELF_KIND, FILLER, JOBS, JOBS_FOR, POPULATION, RACE_OF, REQUIRED, ROYAL
+from .jobs import BASE_KIND, ELF_KIND, FILLER, JOBS, POPULATION, RACE_OF, REQUIRED, ROYAL
 from .names import gen_name
 
 HOME_KINDS = {"house", "treehouse", "hut", "chief", "keep", "palace"}
@@ -86,25 +86,18 @@ def _schedule(s: Settlement, job_name: str, index: int, homes: list, rng: random
     return _spot(s, job.work, rng), night
 
 
-def make_roster(s: Settlement, plan: dict | None, seed: int, ruler_job: str | None = None, ruler_name: str | None = None) -> None:
+def make_roster(s: Settlement, seed: int, ruler_job: str | None = None, ruler_name: str | None = None) -> None:
     rng = random.Random(seed * 1000 + s.id)
-    race, allowed = RACE_OF[s.type], JOBS_FOR[s.type]
+    race = RACE_OF[s.type]
     people: list[dict] = []
-    for p in (plan or {}).get("notable_people", [])[:14]:
-        job = str(p.get("job", "")).lower().strip().replace(" ", "_")
-        if job in allowed and (job != "fisherman" or s.coastal) and p.get("name") and job not in ROYAL:
-            people.append({"name": str(p["name"])[:24], "job": job, "personality": str(p.get("personality", ""))[:160], "notable": True})
-    for job in dict.fromkeys(REQUIRED[s.type]):
-        while sum(p["job"] == job for p in people) < REQUIRED[s.type].count(job):
-            people.append({"name": gen_name(race, rng), "job": job, "personality": "", "notable": True})
+    for job in REQUIRED[s.type]:
+        people.append({"name": gen_name(race, rng), "job": job, "notable": True})
     if ruler_job:
-        people.insert(0, {"name": ruler_name or gen_name(race, rng), "job": ruler_job, "personality": "", "notable": True})
-    lo, hi, default = POPULATION[s.type]
-    pop = (plan or {}).get("population")
-    pop = max(lo, min(hi, int(pop))) if isinstance(pop, (int, float)) else default
+        people.insert(0, {"name": ruler_name or gen_name(race, rng), "job": ruler_job, "notable": True})
+    pop = POPULATION[s.type][2]
     used_names = {p["name"] for p in people}
     for job in _filler_jobs(s, max(0, pop - len(people)), rng):
-        people.append({"name": _unique_name(race, rng, used_names), "job": job, "personality": "", "notable": False})
+        people.append({"name": _unique_name(race, rng, used_names), "job": job, "notable": False})
 
     homes = [b for b in s.layout if b.kind in HOME_KINDS] or [None]
     residents = []
@@ -113,8 +106,7 @@ def make_roster(s: Settlement, plan: dict | None, seed: int, ruler_job: str | No
         work, night = _schedule(s, p["job"], i, homes, rng)
         residents.append(Resident(
             id=s.id * ID_BASE + i, name=p["name"], job=p["job"], label=job.label, race=race, kind=_kind_for(race, p["job"]),
-            service=job.service, body=job.body, hair=job.hair, personality=p["personality"], notable=p["notable"],
-            work=work, night=night))
+            service=job.service, body=job.body, hair=job.hair, notable=p["notable"], work=work, night=night))
     s.residents = residents
     s.ruler = residents[0].name if ruler_job else s.ruler
     s.version += 1

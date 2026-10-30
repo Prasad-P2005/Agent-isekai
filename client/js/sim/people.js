@@ -19,7 +19,8 @@ export function updateResidents(dt) {
   residentTimer = 0.7;
   const night = isNight(), candidates = [];
   // despawn residents left behind, wherever they are (the player may have died, been exiled or flown away)
-  for (const e of ents.slice()) if (e.res && e.pos.distanceTo(player.pos) > DESPAWN_DIST) removeEntity(e);
+  // A witness stays until they have reported: running away from them does not make them forget.
+  for (const e of ents.slice()) if (e.res && !(e.reportT > 0) && e.pos.distanceTo(player.pos) > DESPAWN_DIST) removeEntity(e);
   for (const S of G.world.settlements) {
     if (Math.hypot(S.cx - player.pos.x, S.cz - player.pos.z) > 140) continue;
     for (const r of S.residents) {
@@ -39,9 +40,14 @@ export function updateResidents(dt) {
     if (spawnEntity(r.kind, t.x, y, t.z, { name: r.name, title: r.label, body: r.body, hair: r.hair, res: r })) { live++; spawned++; }
   }
 }
+// Everyone who is still the same person stays where they stand, so one newcomer doesn't make a whole town blink.
 export function replaceSettlement(id, fresh) {
-  const old = G.world.settlements[id];
-  for (const r of old.residents) if (r._ent) removeEntity(r._ent);
+  const old = G.world.settlements[id], now = new Map(fresh.residents.map(r => [r.id, r]));
+  for (const r of old.residents) {
+    if (!r._ent) continue;
+    const same = now.get(r.id);
+    if (same?.name === r.name && !same.dead) { same._ent = r._ent; r._ent.res = same; } else removeEntity(r._ent);
+  }
   G.world.settlements[id] = { ...old, ...fresh };
 }
 
@@ -56,12 +62,13 @@ function witnesses(victim) {
   const eye = new Vec3(player.pos.x, player.pos.y + 1.6, player.pos.z), range = isNight() ? 12 : 26;
   const lawmen = [], civilians = [];
   for (const o of ents) {
-    if (!(o.def.friendly || o.def.lawful) || o.hp <= 0 || o === victim) continue;
+    if (!(o.def.friendly || o.def.lawful) || o.def.sacred || o.hp <= 0 || o === victim) continue;
     if (o.pos.distanceTo(player.pos) > range) continue;
     if (!lineOfSight(new Vec3(o.pos.x, o.pos.y + o.def.h * 0.9, o.pos.z), eye)) continue;
     (o.def.lawful ? lawmen : civilians).push(o);
   }
-  if (victim && victim.hp > 0) civilians.push(victim); // a surviving victim is a witness too
+  // A surviving victim is a witness too. Adventurers and guards fight back rather than run, so they count as the law.
+  if (victim && victim.hp > 0) (victim.def.lawful ? lawmen : civilians).push(victim);
   return { lawmen, civilians };
 }
 function commitCrime(type, victim) {
@@ -71,6 +78,7 @@ function commitCrime(type, victim) {
     body: {
       crime: type, in_city: inCity(player.pos.x, player.pos.z), realm: BIOMES[landOf(player.pos.x, player.pos.z).b].realm,
       lawmen: lawmen.map(o => o.name), civilians: civilians.map(o => o.name), victim: victim ? `${victim.name} the ${victim.def.label}` : '',
+      victim_id: victim?.res?.id ?? null,
     },
   });
 }
@@ -116,15 +124,20 @@ export function updateLaw(dt) {
 }
 
 // ---------- talking ----------
-export function talkToNearest() {
+// Whoever is under the crosshair, or else the nearest person within reach.
+export function nearestTalker() {
   const aimed = pickEntity(6);
   let best = aimed && aimed.e.def.friendly ? aimed.e : null, bd = 4.5;
   if (!best) for (const e of ents) { const d = e.pos.distanceTo(player.pos); if (e.def.friendly && d < bd) { best = e; bd = d; } }
+  return best;
+}
+export function talkToNearest() {
+  const best = nearestTalker();
   if (!best) return toast('No one is near enough to talk to.', 2);
   if (best.talking) return;
   if (best.angryT > 0) return toast(`${best.name} is in no mood to talk!`, 2);
-  const r = best.res, sid = r ? Math.floor(r.id / WORLD.resident_id_base) : -1;
+  const r = best.res, sid = r ? Math.floor(r.id / WORLD.resident_id_base) : -1, offers = r?.service ?? best.service;
   if (best.def.lawful && ((G.profile?.bounty || 0) > 0 || player.wanted > 0)) return emit('service:opened', { type: 'bounty', npc: best, settlement: sid, line: `${best.name}: "You're a wanted criminal. Pay up, or surrender."` });
-  const service = r?.service && !SERVICES[r.service]?.talk_only ? r.service : null;
+  const service = offers && !SERVICES[offers]?.talk_only ? offers : null;
   emit('talk:opened', { npc: best, settlement: sid, service });
 }

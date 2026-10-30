@@ -17,6 +17,7 @@ scene.background = SKY.clone();
 scene.fog = new THREE.Fog(SKY.clone(), 40, RD * 16 - 8);
 export const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 600);
 camera.rotation.order = 'YXZ';
+export const stillCamera = matchMedia('(prefers-reduced-motion: reduce)');
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
 export const opaqueMat = new THREE.MeshLambertMaterial({ vertexColors: true });

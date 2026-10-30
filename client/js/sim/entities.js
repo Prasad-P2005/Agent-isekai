@@ -1,7 +1,7 @@
 // Creatures and people: AI, combat and natural (Minecraft-like) spawning. Their bodies are drawn in view/bodies.js.
 import { G } from '../core/state.js';
 import { CREATURES, WORLD } from '../core/content.js';
-import { emit } from '../core/events.js';
+import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
 import { getBlock, chunkReady } from './chunks.js';
 import { GROUND, WATER, solid } from './blocks.js';
@@ -12,6 +12,7 @@ import { player, damagePlayer, has, eye, lookDir } from './player.js';
 export const ENT = CREATURES;
 export const ents = [];
 const MAX_BEINGS = 60, MAX_HOSTILE = 25;
+const BOLT_SPEED = 16, BOSS_BOLT_DMG = 9, BOSS_BOLT_GAP = [0, 4, 2.5], BREATH_GAP = 5, BREATH_RANGE = [5, 24]; // rare on purpose: fire costs particles
 
 export function spawnEntity(kind, x, y, z, opts = {}) {
   const base = ENT[kind];
@@ -20,12 +21,14 @@ export function spawnEntity(kind, x, y, z, opts = {}) {
   const D = { ...base };
   if (opts.body != null) D.body = opts.body;
   if (opts.hair != null) D.hair = opts.hair;
+  if (opts.power) { D.hp = Math.round(D.hp * opts.power); D.dmg = Math.round(D.dmg * (1 + (opts.power - 1) / 2)); } // a monster with a name
   const e = {
-    kind, def: D, pos: new Vec3(x, y, z), vel: new Vec3(), kb: new Vec3(), yaw: Math.random() * 6.28,
-    hp: D.hp, maxHp: D.hp, onGround: false, wanderT: 0, wdir: [0, 0], cd: 0.5, hopT: 0, flash: 0,
-    fleeT: 0, angryT: opts.angry ? 999 : 0, reportT: 0, reportLaw: null, summonT: 6, attacked: false,
+    kind, def: D, pos: new Vec3(x, y, z), last: new Vec3(x, y, z), vel: new Vec3(), kb: new Vec3(), yaw: Math.random() * 6.28,
+    hp: opts.hp ?? D.hp, maxHp: D.hp, onGround: false, wanderT: 0, wdir: [0, 0], cd: 0.5, hopT: 0, flash: 0,
+    fleeT: 0, angryT: opts.angry ? 999 : 0, frozenT: 0, reportT: 0, reportLaw: null, summonT: 6, boltT: BREATH_GAP, phase: 0, attacked: false,
     name: opts.name || (kind === 'demon_lord' ? G.world.demon_lord_name : D.label), title: opts.title || '', res: opts.res || null, natural: !!opts.natural,
     home: opts.home || null, // the structure this being lives in; leaving the area hands the spot back so it returns
+    service: opts.service || null, role: opts.role || null, named: opts.named || '',
   };
   if (e.res) e.res._ent = e;
   ents.push(e);
@@ -38,7 +41,7 @@ export function removeEntity(e) {
   emit('entity:removed', e);
 }
 function leaveWorld(e) {
-  if (e.home) hintQueue.push(e.home);
+  if (e.home) { e.home.hp = e.hp; hintQueue.push(e.home); } // it comes back, and it comes back as wounded as it left
   removeEntity(e);
 }
 function collidesBox(p, hw, h) {
@@ -63,6 +66,8 @@ function moveEnt(e, a, d) {
 }
 export const isNight = () => Math.sin(G.dayTime * Math.PI * 2) < -0.1;
 const isMonster = o => !o.def.friendly && !o.def.lawful && !o.def.hunter;
+// Spells that pick their own targets only touch those already against the hero, so that a stray bolt can't make a criminal of them.
+export const isFoe = o => (o.def.lawful ? o.angryT > 0 || player.wanted > 0 || !!G.profile?.crowned : !o.def.friendly);
 function nearestEnt(e, filter, range) {
   let best = null, bd = range;
   for (const o of ents) { if (o === e || o.hp <= 0 || !filter(o)) continue; const d = o.pos.distanceTo(e.pos); if (d < bd) { bd = d; best = o; } }
@@ -71,31 +76,36 @@ function nearestEnt(e, filter, range) {
 
 function updateEntity(e, dt) {
   const D = e.def, p = e.pos;
+  e.last.copy(p);
   const dx = player.pos.x - p.x, dz = player.pos.z - p.z, dy = player.pos.y - p.y, dist = Math.hypot(dx, dz) || 0.001;
   // Before the chunk check: a creature left behind in unloaded ground must still go, or it holds a spawn slot forever.
   if (despawns(e, { dist, night: isNight(), wanted: player.wanted, bounty: G.profile?.bounty || 0, roll: Math.random() })) return leaveWorld(e);
-  if (!chunkReady(p.x, p.z)) return;
-  e.fleeT -= dt; e.angryT -= dt;
+  // Before the chunk check too: a witness who has run into unloaded ground is still on their way to the watch.
   if (e.reportT > 0) { e.reportT -= dt; if (e.reportT <= 0) emit('witness:report', e); }
+  if (D.sacred || !chunkReady(p.x, p.z)) return;
+  if (e.frozenT > 0) { e.frozenT -= dt; return; } // locked in ice: it neither thinks nor moves, and its grudges wait for it
+  e.fleeT -= dt; e.angryT -= dt;
   const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.3), Math.floor(p.z)) === WATER;
+  const crowned = !!G.profile?.crowned;
+  if (crowned && D.friendly && !D.lawful && dist < 14) e.fleeT = Math.max(e.fleeT, 2); // nobody stays near the new Demon Lord
 
   // choose a target: the player, another creature, or nobody
   const canHitPlayer = player.ready && (G.locked || G.focused) && !G.uiOpen && Math.abs(dy) < 16;
-  const flee = e.reportT > 0 || e.fleeT > 0;
+  const flee = !D.lawful && (e.reportT > 0 || e.fleeT > 0); // the law stands its ground: only civilians run
   let tgt = null;
   if (!flee) {
     if (D.lawful) {
-      if (canHitPlayer && (player.wanted > 0 || e.angryT > 0) && dist < 40) tgt = 'player';
+      if (canHitPlayer && (player.wanted > 0 || e.angryT > 0 || crowned) && dist < 40) tgt = 'player';
       else tgt = nearestEnt(e, isMonster, 14);
     } else if (D.hunter) { if (canHitPlayer && dist < 60) tgt = 'player'; }
     else if (!D.friendly) {
-      if (canHitPlayer && dist < (D.fly || D.boss ? 40 : 22)) tgt = 'player';
-      const v = D.demon ? nearestEnt(e, o => o.def.friendly || o.def.lawful, 18) : nearestEnt(e, o => o.def.lawful, 6);
+      if (canHitPlayer && !crowned && dist < (D.fly || D.boss ? 40 : 22)) tgt = 'player';
+      const v = D.demon ? nearestEnt(e, o => (o.def.friendly || o.def.lawful) && !o.def.sacred, 18) : nearestEnt(e, o => o.def.lawful, 6);
       if (v && (!tgt || v.pos.distanceTo(p) < dist)) tgt = v;
     }
   }
   const tp = tgt === 'player' ? player.pos : tgt ? tgt.pos : null;
-  let mx = 0, mz = 0, speed = D.speed;
+  let mx = 0, mz = 0, speed = D.speed * (D.boss && e.phase === 2 ? 1.4 : 1);
   if (flee) { mx = -dx / dist; mz = -dz / dist; speed *= 1.5; }
   else if (tp) { const tx = tp.x - p.x, tz = tp.z - p.z, l = Math.hypot(tx, tz) || 1; mx = tx / l; mz = tz / l; }
   else if (D.friendly && dist < 4) { e.yaw = Math.atan2(-dx, -dz); speed = 0; }
@@ -134,18 +144,46 @@ function updateEntity(e, dt) {
     const reach = D.w / 2 + 1.0 + (D.quad ? D.w * 0.6 : 0), tdx = tp.x - p.x, tdz = tp.z - p.z, td = Math.hypot(tdx, tdz) || 0.01;
     if (Math.hypot(td, tp.y - p.y + 0.5) < reach + 0.6 && e.cd <= 0) {
       e.cd = D.fly ? 1.6 : 1.0;
-      if (tgt === 'player') { damagePlayer(D.dmg, e.name === D.label ? 'a ' + D.label : e.name); player.kb.set(tdx / td * 7, 0, tdz / td * 7); player.vel.y = Math.max(player.vel.y, 5); }
+      emit('entity:struck', e);
+      if (tgt === 'player') { damagePlayer(D.dmg, killerName(e), e); player.kb.set(tdx / td * 7, 0, tdz / td * 7); player.vel.y = Math.max(player.vel.y, 5); }
       else hurtEntity(tgt, D.dmg, tdx / td, tdz / td, e);
     }
   }
-  if (D.boss && tgt === 'player') { e.summonT -= dt; if (e.summonT <= 0) { e.summonT = 12; for (let i = 0; i < 2; i++) spawnEntity('imp', p.x + Math.random() * 4 - 2, p.y + 3, p.z + Math.random() * 4 - 2); } }
+  if (tgt === 'player') {
+    if (D.boss) bossTurn(e, dt);
+    else if (D.breath && dist > BREATH_RANGE[0] && dist < BREATH_RANGE[1]) { e.boltT -= dt; if (e.boltT <= 0) { e.boltT = BREATH_GAP; shoot(e, D.breath); } }
+  }
+}
+const killerName = e => (e.name === e.def.label ? 'a ' + e.def.label : e.name);
+// projectiles.js makes the bolt: it needs this file for what fireballs hit, so this file must not import it.
+function shoot(e, dmg) {
+  const from = new Vec3(e.pos.x, e.pos.y + e.def.h * 0.75, e.pos.z), at = eye();
+  const d = new Vec3(at.x - from.x, at.y - from.y, at.z - from.z), l = d.length() || 1;
+  emit('foe:shot', { pos: from, vel: d.multiplyScalar(BOLT_SPEED / l), dmg, src: killerName(e), killer: e });
+}
+// The Demon Lord's fight has three stages, set by his wounds: he summons, then he calls fire, then the crown drives him harder.
+function bossTurn(e, dt) {
+  const share = e.hp / e.maxHp, phase = share > 2 / 3 ? 0 : share > 1 / 3 ? 1 : 2, p = e.pos;
+  if (phase > e.phase) { e.phase = phase; e.summonT = 0; emit('boss:phase', phase); }
+  e.summonT -= dt;
+  if (e.summonT <= 0) {
+    e.summonT = 12;
+    for (let i = 0; i < 2; i++) spawnEntity(phase === 2 && !i ? 'demon_knight' : 'imp', p.x + Math.random() * 4 - 2, p.y + 3, p.z + Math.random() * 4 - 2);
+  }
+  if (!phase) return;
+  e.boltT -= dt;
+  if (e.boltT <= 0) { e.boltT = BOSS_BOLT_GAP[phase]; shoot(e, BOSS_BOLT_DMG); }
 }
 
 export function hurtEntity(e, dmg, dirx, dirz, by = 'player') {
-  if (e.hp <= 0) return;
-  e.hp -= dmg; e.flash = 0.2;
-  e.kb.set(dirx * 7, 0, dirz * 7); if (!e.def.fly) e.vel.y = 4;
   const D = e.def, byPlayer = by === 'player';
+  if (e.hp <= 0 || D.sacred) return;
+  if (D.boss) {
+    if (!byPlayer) return; // only the hero can end this, or the world would never hear of it
+    if (!G.profile?.oathbound) { e.flash = 0.2; toast('Your blow slides off him. The First Law holds.', 2); return; }
+  }
+  e.hp -= dmg; e.flash = 0.2;
+  e.kb.set(dirx * 7, 0, dirz * 7); if (!D.fly) e.vel.y = 4;
   if (byPlayer && D.friendly) {
     if (D.lawful) e.angryT = 25; else e.fleeT = 12;
     if (!e.attacked && e.hp > 0) { e.attacked = true; emit('crime:committed', { type: 'attack_civilian', victim: e }); }
@@ -156,7 +194,7 @@ export function hurtEntity(e, dmg, dirx, dirz, by = 'player') {
   const resident = e.res ? { settlement: Math.floor(e.res.id / WORLD.resident_id_base), id: e.res.id } : null;
   if (e.res) e.res.dead = true;
   if (byPlayer && D.friendly) emit('crime:committed', { type: 'kill_' + D.race, victim: e });
-  if (byPlayer || resident) emit('entity:killed', { kind: e.kind, byPlayer, resident });
+  if (byPlayer || resident) emit('entity:killed', { kind: e.kind, byPlayer, resident, named: e.named });
 }
 export function pickEntity(max) {
   const o = eye(), d = lookDir();
@@ -177,6 +215,7 @@ export function pickEntity(max) {
 export function meleeHit(e) {
   if (player.atkCd > 0) return;
   player.atkCd = 0.35;
+  emit('player:struck');
   const dx = e.pos.x - player.pos.x, dz = e.pos.z - player.pos.z, l = Math.hypot(dx, dz) || 1;
   hurtEntity(e, (has('giant_strength') ? 9 : 4) + (G.profile?.weapon || 0), dx / l, dz / l);
 }
@@ -224,7 +263,8 @@ function structureSpawning(dt) {
     if (d > 48 || !chunkReady(h.x, h.z)) continue;
     if (h.kind === 'demon_lord' && G.world.demon_lord_dead) { hintQueue.splice(i, 1); continue; }
     let y = h.y; while (!fitsAt(h.x + 0.5, y, h.z + 0.5) && y < H - 2) y++;
-    if (spawnEntity(h.kind, h.x + 0.5, y, h.z + 0.5, { home: h })) hintQueue.splice(i, 1); // no room right now: try again next time
+    const hp = h.hp ?? (h.kind === 'demon_lord' ? G.world.boss_hp : undefined); // wounds outlast a reload
+    if (spawnEntity(h.kind, h.x + 0.5, y, h.z + 0.5, { home: h, hp })) hintQueue.splice(i, 1); // no room right now: try again next time
   }
 }
 export function updateEntities(dt) {

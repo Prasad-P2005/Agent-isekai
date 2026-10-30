@@ -1,4 +1,4 @@
-"""Laws are written by the god at genesis (or decreed later) and enforced here, deterministically.
+"""The laws of the world, enforced here deterministically.
 
 A crime only has consequences if a law covers it *where* it happened, and — for laws that need a witness —
 only if someone saw it. Lawmen (guards, golems) punish on the spot; civilians run off to report it,
@@ -10,6 +10,7 @@ import random
 
 from ..content import LAWS
 from ..core.state import Law, World
+from . import chronicle
 
 CRIME_TEXT = LAWS["crimes"]
 CRIMES = list(CRIME_TEXT)
@@ -17,20 +18,8 @@ SCOPE_REALM = LAWS["scopes"]  # scope -> the realm it covers, or None for scopes
 SCOPES = list(SCOPE_REALM)
 PUNISHMENTS = LAWS["punishments"]
 DEFAULT_LAWS = [Law(**law) for law in LAWS["default_laws"]]
-
-
-def validate_law(raw: dict | Law | None) -> Law | None:
-    if raw is None:
-        return None
-    d = raw.model_dump() if isinstance(raw, Law) else dict(raw)
-    if d.get("crime") not in CRIMES:
-        return None
-    sev = d.get("severity")
-    return Law(name=str(d.get("name") or "Unnamed Law")[:40], crime=d["crime"],
-               scope=d.get("scope") if d.get("scope") in SCOPES else "everywhere",
-               needs_witness=d.get("needs_witness") is not False,
-               punishment=d.get("punishment") if d.get("punishment") in PUNISHMENTS else "bounty",
-               severity=max(1, min(4, int(sev))) if isinstance(sev, (int, float)) else 2)
+LOCAL_LAWS = [Law(**law) for law in LAWS["local_laws"]]
+RENOWN_LOST = 3
 
 
 def law_text(l: Law) -> str:
@@ -71,6 +60,7 @@ def punish(world: World, law: Law, by: str) -> dict:
     """Apply a law's punishment to the player profile; return the effects the client must carry out."""
     p, sev = world.player, law.severity
     p.notoriety += 1
+    chronicle.fame(world, -RENOWN_LOST)
     fx: dict = {"wanted": 50 * sev, "spawn": []}
     if law.punishment == "golem_hunters":
         n = min(4, sev)
@@ -94,9 +84,12 @@ def punish(world: World, law: Law, by: str) -> dict:
         if p.abilities:
             lost = random.choice(p.abilities)
             p.abilities.remove(lost)
+            p.cursed_abilities.append(lost)
             fx["text"] = f"you were cursed and lost {lost.replace('_', ' ')}"
         else:
-            p.max_hp = max(10, p.max_hp - 4)
+            taken = p.max_hp - max(10, p.max_hp - 4)
+            p.max_hp -= taken
+            p.cursed_hp += taken
             fx["text"] = "you were cursed: max health -4"
         fx["wanted"] = 0
     fx["law"], fx["by"] = law.name, by

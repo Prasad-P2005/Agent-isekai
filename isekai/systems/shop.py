@@ -3,21 +3,25 @@ from __future__ import annotations
 
 from ..content import ABILITIES, CREATURES, ITEMS, SERVICES as SERVICE_DATA
 from ..core.state import World
+from . import magic
+from .chronicle import standing
 
 CATALOG = {
     **ITEMS,
-    **{f"scroll_{a}": {"name": f"Skill Scroll: {a.replace('_', ' ')}", "base": spec["scroll"], "ability": a, "sold_by": ["trade"]}
+    **{f"scroll_{a}": {"name": f"Skill Scroll: {a.replace('_', ' ')} ({spec['about']})", "base": spec["scroll"], "ability": a, "sold_by": ["trade"]}
        for a, spec in ABILITIES.items()},
 }
 LOOT = {kind: (c["loot"]["name"], c["loot"]["value"]) for kind, c in CREATURES.items() if "loot" in c}
 LOOT_VALUE = dict(LOOT.values())
 PROSPERITY = {"poor": 0.75, "normal": 1.0, "rich": 1.4}
+WAR_CAP = 0.3  # however bad the war gets, prices never rise more than this
+STANDING_PRICE = {"famous": 0.95, "legend": 0.9, "infamous": 1.15, "feared": 1.3}  # traders charge what they think of you
 
 
 def price_multiplier(world: World) -> float:
-    threat = 0 if world.demon_lord_dead else min(0.6, world.raid_level * 0.08)  # the war drives prices up
+    threat = 0 if world.demon_lord_dead else min(WAR_CAP, world.war_pressure)  # the war drives prices up, until things calm down
     festival = 0.8 if world.clock < world.festival_until else 1.0
-    return PROSPERITY.get(world.prosperity, 1.0) * (1 + threat) * festival
+    return PROSPERITY.get(world.prosperity, 1.0) * (1 + threat) * festival * STANDING_PRICE.get(standing(world), 1.0)
 
 
 def price(world: World, item_id: str) -> int:
@@ -35,7 +39,7 @@ def catalog_for(world: World, service: str) -> dict:
     notes = []
     if world.clock < world.festival_until:
         notes.append("Festival prices: -20%")
-    if world.raid_level and not world.demon_lord_dead:
+    if world.war_pressure >= 0.01 and not world.demon_lord_dead:
         notes.append(f"The war with {world.demon_lord_name} has raised prices")
     return {"items": items, "sell": sell, "notes": notes}
 
@@ -95,6 +99,8 @@ def service_options(world: World, service: str) -> list[dict]:
     for action, label, cost in SERVICES.get(service, []):
         if service == "bounty" and action == "pay":
             cost = world.player.bounty + 25
+        if action == "attune":
+            cost = magic.attune_price(world, cost)
         opts.append({"action": action, "label": label, "price": round(cost * price_multiplier(world)) if service != "bounty" else cost})
     return opts
 
@@ -112,19 +118,27 @@ def use_service(world: World, service: str, action: str, npc_id: int | None) -> 
     if p.gold < opt["price"]:
         return "Not enough money.", {}
     if action == "bless" and npc_id in p.blessed_by:
-        return "You have already received this priest's blessing.", {}
+        return "This temple has already blessed you.", {}
+    if action == "cure" and not p.cursed_hp and not p.cursed_abilities:
+        return "There is no curse on you to lift.", {}
+    if action == "attune" and p.blocks.get(magic.CRYSTAL, 0) <= 0:
+        return "You have no Mana Crystal to attune to. They grow in the Dragonspine.", {}
     p.gold -= opt["price"]
     if action == "treat":
         return "The doctor patches you up.", {"heal": 999}
     if action == "cure":
-        p.max_hp = max(p.max_hp, 20)
-        return "The curse lifts.", {"heal": 999}
+        p.max_hp += p.cursed_hp
+        p.abilities += [a for a in p.cursed_abilities if a not in p.abilities]
+        p.cursed_hp, p.cursed_abilities = 0, []
+        return "The curse lifts, and what it took comes back to you.", {"heal": 999}
     if action == "rest":
         return "You sleep soundly at the inn.", {"heal": 999, "mana": 999, "morning": True}
     if action == "bless":
         p.blessed_by.append(npc_id or -1)
         p.max_hp += 5
         return "A warm light fills you. Max HP +5.", {"heal": 5}
+    if action == "attune":
+        return magic.attune(world)
     if action == "pray":
         return "The priest prays over you.", {"heal": 10}
     if action == "pay":

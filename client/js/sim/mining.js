@@ -1,6 +1,6 @@
 // Aiming at blocks, mining them (hold left mouse) and building (right mouse, uses your inventory).
 import { G } from '../core/state.js';
-import { toast } from '../core/events.js';
+import { emit, toast } from '../core/events.js';
 import { AIR, BL, WATER, dropOf, hardness } from './blocks.js';
 import { getBlock, setBlock } from './chunks.js';
 import { addBlock, heldBlock, takeBlock } from './inventory.js';
@@ -42,5 +42,5 @@ export function placeBlock() {
   if (!id) return toast('Nothing to place. Mine some blocks first (hold left click).', 2);
   const x = t.x + t.n[0], y = t.y + t.n[1], z = t.z + t.n[2], p = player.pos;
   const overlap = x + 1 > p.x - 0.3 && x < p.x + 0.3 && z + 1 > p.z - 0.3 && z < p.z + 0.3 && y + 1 > p.y && y < p.y + 1.8;
-  if (!overlap && [AIR, WATER].includes(getBlock(x, y, z)) && takeBlock(id)) setBlock(x, y, z, id);
+  if (!overlap && [AIR, WATER].includes(getBlock(x, y, z)) && takeBlock(id)) { setBlock(x, y, z, id); emit('player:placed'); }
 }

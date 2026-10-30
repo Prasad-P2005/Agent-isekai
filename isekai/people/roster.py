@@ -30,8 +30,7 @@ def _spot(s: Settlement, where: str, rng: random.Random) -> Pos:
         ox, oz = rng.choice([(0, -1), (1, 0), (0, 1), (-1, 0)])
         d = 30 if s.type == "city" else 28 if s.type == "elfcity" else 27
         return Pos(x=s.cx + ox * d + 0.5, z=s.cz + oz * d + 0.5)
-    spot_kind = where
-    spots = [b for b in s.layout if b.kind == spot_kind]
+    spots = [b for b in s.layout if b.kind == where]
     if where == "street_stall" and not spots:
         spots = [b for b in s.layout if b.kind == "stall"]
     if not spots:

@@ -188,7 +188,7 @@ class World(BaseModel):
 def save(world: World, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(world.model_dump_json())
+    tmp.write_text(world.model_dump_json(), encoding="utf-8")  # the feed is full of emoji, which the Windows default can't encode
     tmp.replace(path)
 
 
@@ -196,6 +196,11 @@ def load(path: Path) -> World | None:
     if not path.exists():
         return None
     try:
-        return World.model_validate(json.loads(path.read_text()))
+        raw = path.read_bytes()
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:  # saved on Windows before saves were always UTF-8
+            text = raw.decode("cp1252")
+        return World.model_validate(json.loads(text))
     except (ValueError, OSError):
         return None

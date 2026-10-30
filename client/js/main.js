@@ -12,8 +12,8 @@ import { updateEntities, pickEntity, meleeHit, ents, hurtEntity, spawnNear } fro
 import { updateResidents, updateLaw, talkToNearest, onBreakBlock } from './people.js';
 import { toast, updateHUD, renderStory, startFeed, openPrayer, closePanel, toggleLaws, setOracle, applyState } from './ui.js';
 import { startHeaven, renderHeaven } from './heaven.js';
-import { inventory, addBlock, takeBlock, renderHotbar, hotbarId, selectSlot, cycleSlot, openInventory } from './inventory.js';
-import { toggleWorldMap, closeWorldMap, isWorldMapOpen, updateWorldMap } from './map.js';
+import { addBlock, takeBlock, renderHotbar, hotbarId, selectSlot, cycleSlot, openInventory } from './inventory.js';
+import { toggleWorldMap, closeWorldMap, isWorldMapOpen } from './map.js';
 
 const $ = id => document.getElementById(id);
 const overlay = $('overlay');
@@ -209,7 +209,6 @@ function frame(now) {
     G.dayTime = (G.dayTime + dt / 600) % 1;
   }
   updateHUD(dt);
-  updateWorldMap();
   if (realmT > 0) { realmT -= dt; if (realmT <= 0) $('realm').style.opacity = 0; }
 
   camera.position.set(p.x, p.y + 1.62, p.z);

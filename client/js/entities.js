@@ -4,7 +4,7 @@ import { G } from './state.js';
 import { scene, camera } from './scene.js';
 import { getBlock, chunkReady } from './chunks.js';
 import { solid, GROUND } from './blocks.js';
-import { CS, H, SEA, B, biomeAt, hintQueue, groundAt, landOf } from './terrain.js';
+import { H, SEA, B, biomeAt, hintQueue, heightAt, landOf } from './terrain.js';
 import { player, damagePlayer, has } from './player.js';
 import { crime, report } from './people.js';
 import { toast, applyState } from './ui.js';
@@ -41,7 +41,7 @@ function part(g, mats, w, h, d, color, x, y, z) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color }));
   m.position.set(x, y, z); mats.push(m.material); g.add(m); return m;
 }
-export function buildBody(D) {
+function buildBody(D) {
   const g = new THREE.Group(), mats = [], { w, h } = D, extra = {};
   if (D.slime) {
     const b = part(g, mats, w, h, w, D.body, 0, h / 2, 0); b.material.transparent = true; b.material.opacity = 0.75;
@@ -112,7 +112,7 @@ export function removeEntity(e) {
   const i = ents.indexOf(e); if (i >= 0) ents.splice(i, 1);
   if (e.res) e.res._ent = null;
   scene.remove(e.mesh);
-  e.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { o.material.map?.dispose(); o.material.dispose(); } });
+  e.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && !o.material.userData.shared) { o.material.map?.dispose(); o.material.dispose(); } });
 }
 function collidesBox(p, hw, h) {
   for (let x = Math.floor(p.x - hw); x <= Math.floor(p.x + hw); x++)
@@ -189,7 +189,7 @@ function updateEntity(e, dt) {
   e.kb.multiplyScalar(Math.max(0, 1 - 5 * dt));
   e.vel.x = mx * speed + e.kb.x; e.vel.z = mz * speed + e.kb.z;
   if (D.fly) {
-    const ty = tp ? tp.y + (Math.hypot(tp.x - p.x, tp.z - p.z) > 7 ? 7 : 0.5) : Math.max(p.y, groundAt(p.x | 0, p.z | 0) + 12);
+    const ty = tp ? tp.y + (Math.hypot(tp.x - p.x, tp.z - p.z) > 7 ? 7 : 0.5) : Math.max(p.y, heightAt(p.x | 0, p.z | 0) + 12);
     e.vel.y = Math.max(-7, Math.min(7, (ty - p.y) * 2));
     p.addScaledVector(e.vel, dt);
   } else {
@@ -298,8 +298,8 @@ function updateProjectiles(dt) {
 }
 
 // ---------- spawning ----------
-export function topGround(x, z) { for (let y = H - 1; y > 0; y--) if (GROUND.has(getBlock(x, y, z))) return y; return 0; }
-export function ringPos(rmin, rmax) {
+function topGround(x, z) { for (let y = H - 1; y > 0; y--) if (GROUND.has(getBlock(x, y, z))) return y; return 0; }
+function ringPos(rmin, rmax) {
   const a = Math.random() * 6.28, r = rmin + Math.random() * (rmax - rmin);
   const x = Math.floor(player.pos.x + Math.cos(a) * r), z = Math.floor(player.pos.z + Math.sin(a) * r);
   return { x: x + 0.5, y: topGround(x, z) + 1, z: z + 0.5 };

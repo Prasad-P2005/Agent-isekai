@@ -8,7 +8,7 @@ import { applyState } from './ui.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-export const heavenScene = new THREE.Scene();
+const heavenScene = new THREE.Scene();
 heavenScene.background = new THREE.Color(0xfff2d8);
 heavenScene.fog = new THREE.Fog(0xfff2d8, 20, 90);
 heavenScene.add(new THREE.HemisphereLight(0xffffff, 0xffe0b0, 1.6));

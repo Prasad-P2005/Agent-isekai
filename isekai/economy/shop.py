@@ -5,7 +5,6 @@ import time
 
 from ..state import World
 
-ABILITIES = ["fireball", "heal", "double_jump", "swift", "flight", "giant_strength"]
 CATALOG = {
     "potion": {"name": "Health Potion (+10 HP, key G)", "base": 15, "sold_by": {"trade"}},
     "mana": {"name": "Mana Potion (+50 mana, key V)", "base": 12, "sold_by": {"trade"}},

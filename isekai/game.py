@@ -19,7 +19,7 @@ from .people.roster import make_roster
 from .people.society import migrate_world_society
 from .state import World, load, save
 from .story.stages import advance, objective
-from .world.map import LAND, build_map
+from .world.map import build_map
 
 log = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ class Game:
         await asyncio.sleep(self.successor_delay)
         rng = random.Random(dead.id + int(time.time()))
         heir = dead.model_copy(update={"id": max(r.id for r in s.residents) + 1, "dead": False, "memory": [], "personality": "",
-                                       "name": gen_name(dead.race, rng) if dead.job not in ("king", "queen") else f"{gen_name(dead.race, rng)}"})
+                                       "name": gen_name(dead.race, rng)})
         s.residents.append(heir)
         if dead.job == "king" and s.id == self.world.capital().id:
             self.world.king_name = heir.name
@@ -170,7 +170,3 @@ class Game:
             self.narrator.call(f"the hero arrived for the first time at {s.name}, a {s.type} settlement. {s.description}")
         elif land.structure != "none" or land.realm == "demon":
             self.narrator.call(f"the hero arrived for the first time at {land.name or land.structure.replace('_', ' ')} ({land.realm} lands)")
-
-    def settlement_at(self, x: float, z: float):
-        land = self.world.land_at(int(x // LAND), int(z // LAND))
-        return self.world.settlements[land.settlement] if land and land.settlement is not None else None

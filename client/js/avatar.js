@@ -57,7 +57,6 @@ const OUTFITS = {
   herbalist: L => { L.top = 0x6ab06a; L.bottom = 0x4a8a4a; L.skirt = 'dress'; L.apron = 0xf0e8d0; L.hat = 'leaves'; },
   innkeeper: L => { L.top = 0xf0e0c0; L.bottom = 0x6a3a2a; L.apron = 0xffffff; L.skirt = L.female ? 'dress' : null; L.hat = 'bandana'; },
   blacksmith: L => { L.top = 0x5a5a5a; L.bottom = 0x3a3a3a; L.apron = 0x5a3a20; L.style = 'messy'; L.skirt = null; },
-  farmer: L => { L.top = 0x8b7652; L.bottom = 0x5b4b37; L.hat = 'straw'; L.skirt = null; },
   fisherman: L => { L.top = 0x477f91; L.bottom = 0x354b50; L.hat = 'bandana'; L.hatColor = 0x526d78; L.back = 'fishing_rod'; L.skirt = null; },
   peddler: L => { L.top = 0x806447; L.bottom = 0x53493c; L.coat = 0x6f5d48; L.hat = 'bandana'; L.hatColor = 0x8e624a; L.skirt = null; },
   priest: L => { L.top = 0xffffff; L.bottom = 0xf4f0e0; L.gown = true; L.belt = 0xd8b040; L.hat = L.female ? 'veil' : null; L.cape = 0x3a4a8a; },
@@ -72,7 +71,6 @@ const OUTFITS = {
   shaman: L => { L.top = 0x5a2a6a; L.bottom = 0x3a1a4a; L.gown = true; L.hat = 'feathers'; L.belt = 0xf0f0e0; },
   hunter: L => { L.top = 0x8a6a3a; L.bottom = 0x5a3a20; L.back = 'bow'; L.armor = 0xb89a6a; L.skirt = L.female ? 'short' : null; },
   warrior: L => { L.top = 0x8a2a1a; L.bottom = 0x4a2a1a; L.armor = 0xb89a6a; L.back = 'sword'; L.skirt = null; },
-  merchant_caravan: L => OUTFITS.merchant(L, Math.random),
   mermaid: L => { L.top = 0xff8fb8; L.bottom = 0x2fb5b5; L.skirt = null; L.style = 'long'; L.hair = pick(Math.random, [HAIR.pink, HAIR.mint, HAIR.blue]); },
   bounty_hunter: L => { L.top = 0x2a2a2a; L.bottom = 0x2a2a2a; L.coat = 0x4a3a2a; L.hat = 'hood'; L.back = 'sword'; L.skirt = null; L.female = false; L.style = 'short'; },
   demon_lord: L => { L.top = 0x2a0a3a; L.bottom = 0x1a0a2a; L.cape = 0x6a0a1a; L.armor = 0x3a2a4a; L.crown = 'horns'; L.hair = HAIR.silver; L.eyes = 0xff2020; L.style = 'long'; L.skin = 0xd8c8e0; L.female = false; L.skirt = null; L.bow = null; },
@@ -113,6 +111,7 @@ function faceTexture(L) {
   const tex = new THREE.CanvasTexture(cv);
   tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
   const mat = new THREE.MeshLambertMaterial({ map: tex });
+  mat.userData.shared = true; // outlives any one character: other people may be wearing this face
   faceCache.set(key, mat);
   return mat;
 }

@@ -12,10 +12,15 @@ const REALM_B = { elf: B.ELF, human: B.KINGDOM, beast: B.BEAST, peaks: B.PEAKS, 
 const BASE_H = [SEA - 16, SEA + 1, SEA + 7, SEA + 5, SEA + 5, SEA + 24, SEA + 8];
 const OCEAN_LAND = { b: B.OCEAN, structure: 'none', density: 0.2, settlement: null, name: 'The Endless Sea' };
 
+export const chunkKey = (cx, cz) => (cx + 16384) * 32768 + (cz + 16384);
+
 let W = null;
-export function setWorldData(w) { W = w; for (const row of w.lands) for (const L of row) delete L._c; }
+// Every chunk also runs its neighbours' features, so the same columns are asked for again and again and each
+// miss costs eight noise samples. Height only depends on the column, so each one is computed once.
+const heightCache = new Map(); // chunk key -> column heights; 0 = not computed yet, real heights are at least 4
+export function setWorldData(w) { W = w; heightCache.clear(); for (const row of w.lands) for (const L of row) delete L._c; }
 export const settlement = id => W.settlements[id];
-export function land(lx, lz) {
+function land(lx, lz) {
   const L = W.lands[lz]?.[lx];
   if (!L) return OCEAN_LAND;
   return L._c || (L._c = { b: REALM_B[L.realm], structure: L.structure, density: L.density, settlement: L.settlement, name: L.name });
@@ -23,7 +28,13 @@ export function land(lx, lz) {
 export const landOf = (x, z) => land(Math.floor(x / LAND), Math.floor(z / LAND));
 export const landName = L => (L.settlement != null ? settlement(L.settlement).name : L.name) || REALM[L.b][0];
 
-export function heightAt(x, z) {
+export function heightAt(x, z) { // whole block coordinates
+  const k = chunkKey(x >> 4, z >> 4), i = (x & 15) + (z & 15) * CS;
+  let column = heightCache.get(k);
+  if (!column) heightCache.set(k, column = new Int16Array(CS * CS));
+  return column[i] || (column[i] = columnHeight(x, z));
+}
+function columnHeight(x, z) {
   const fx = x / LAND - 0.5, fz = z / LAND - 0.5, lx = Math.floor(fx), lz = Math.floor(fz);
   let tx = fx - lx, tz = fz - lz;
   tx = tx * tx * (3 - 2 * tx); tz = tz * tz * (3 - 2 * tz);
@@ -51,15 +62,10 @@ export function biomeAt(x, z, h) {
   return b;
 }
 
-// ground lookup used by structures: terrain noise during generation, real blocks when building at runtime
-let groundFn = (x, z) => heightAt(x, z);
-export const groundAt = (x, z) => groundFn(x, z);
-export function withGround(fn, body) { const g = groundFn; groundFn = fn; try { body(); } finally { groundFn = g; } }
-
 // spawn hints for creatures that live in structures (mermaids in palaces, the Demon Lord in his castle)
 export const hintQueue = [];
 const hintSeen = new Set();
-export function hint(kind, x, y, z) { const k = kind + x + ',' + y + ',' + z; if (hintSeen.has(k)) return; hintSeen.add(k); hintQueue.push({ kind, x, y, z }); }
+function hint(kind, x, y, z) { const k = kind + x + ',' + y + ',' + z; if (hintSeen.has(k)) return; hintSeen.add(k); hintQueue.push({ kind, x, y, z }); }
 
 // ===================== structures =====================
 function blob(set, cx, cy, cz, rx, ry, rz, id, r) {
@@ -76,7 +82,7 @@ function elfTree(x, y, z, set, r) {
   if (r() < 0.5) set(x + 2, y + th - 4, z, 22, true);
   if (r() < 0.5) set(x - 2, y + th - 4, z, 22, true);
 }
-export function giantTree(x, y, z, set, r) {
+function giantTree(x, y, z, set, r) {
   const th = 20 + Math.floor(r() * 5), py = y + 9;
   for (let dx = -5; dx <= 6; dx++) for (let dz = -5; dz <= 6; dz++) {
     const d = Math.hypot(dx - 0.5, dz - 0.5);
@@ -93,8 +99,8 @@ export function giantTree(x, y, z, set, r) {
   for (const [dx, dz] of [[-1, -1], [2, -1], [-1, 2], [2, 2]]) { set(x + dx, y, z + dz, 8); set(x + dx, y - 1, z + dz, 8); }
   for (let i = 0; i < 5; i++) set(x + Math.floor(r() * 9) - 4, y, z + Math.floor(r() * 9) - 4, 26, true);
 }
-function foundation(set, x, y, z, id) { const g = groundAt(x, z); for (let yy = y; yy > g; yy--) set(x, yy, z, id); }
-export function house(x, y, z, set, r, small) {
+function foundation(set, x, y, z, id) { const g = heightAt(x, z); for (let yy = y; yy > g; yy--) set(x, yy, z, id); }
+function house(x, y, z, set, r, small) {
   const hw = small || r() < 0.5 ? 2 : 3, hd = small || r() < 0.5 ? 2 : 3;
   for (let dx = -hw; dx <= hw; dx++) for (let dz = -hd; dz <= hd; dz++) {
     foundation(set, x + dx, y - 1, z + dz, 19);
@@ -115,7 +121,7 @@ export function house(x, y, z, set, r, small) {
     for (let dx = -ex; dx <= ex; dx++) for (let dz = -ez; dz <= ez; dz++) set(x + dx, y + 4 + k, z + dz, 20);
   }
 }
-export function tower(x, y, z, set) {
+function tower(x, y, z, set) {
   const top = y + 14;
   for (let dx = -4; dx <= 4; dx++) for (let dz = -4; dz <= 4; dz++) {
     const d = dx * dx + dz * dz;
@@ -140,7 +146,7 @@ function acacia(x, y, z, set, r) {
     if (d <= 3) set(cx + dx, cy + 1, cz + dz, 32, true);
   }
 }
-export function hut(x, y, z, set) {
+function hut(x, y, z, set) {
   for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) {
     const d = dx * dx + dz * dz;
     if (d > 10) continue;
@@ -161,7 +167,7 @@ function crystals(x, y, z, set, r) {
   const n = 3 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
     let px = x + Math.floor(r() * 5) - 2;
-    const pz = z + Math.floor(r() * 5) - 2, len = 3 + Math.floor(r() * 5), lx = r() < 0.3 ? (r() < 0.5 ? 1 : -1) : 0, py = groundAt(px, pz) + 1;
+    const pz = z + Math.floor(r() * 5) - 2, len = 3 + Math.floor(r() * 5), lx = r() < 0.3 ? (r() < 0.5 ? 1 : -1) : 0, py = heightAt(px, pz) + 1;
     for (let k = 0; k < len; k++) { set(px, py + k, pz, 16); if (k === 2) px += lx; }
   }
 }
@@ -202,12 +208,12 @@ function spire(x, y, z, set) {
 function ruins(x, y, z, set, r) {
   for (let dx = -5; dx <= 5; dx++) for (let dz = -5; dz <= 5; dz++) {
     if (Math.abs(dx) !== 5 && Math.abs(dz) !== 5 && !(dx === 0 && Math.abs(dz) < 5 && r() < 0.3)) continue;
-    const g = groundAt(x + dx, z + dz), hgt = Math.floor(r() * 6);
+    const g = heightAt(x + dx, z + dz), hgt = Math.floor(r() * 6);
     for (let dy = 1; dy <= hgt; dy++) set(x + dx, g + dy, z + dz, r() < 0.15 ? 7 : 19);
   }
-  set(x, groundAt(x, z) + 1, z, 16);
+  set(x, heightAt(x, z) + 1, z, 16);
 }
-export function stall(x, y, z, set, r) {
+function stall(x, y, z, set, r) {
   const roof = r() < 0.5 ? 20 : 30;
   for (let dx = -2; dx <= 2; dx++) for (let dz = -1; dz <= 1; dz++) {
     foundation(set, x + dx, y - 1, z + dz, 19);
@@ -232,7 +238,7 @@ function demonCastle(x, y, z, set) {
   for (let dx = -10; dx <= 10; dx++) for (let dz = -10; dz <= 10; dz++) {
     const d = Math.hypot(dx, dz);
     if (d > 10.5) continue;
-    if (d > 8.5) { set(x + dx, groundAt(x + dx, z + dz), z + dz, 36); continue; } // magma moat
+    if (d > 8.5) { set(x + dx, heightAt(x + dx, z + dz), z + dz, 36); continue; } // magma moat
     foundation(set, x + dx, y - 1, z + dz, 37);
     set(x + dx, y - 1, z + dz, 37);
     for (let dy = 0; dy < 22; dy++) set(x + dx, y + dy, z + dz, d > 6.5 ? 37 : (dy % 7 === 6 && d > 2 ? 34 : 0));
@@ -334,7 +340,7 @@ const BUILD = {
 function settlementChunk(cx, cz, S, set) {
   const bx = cx * CS, bz = cz * CS;
   for (let x = bx; x < bx + CS; x++) for (let z = bz; z < bz + CS; z++) {
-    const dx = x - S.cx, dz = z - S.cz, d = Math.hypot(dx, dz), g = groundAt(x, z);
+    const dx = x - S.cx, dz = z - S.cz, d = Math.hypot(dx, dz), g = heightAt(x, z);
     const largeCity = S.type === 'city', road = (Math.abs(dx) <= 1 || Math.abs(dz) <= 1) && d < (largeCity ? 28.5 : 27);
     if (S.type === 'city' || S.type === 'elfcity') {
       const M = S.type === 'elfcity' ? { wall: 8, top: 9, road: 15, post: 8, lamp: 26 } : { wall: 19, top: 19, road: 29, post: 6, lamp: 22 };
@@ -350,17 +356,17 @@ function settlementChunk(cx, cz, S, set) {
       if (d < wallInner - 1 && d > 10 && (Math.abs(dx) === 2 || Math.abs(dz) === 2) && ((dx + dz) & 7) === 0) { set(x, g + 1, z, M.post); set(x, g + 2, z, M.post); set(x, g + 3, z, M.lamp); }
     } else if (S.type !== 'elf' && d <= 27 && (road || d < 4.5)) set(x, g, z, S.type === 'beast' ? 25 : d < 4.5 ? 19 : 29);
   }
-  if (S.type === 'city' && Math.floor(S.cx / CS) - 1 === cx && Math.floor(S.cz / CS) - 1 === cz) tower(S.cx, groundAt(S.cx, S.cz) + 1, S.cz, set);
+  if (S.type === 'city' && Math.floor(S.cx / CS) - 1 === cx && Math.floor(S.cz / CS) - 1 === cz) tower(S.cx, heightAt(S.cx, S.cz) + 1, S.cz, set);
   STYLE = S.type === 'elfcity' ? 'elf' : null;
   for (const b of S.layout) {
     if (Math.floor(b.x / CS) !== cx || Math.floor(b.z / CS) !== cz) continue;
-    BUILD[b.kind](b, groundAt(b.x, b.z) + 1, set, mulberry(hash2(b.x, b.z)));
+    BUILD[b.kind](b, heightAt(b.x, b.z) + 1, set, mulberry(hash2(b.x, b.z)));
   }
   STYLE = null;
 }
 
 // features of a chunk: settlements, landmarks, then vegetation
-export function features(cx, cz, set) {
+function features(cx, cz, set) {
   const r = mulberry(hash2(cx, cz)), bx = cx * CS, bz = cz * CS;
   const L = landOf(bx + 8, bz + 8);
   const ix = ((cx % 4) + 4) % 4, iz = ((cz % 4) + 4) % 4, heart = ix === 1 && iz === 1;

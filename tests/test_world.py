@@ -1,6 +1,19 @@
 from collections import Counter
 
 from isekai.people.roster import make_roster
+from isekai.state import load, save
+
+
+def test_saves_keep_emoji_and_old_windows_saves_still_load(world, tmp_path):
+    path = tmp_path / "world.json"
+    world.push("event", "🔥 The armies attack…")
+    save(world, path)
+    assert load(path).feed[-1].text == "🔥 The armies attack…"
+
+    world.feed.clear()
+    world.name = "Café — Aldervale"
+    path.write_bytes(world.model_dump_json().encode("cp1252"))
+    assert load(path).name == "Café — Aldervale"
 
 
 def test_map_has_the_planned_settlements(world):

@@ -1,29 +1,37 @@
 # Isekai Realms
 
 You die on Earth, meet a god in heaven, and are reborn into a voxel fantasy world to slay the Demon Lord.
-The world, its people, its laws and its story are written by a local LLM (Ollama) acting as a god who
+The world, its people, its laws and its story are written by an LLM (through OpenRouter) acting as a god who
 **cannot touch the world directly**: he acts only through the world's rules.
 
 ## Run it
 
-To run the app and its Ollama model with Docker Compose:
+Create an [OpenRouter API key](https://openrouter.ai/keys), then copy the example settings and paste the key into `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Then run the app with Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
-Open `http://localhost:8000`. The single Ollama container downloads `qwen3.5:2b` on first startup and serves it to the app once it is ready. Compose keeps the model and world saves in named volumes. Stop with `docker compose down`.
+Open `http://localhost:8000`. Compose keeps world saves in a named volume and publishes the game on this machine only, because the game has no login and anyone who can reach it can spend your OpenRouter credits. Stop with `docker compose down`.
 
 You can also run the app directly:
 
 ```bash
-docker start isekai-llm            # Ollama with qwen3.5:2b, listening on :11435
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # first time only
+export ISEKAI_LLM_API_KEY=sk-or-...
 .venv/bin/python -m isekai         # http://localhost:8000
 .venv/bin/pytest                   # tests (no LLM needed)
 ```
 
-Settings come from environment variables: `ISEKAI_LLM_URL`, `ISEKAI_LLM_MODEL`, `ISEKAI_PORT`, `ISEKAI_SAVE_DIR`.
+Settings come from environment variables: `ISEKAI_LLM_API_KEY`, `ISEKAI_LLM_URL`, `ISEKAI_LLM_MODEL`, `ISEKAI_PORT`, `ISEKAI_SAVE_DIR`.
+`ISEKAI_LLM_MODEL` can be any OpenRouter model with a provider that supports both structured outputs and temperature.
+The default model is free, but OpenRouter caps free use at 20 requests a minute and 50 a day (1,000 a day once you have bought 10 credits). A new world uses 14 requests, and every person's reply and god narration uses one. Past the cap, the god goes quiet and people only answer "…" until the quota resets at midnight UTC. `ISEKAI_GOD_IDLE` sets the seconds between unprompted narrations (default 600); raise it to save requests.
 The world is saved to `saves/world.json` after every action.
 
 ## How a playthrough goes

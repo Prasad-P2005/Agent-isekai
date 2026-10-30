@@ -9,7 +9,7 @@ import { ents, spawnEntity, removeEntity, fitsAt, spawnNear, isNight, pickEntity
 import { toast, applyState, openService, openConversation, applyEffects } from './ui.js';
 
 // ---------- residents: only the ones near the player physically exist ----------
-const MAX_RESIDENTS = 34, SPAWN_DIST = 56, DESPAWN_DIST = 76;
+const MAX_RESIDENTS = 34, MAX_SPAWNS_PER_TICK = 6, SPAWN_DIST = 56, DESPAWN_DIST = 76;
 let residentTimer = 0;
 export function updateResidents(dt) {
   residentTimer -= dt;
@@ -28,12 +28,13 @@ export function updateResidents(dt) {
   }
   // the people that matter (rulers, shopkeepers, guild staff) and the nearest ones get the limited slots
   candidates.sort((a, b) => a[0] - b[0]);
-  let live = ents.filter(e => e.res).length;
+  let live = ents.filter(e => e.res).length, spawned = 0;
   for (const [, r, t] of candidates) {
     if (live >= MAX_RESIDENTS) break;
+    if (spawned === MAX_SPAWNS_PER_TICK) { residentTimer = 0.1; break; } // a town fills in over a few ticks, not in one long frame
     let y = heightAt(Math.floor(t.x), Math.floor(t.z)) + 1; // ground floor, not the roof
     while (!fitsAt(t.x, y, t.z) && y < 150) y++;
-    if (spawnEntity(r.kind, t.x, y, t.z, { name: r.name, title: r.label, body: r.body, hair: r.hair, res: r })) live++;
+    if (spawnEntity(r.kind, t.x, y, t.z, { name: r.name, title: r.label, body: r.body, hair: r.hair, res: r })) { live++; spawned++; }
   }
 }
 export async function reloadSettlement(id) {
@@ -44,7 +45,7 @@ export async function reloadSettlement(id) {
 }
 
 // ---------- crimes ----------
-export function inCity(x, z) {
+function inCity(x, z) {
   const L = landOf(x, z);
   if (L.settlement == null) return false;
   const S = settlement(L.settlement);

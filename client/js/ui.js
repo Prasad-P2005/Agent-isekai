@@ -9,9 +9,8 @@ import { landOf, LAND, biomeAt } from './terrain.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-let toastT = 0, dialogT = 0;
+let toastT = 0;
 export function toast(msg, sec = 5) { $('toast').textContent = msg; $('toast').style.opacity = 1; toastT = sec; }
-export function showDialog(html, sec = 9) { $('dialog').innerHTML = html; $('dialog').style.display = 'block'; dialogT = sec; }
 export function flashHurt() { $('hurt').style.opacity = 1; setTimeout(() => { $('hurt').style.opacity = 0; }, 180); }
 
 // ---------- server state ----------
@@ -39,18 +38,25 @@ export function applyEffects(fx) {
 // ---------- HUD ----------
 const ABIL = { fireball: 'Q Fireball', heal: 'R Heal', flight: 'F Flight', double_jump: 'Double jump', swift: 'Swift', giant_strength: 'Giant strength' };
 const RANKS = ['F', 'E', 'D', 'C', 'B', 'A', 'S'];
+// The HUD is rebuilt every frame but rarely changes, and assigning innerHTML reparses it even when
+// the text is the same, so the DOM is only touched when a value really is different.
+const written = {};
+function write(id, prop, value) {
+  if (written[id + prop] === value) return;
+  written[id + prop] = value;
+  if (prop === 'width') $(id).style.width = value; else $(id)[prop] = value;
+}
 export function updateHUD(dt) {
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').style.opacity = 0; }
-  if (dialogT > 0) { dialogT -= dt; if (dialogT <= 0) $('dialog').style.display = 'none'; }
   const P = G.profile; if (!P) return;
-  $('hpfill').style.width = (100 * player.hp / maxHp()) + '%'; $('hptext').textContent = `❤ ${Math.ceil(player.hp)} / ${maxHp()}`;
-  $('mpfill').style.width = (100 * player.mana / player.maxMana) + '%'; $('mptext').textContent = `✦ ${Math.floor(player.mana)} / ${player.maxMana}`;
-  $('abil').textContent = P.abilities.length ? P.abilities.map(a => ABIL[a]).join('  ·  ') : 'No powers yet. Buy skill scrolls or earn the trust of the elders';
+  write('hpfill', 'width', (100 * player.hp / maxHp()).toFixed(1) + '%'); write('hptext', 'textContent', `❤ ${Math.ceil(player.hp)} / ${maxHp()}`);
+  write('mpfill', 'width', (100 * player.mana / player.maxMana).toFixed(1) + '%'); write('mptext', 'textContent', `✦ ${Math.floor(player.mana)} / ${player.maxMana}`);
+  write('abil', 'textContent', P.abilities.length ? P.abilities.map(a => ABIL[a]).join('  ·  ') : 'No powers yet. Buy skill scrolls or earn the trust of the elders');
   const q = P.active_quest;
-  $('status').innerHTML = `💰 ${P.gold} ${G.world.currency} · 🧪${P.potions} (G) · 🔷${P.mana_potions} (V) · ⚔ ${esc(P.weapon_name)} · 🛡 ${esc(P.armor_name)} · ⛏ ${esc(P.tool_name)} · Guild rank ${RANKS[P.guild_rank]}`
+  write('status', 'innerHTML', `💰 ${P.gold} ${G.world.currency} · 🧪${P.potions} (G) · 🔷${P.mana_potions} (V) · ⚔ ${esc(P.weapon_name)} · 🛡 ${esc(P.armor_name)} · ⛏ ${esc(P.tool_name)} · Guild rank ${RANKS[P.guild_rank]}`
     + (q ? `<br>📋 ${esc(q.title)}: ${q.progress}/${q.count}` : '')
     + (player.wanted > 0 ? `<br><span class="wanted">⚠ WANTED ${Math.ceil(player.wanted)}s</span>` : '')
-    + (P.bounty > 0 ? ` <span class="wanted">Bounty ${P.bounty}</span>` : '');
+    + (P.bounty > 0 ? ` <span class="wanted">Bounty ${P.bounty}</span>` : ''));
 }
 let lawsVisible = true, lastFeed = null, current = null;
 export function renderStory(feed) {
@@ -58,9 +64,9 @@ export function renderStory(feed) {
   const f = lastFeed;
   $('wname').textContent = G.world.name;
   if (!f) return;
-  $('beats').innerHTML = f.beats.map(b => `<div class="beat">${esc(b)}</div>`).join('');
+  write('beats', 'innerHTML', f.beats.map(b => `<div class="beat">${esc(b)}</div>`).join(''));
   G.objective = f.objective; $('quest').textContent = '⚑ ' + f.objective;
-  $('laws').innerHTML = lawsVisible ? '<b>⚖ Laws of the world (L)</b>' + f.law_texts.map(t => `<div>${esc(t)}</div>`).join('') : '<b>⚖ Laws hidden (L)</b>';
+  write('laws', 'innerHTML', lawsVisible ? '<b>⚖ Laws of the world (L)</b>' + f.law_texts.map(t => `<div>${esc(t)}</div>`).join('') : '<b>⚖ Laws hidden (L)</b>');
 }
 export function toggleLaws() { lawsVisible = !lawsVisible; renderStory(); }
 export function setOracle(t) { $('oracle').textContent = t; }

@@ -2,13 +2,13 @@
 export function mulberry(a) {
   return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
-export let SEED = 1;
+let SEED = 1;
 export const hash2 = (x, z) => (Math.imul(x, 73856093) ^ Math.imul(z, 19349663) ^ SEED) >>> 0;
 export const hash3 = (x, y, z) => {
   let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 2147483647);
   h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 };
-export function makeSimplex(seed) {
+function makeSimplex(seed) {
   const r = mulberry(seed), p = new Uint8Array(512), a = new Uint8Array(256);
   for (let i = 0; i < 256; i++) a[i] = i;
   for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
@@ -31,5 +31,6 @@ export const ss = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a)))
 export const NZ = {};
 export function initNoise(seed) {
   SEED = seed;
-  ['C', 'H', 'M', 'T', 'W', 'D'].forEach((k, i) => { NZ[k] = makeSimplex(seed + i); });
+  // the seed offsets are part of the terrain: changing one reshapes every existing world
+  NZ.H = makeSimplex(seed + 1); NZ.M = makeSimplex(seed + 2); NZ.D = makeSimplex(seed + 5);
 }

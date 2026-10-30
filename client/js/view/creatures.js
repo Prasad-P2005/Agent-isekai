@@ -1,4 +1,4 @@
-// Everything alive that is not a person, built like people: art pixels on boxes, painted with the same materials.
+// Everything alive that is not a person, built like people and painted with the same materials at the same size of pixel.
 // The colours come from content/creatures.json, so a named monster painted differently still works. A kind with no
 // model here falls back on the shape its data asks for.
 import * as THREE from 'three';
@@ -164,7 +164,7 @@ function wolf(D, mats) {
 // ---------------- the dragon ----------------
 // A wing is thin skin stretched between long bones: ribbed, scalloped between the ribs, narrowing to the tip and torn along its edge.
 function wingSkin(c, side, ribs, taper) {
-  const skin = plain(darker(c, 0.32)), near = plain(darker(c, 0.5)), rib = plain(darker(c, 0.68));
+  const skin = flesh(darker(c, 0.32)), near = flesh(darker(c, 0.5)), rib = flesh(darker(c, 0.68));
   return (i, j, W, H, f) => {
     if (f !== 'top' && f !== 'bottom') return -1;
     const back = (f === 'bottom' ? H - 1 - j : j) / H, out = (side > 0 ? i : W - 1 - i) / W, between = Math.abs(Math.sin(out * Math.PI * ribs));
@@ -226,12 +226,12 @@ function slime(D, mats) {
   const c = hex(D.body), g = new THREE.Group(), blob = new THREE.Group(), sheet = new Atlas(128), jelly = plain(c);
   const inside = [[18, 14, 18, 0, 14, 0, plain(darker(c, 0.25))], [6, 8, 1, -9, 22, -22.4, INK], [6, 8, 1, 9, 22, -22.4, INK], [2, 3, 1, -10, 24, -22.9, CREAM], [2, 3, 1, 8, 24, -22.9, CREAM], [8, 2, 1, 0, 13, -22.4, INK]];
   const outside = [[44, 26, 44, 0, 18, 0, jelly], [36, 6, 36, 0, 34, 0, jelly], [36, 5, 36, 0, 2.5, 0, jelly], [8, 1, 8, -10, 37.5, -6, plain(lighter(c, 0.55))], [4, 1, 4, 6, 37.5, 2, plain(lighter(c, 0.55))]];
-  const core = solid(inside, sheet), shell = solid(outside, sheet);
+  const size = D.h / 37, core = solid(inside, sheet, undefined, size), shell = solid(outside, sheet, undefined, size);
   core.material = sheet.material();
   shell.material = sheet.material({ transparent: true, opacity: 0.72, depthWrite: false, alphaTest: 0 });
   mats.push(core.material, shell.material);
   blob.add(core, shell);
-  blob.children.forEach(m => { m.scale.setScalar(D.h / 37); });
+  blob.children.forEach(m => { m.scale.setScalar(size); });
   g.add(blob);
   return { g, extra: { blob }, pose: poseSlime };
 }

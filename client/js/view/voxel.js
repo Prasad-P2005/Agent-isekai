@@ -1,12 +1,14 @@
-// How anything living is built. Boxes are laid out in art pixels, as the interface is, and every face of every box is
-// painted into one texture (see paint.js), a texel for each art pixel. A figure is one skinned mesh however many parts it
-// has, so a crowd costs a draw call a body rather than one a limb.
+// How anything living is built. Every face of every box is painted into one texture (see paint.js) at one size of pixel for the
+// whole world: a person is 32 of them tall, as in a Minecraft skin, and a dragon's pixels are the same size as a farmer's. A
+// figure is one skinned mesh however many parts it has, so a crowd costs a draw call a body rather than one a limb.
 import * as THREE from 'three';
 import { plain } from './paint.js';
 
 export { CREAM, INK, mixHex } from './paint.js';
 
-const CUTOUT = 0.5;
+const CUTOUT = 0.5, PIXEL = 1.8 / 32;
+// The world's light and tone mapping dim a colour to about half of what was painted. Bodies are lifted back up, or the soft colours turn to mud.
+export const LIFT = new THREE.Color(2, 2, 2);
 const FACES = [
   { name: 'right', n: [1, 0, 0], u: [0, 0, -1], v: [0, 1, 0], across: 2, down: 1 },
   { name: 'left', n: [-1, 0, 0], u: [0, 0, 1], v: [0, 1, 0], across: 2, down: 1 },
@@ -41,11 +43,16 @@ export class Atlas {
     return at;
   }
   paint(paint, W, H, face) {
-    const [ax, ay] = this.claim(W, H);
+    const [gx, gy] = this.claim(W + 2, H + 2), ax = gx + 1, ay = gy + 1, at = (x, y) => (y * this.w + x) * 4;
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-      const c = paint(i, j, W, H, face), k = ((ay + j) * this.w + ax + i) * 4;
+      const c = paint(i, j, W, H, face), k = at(ax + i, ay + j);
       if (c < 0) continue;
       this.px[k] = c >> 16 & 255; this.px[k + 1] = c >> 8 & 255; this.px[k + 2] = c & 255; this.px[k + 3] = 255;
+    }
+    // Each face is framed in a copy of its own edge: antialiasing reads a hair outside a triangle, and must find the same face there and not a neighbour on the sheet.
+    for (let j = -1; j <= H; j++) for (let i = -1; i <= W; i++) {
+      if (i >= 0 && i < W && j >= 0 && j < H) continue;
+      this.px.copyWithin(at(ax + i, ay + j), at(ax + Math.max(0, Math.min(W - 1, i)), ay + Math.max(0, Math.min(H - 1, j))), at(ax + Math.max(0, Math.min(W - 1, i)), ay + Math.max(0, Math.min(H - 1, j))) + 4);
     }
     return [ax, ay];
   }
@@ -58,17 +65,17 @@ export class Atlas {
     t.needsUpdate = true;
     return t;
   }
-  material(options) { return new THREE.MeshLambertMaterial({ map: this.texture(), alphaTest: CUTOUT, ...options }); }
+  material(options) { return new THREE.MeshLambertMaterial({ map: this.texture(), alphaTest: CUTOUT, color: LIFT, ...options }); }
 }
 
 class Boxes {
   pos = []; nor = []; uv = []; idx = []; owner = [];
-  constructor(atlas) { this.atlas = atlas; }
+  constructor(atlas, res) { this.atlas = atlas; this.res = res; }
   // A box is [width, height, depth, x, y, z, paint or colour, tilt about z, tilt about x, tilt about y], with x, y, z its middle.
   add([w, h, d, x, y, z, paint, rz = 0, rx = 0, ry = 0], bone, origin) {
     const size = [w, h, d], at = [x + origin[0], y + origin[1], z + origin[2]], fill = typeof paint === 'function' ? paint : plain(paint);
     for (const f of FACES) {
-      const W = Math.max(1, Math.ceil(size[f.across])), H = Math.max(1, Math.ceil(size[f.down])), [ax, ay] = this.atlas.paint(fill, W, H, f.name);
+      const W = Math.max(1, Math.round(size[f.across] * this.res)), H = Math.max(1, Math.round(size[f.down] * this.res)), [ax, ay] = this.atlas.paint(fill, W, H, f.name);
       const first = this.pos.length / 3, [nx, ny, nz] = turned(f.n, rz, rx, ry);
       for (const [a, b] of CORNERS) {
         const [px, py, pz] = turned([0, 1, 2].map(i => (f.n[i] + f.u[i] * a + f.v[i] * b) * size[i] / 2), rz, rx, ry);
@@ -90,19 +97,20 @@ class Boxes {
   }
 }
 
-// A plain mesh, for what never needs bones. Several can share an atlas; give them its material once it is full.
-export function solid(list, atlas, material) {
-  const out = new Boxes(atlas);
+// A plain mesh, for what never needs bones. Several can share an atlas; give them its material once it is full. `size` is the
+// length in the world of one unit of the boxes, which sets how many pixels they get.
+export function solid(list, atlas, material, size = PIXEL) {
+  const out = new Boxes(atlas, size / PIXEL);
   for (const box of list) out.add(box, 0, [0, 0, 0]);
   return new THREE.Mesh(out.geometry(), material);
 }
 
 export class Rig {
-  constructor(height, total, mats, sheet = 256) {
+  constructor(height, total, mats, sheet = 128) {
     this.g = new THREE.Group(); this.body = new THREE.Group();
     this.body.scale.setScalar(height / total);
     this.g.add(this.body);
-    this.mats = mats; this.bones = []; this.boxes = new Boxes(new Atlas(sheet));
+    this.mats = mats; this.bones = []; this.boxes = new Boxes(new Atlas(sheet), height / total / PIXEL);
   }
   bone(parent, x, y, z) {
     const b = new THREE.Bone();
@@ -139,13 +147,13 @@ export class Rig {
 }
 
 // The bones every upright body shares. Index 0 of each pair is the left limb, 1 the right, which is the one that strikes.
-export function figureBones(rig, { leg, trunk, span, upper, fore, waist = 4, stance = 5, neck = trunk }) {
-  const x = { arms: [], fores: [], hands: [], legs: [], shins: [], soft: [], carry: [false, false], hipY: leg, hunch: 0, dangle: 0, hover: false };
+export function figureBones(rig, { leg, trunk, span, upper, fore, waist = 4, stance = 5, neck = trunk, shoulder = trunk - 3 }) {
+  const x = { arms: [], fores: [], hands: [], legs: [], shins: [], soft: [], carry: [false, false], hipY: leg, hunch: 0, dangle: 0, hover: false, bob: 1 };
   x.hips = rig.bone(null, 0, leg, 0);
   x.chest = rig.bone(x.hips, 0, waist, 0);
   x.head = rig.bone(x.chest, 0, neck, 0);
   for (const side of [-1, 1]) {
-    const arm = rig.bone(x.chest, side * span, trunk - 3, 0), forearm = rig.bone(arm, 0, -upper, 0);
+    const arm = rig.bone(x.chest, side * span, shoulder, 0), forearm = rig.bone(arm, 0, -upper, 0);
     x.arms.push(arm); x.fores.push(forearm); x.hands.push(rig.bone(forearm, 0, -fore, 0));
     const thigh = rig.bone(x.hips, side * stance, -1, 0);
     x.legs.push(thigh); x.shins.push(rig.bone(thigh, 0, 1 - Math.ceil(leg / 2), 0));
@@ -153,12 +161,8 @@ export function figureBones(rig, { leg, trunk, span, upper, fore, waist = 4, sta
   return x;
 }
 
-// Boxes for a hand hanging from the wrist: palm, three fingers and a thumb to the front. `k` is the width of the wrist, in sevenths.
-export const handBoxes = (c, k = 1) => [
-  [7 * k, 4 * k, 8 * k, 0, -2 * k, 0, c],
-  [7 * k, 3 * k, 2.4 * k, 0, -5.5 * k, -2.8 * k, c], [7 * k, 3 * k, 2.4 * k, 0, -5.5 * k, 0, c], [7 * k, 3 * k, 2.4 * k, 0, -5.5 * k, 2.8 * k, c],
-  [2.4 * k, 4 * k, 3 * k, 0, -3 * k, -5 * k, c],
-];
+// Boxes for a hand hanging from the wrist: a palm and a thumb to the front. `k` is the width of the wrist, in sevenths.
+export const handBoxes = (c, k = 1) => [[7 * k, 6 * k, 8 * k, 0, -3 * k, 0, c], [2.4 * k, 4 * k, 3 * k, 0, -3 * k, -5 * k, c]];
 // Something held in a fist. Parts are [width, length, depth, distance along the handle, paint]. `tilt` is the angle the
 // handle leans from straight up, negative pointing it forward, and `lean` carries it out to the side, away from the head.
 export const held = (tilt, parts, grip = -4, lean = 0) => parts.map(([w, l, d, at, c]) => {

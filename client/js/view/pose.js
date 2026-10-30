@@ -24,19 +24,21 @@ function softParts(x, m, idle, c) {
   }
 }
 
+const TAIL_CURL = [-0.14, 0.08, 0.2, 0.3, 0.3]; // a mermaid at rest holds her tail in a lazy S
 export function poseFigure(x, m) {
   const { walk, run, air, rise, hurt, scared, strike } = m;
   const idle = m.t + m.seed, s = Math.sin(m.phase), c = Math.cos(m.phase), still = 1 - walk;
   const up = drawn(strike), hit = landed(strike), stride = mix(0.46, 1, run) * walk;
 
-  x.hips.position.y = x.hipY + Math.cos(m.phase * 2) * mix(0.5, 1.5, run) * walk + Math.sin(idle * 1.8) * 0.25 * still + (x.hover ? Math.sin(idle * 3.1) * 1.6 : 0);
+  x.hips.position.y = x.hipY + (Math.cos(m.phase * 2) * mix(0.5, 1.5, run) * walk + Math.sin(idle * 1.8) * 0.25 * still) * x.bob + (x.hover ? Math.sin(idle * 3.1) * 1.6 : 0);
   x.hips.rotation.y = s * 0.14 * walk;
   x.hips.rotation.z = c * 0.05 * walk;
+  if (x.swims) x.hips.rotation.x = -1.15 * walk; // a mermaid lies out flat to swim, and only stands up in the water to look at you
   const lean = x.hunch + 0.24 * run * walk - 0.3 * hurt + 0.22 * hit - 0.12 * up;
   x.chest.rotation.x = -lean;
   x.chest.rotation.y = -s * 0.26 * walk - 0.45 * up + 0.55 * hit;
   x.chest.rotation.z = -c * 0.03 * walk;
-  x.head.rotation.x = m.nod + lean * 0.7 + Math.sin(idle * 1.1) * 0.03;
+  x.head.rotation.x = m.nod + lean * 0.7 + Math.sin(idle * 1.1) * 0.03 + (x.swims ? 0.9 * walk : 0);
   x.head.rotation.y = m.look + s * 0.12 * walk + 0.25 * up - 0.3 * hit;
   x.head.rotation.z = Math.sin(idle * 0.7) * 0.03;
 
@@ -63,7 +65,7 @@ export function poseFigure(x, m) {
     x.fores[i].rotation.x = elbow;
     x.hands[i].rotation.x = 0.12 + 0.2 * walk * run;
   });
-  x.tail?.forEach((b, i) => { b.rotation.x = Math.sin(idle * 3.4 - i * 0.9) * (0.12 + 0.1 * i) * (0.6 + walk); });
+  x.tail?.forEach((b, i) => { b.rotation.x = TAIL_CURL[i] * (1 - walk) + Math.sin(idle * 3 - i * 0.9) * (0.08 + 0.07 * i) * (0.7 + 1.5 * walk); });
   softParts(x, m, idle, c);
 }
 

@@ -13,8 +13,8 @@ const W = innerWidth, H = innerHeight;
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); document.body.appendChild(r.domElement);
 r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.08;
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0xa9c8d0);
-scene.add(new THREE.HemisphereLight(0xf4f3ec, 0x62645b, 1.3)); const d = new THREE.DirectionalLight(0xfff0d8, 1.35); d.position.set(2, 3, -4); scene.add(d);
-const cam = new THREE.PerspectiveCamera(24, W / H, 0.1, 200); cam.position.set(0, 7, -42); cam.lookAt(0, 4.6, 0);
+scene.add(new THREE.HemisphereLight(0xf4f3ec, 0x62645b, 0.86)); const d = new THREE.DirectionalLight(0xffefd8, 1.33); d.position.set(0.5, 1, -0.7); scene.add(d); // the game at noon
+const cam = new THREE.PerspectiveCamera(24, W / H, 0.1, 200); cam.position.set(0, 5, -46); cam.lookAt(0, 2.2, 0);
 
 const creatures = await (await fetch('/content/creatures.json')).json();
 const OWN_LINE = ['god', 'goddess', 'guard', 'mermaid', 'mermaid_queen', 'bounty_hunter', 'demon_lord']; // not plain jobs: listed by hand below
@@ -24,7 +24,7 @@ const people = [
   ['knight', 'guard', 'human'], ['mermaid', undefined, 'mermaid'], ['mermaid_queen', undefined, 'mermaid'], ['god', 'god', 'human'], ['goddess', 'goddess', 'human'], ['bounty_hunter', undefined, 'human'],
 ];
 const shown = [];
-const place = ({ g, extra, pose }, x, y, seed) => { g.position.set(x, y, 0); g.rotation.y = Math.PI; scene.add(g); shown.push({ extra, pose, m: newMotion(seed) }); };
+const place = ({ g, extra, pose }, x, y, seed) => { g.position.set(x, y, 0); g.rotation.y = -0.4; scene.add(g); shown.push({ extra, pose, m: newMotion(seed) }); };
 const PER_ROW = 14, GAP = 1.5;
 people.forEach(([kind, job, race], i) => {
   const def = creatures[kind] || {}, height = def.h || 1.85;

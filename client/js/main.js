@@ -6,7 +6,7 @@ import { chunkReady, getBlock, streamChunks } from './sim/chunks.js';
 import { ents, hurtEntity, spawnNear } from './sim/entities.js';
 import { stopAiming } from './sim/mining.js';
 import { player, settlePlayer } from './sim/player.js';
-import { heightAt } from './sim/terrain.js';
+import { TOWNS, heightAt } from './sim/terrain.js';
 import { stepWorld } from './sim/world.js';
 import { updateCompass } from './ui/compass.js';
 import { renderHeaven } from './ui/heaven.js';
@@ -48,7 +48,7 @@ title();
 // isekai.teleport('Nebula') or isekai.teleport(x, z) moves you safely onto the ground
 function teleport(a, b) {
   const s = typeof a === 'string' ? G.world.settlements.find(s => s.name.toLowerCase().includes(a.toLowerCase())) : null;
-  const x = s ? s.cx + 3.5 : Number(a), z = s ? s.cz + 33.5 : Number(b);
+  const x = s ? s.cx + 3.5 : Number(a), z = s ? s.cz + TOWNS[s.type].reach + 3.5 : Number(b);
   if (!Number.isFinite(x) || !Number.isFinite(z)) return `No place called "${a}". Try: ${G.world.settlements.map(s => s.name).join(', ')}`;
   player.pos.set(x, heightAt(Math.floor(x), Math.floor(z)) + 2, z); player.vel.set(0, 0, 0);
   return s ? `Teleported to ${s.name}` : `Teleported to ${x}, ${z}`;

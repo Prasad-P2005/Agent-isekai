@@ -4,10 +4,13 @@
 import * as THREE from 'three';
 import { on } from '../core/events.js';
 import { G } from '../core/state.js';
+import { BL } from '../sim/blocks.js';
+import { heldBlock } from '../sim/inventory.js';
 import { miningBar } from '../sim/mining.js';
 import { ss } from '../sim/noise.js';
 import { player } from '../sim/player.js';
 import { heroLook } from './avatar.js';
+import { TILE, tilePixels } from './blocktex.js';
 import { GOLD } from './outfits.js';
 import { cloth, flesh, leather, plain } from './paint.js';
 import { ambientLight, camera, renderer } from './scene.js';
@@ -55,6 +58,39 @@ thumb.add(solid([[4, 4, 8, 0, 0, -4, skin]], sheet, material, BLOCK));
 wrist.add(thumb);
 material.map = sheet.texture(); // only now that every part has been painted onto it
 
+// The block in hand, a real little cube of it, sitting in the palm.
+const HELD_SIZE = 11;
+const held = new THREE.Mesh(new THREE.BoxGeometry(HELD_SIZE, HELD_SIZE, HELD_SIZE), []);
+held.position.set(0, -3, -19); // the palm faces down, so it rides out past the fingers where it can be seen
+held.rotation.set(0.1, 0.6, 0);
+held.visible = false;
+wrist.add(held);
+const faceTextures = new Map(), heldLooks = new Map();
+function faceTexture(name) {
+  if (!faceTextures.has(name)) {
+    const t = new THREE.DataTexture(tilePixels(name), TILE, TILE);
+    t.magFilter = t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
+    t.repeat.y = -1; t.offset.y = 1; // tiles are painted from the top row down
+    t.needsUpdate = true;
+    faceTextures.set(name, t);
+  }
+  return faceTextures.get(name);
+}
+function heldLook(id) {
+  if (!heldLooks.has(id)) {
+    const b = BL[id], [top, side = top, bottom = side] = [].concat(b.tex ?? 'dirt'), tint = b.tint ? new THREE.Color().setRGB(...b.top, THREE.SRGBColorSpace) : new THREE.Color(LIFT);
+    const face = name => new THREE.MeshLambertMaterial({ map: faceTexture(name), color: name === 'dirt' ? LIFT : tint, alphaTest: b.cutout ? 0.4 : 0, side: b.cutout ? THREE.DoubleSide : THREE.FrontSide });
+    heldLooks.set(id, [side, side, top, bottom, side, side].map(face));
+  }
+  return heldLooks.get(id);
+}
+let heldId = 0;
+function syncHeld(reach) {
+  const id = heldBlock();
+  if (id !== heldId) { heldId = id; if (id) held.material = heldLook(id); }
+  held.visible = !!id && reach < 0.3;
+}
+
 function closeHand(curl) {
   for (const { base, tip } of fingers) { base.rotation.x = -curl * 1.25; tip.rotation.x = -curl * 1.45; }
   thumb.rotation.set(-curl * 0.5, 0.7 - curl * 1.3, 0);
@@ -81,7 +117,8 @@ export function syncHand(dt, stride, gait) {
 
   const ease = 1 - Math.exp(-EASE * dt), fade = Math.exp(-LAG_FADE * dt);
   curl += ((punch > 0.02 || working ? 1 : RELAXED) * (1 - reach) - curl) * ease;
-  closeHand(curl);
+  closeHand(heldId ? Math.max(curl, 0.75) : curl);
+  syncHeld(reach);
   lift += (Math.max(-0.06, Math.min(0.1, -player.vel.y * 0.006)) - lift) * ease;
   turnLag = Math.max(-MAX_LAG, Math.min(MAX_LAG, turnLag * fade + (player.yaw - lastYaw) * LAG_TURN));
   tiltLag = Math.max(-MAX_LAG, Math.min(MAX_LAG, tiltLag * fade + (player.pitch - lastPitch) * LAG_TURN));

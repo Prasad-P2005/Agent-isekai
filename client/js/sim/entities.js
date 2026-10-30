@@ -194,6 +194,7 @@ export function hurtEntity(e, dmg, dirx, dirz, by = 'player') {
   }
   if (!byPlayer && D.friendly && !D.lawful) e.fleeT = 8;
   if (e.hp > 0) return;
+  e.fell = true; // the view lets the body drop before it goes
   removeEntity(e);
   const resident = e.res ? { settlement: Math.floor(e.res.id / WORLD.resident_id_base), id: e.res.id } : null;
   if (e.res) e.res.dead = true;
@@ -250,7 +251,7 @@ function naturalSpawning(dt) {
   spawnTimer = night ? 2.5 : 8;
   if (ents.filter(e => e.natural && !e.def.friendly).length >= (night ? 14 : 4)) return;
   const q = ringPos(24, 40), x = Math.floor(q.x), z = Math.floor(q.z), y = q.y - 1;
-  if (!chunkReady(x, z) || y <= SEA || getBlock(x, y + 1, z) !== 0) return;
+  if (!chunkReady(x, z) || y <= SEA || solid(getBlock(x, y + 1, z))) return;
   const L = landOf(x, z);
   if (L.settlement != null && !night) return; // villages are safe by day
   const b = biomeAt(x, z, y), table = SPAWN_TABLE[b];

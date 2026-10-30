@@ -15,7 +15,7 @@ const STEP_SPRING = 20, MAX_STEP_LAG = 1.4, STEP_CLEARANCE = 0.001;
 export const player = {
   pos: new Vec3(), vel: new Vec3(), kb: new Vec3(), spawn: new Vec3(), lastEye: new Vec3(),
   onGround: false, fly: false, yaw: 0, pitch: 0, ready: false, restored: false, stepLag: 0, stepRate: 0,
-  hp: 20, mana: 100, wardT: 0, iframe: 0, dj: false, wanted: 0, lastHurt: 99, atkCd: 0,
+  hp: 20, mana: 100, wardT: 0, iframe: 0, dj: false, wanted: 0, lastHurt: 99, atkCd: 0, wet: false, sprinting: false,
 };
 export const has = a => !!G.profile && G.profile.abilities.includes(a);
 export const maxHp = () => (G.profile ? G.profile.max_hp : 20);
@@ -84,7 +84,10 @@ export function updatePlayer(dt) {
   const p = player.pos, keys = G.keys;
   player.lastEye.copy(eye());
   const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.4), Math.floor(p.z)) === WATER;
+  if (inWater && !player.wet && player.vel.y < -3) emit('player:splashed', { x: p.x, y: p.y, z: p.z, speed: -player.vel.y });
+  player.wet = inWater;
   const sprint = keys.ShiftLeft || keys.ShiftRight;
+  player.sprinting = !!sprint && !player.fly && Math.hypot(player.vel.x, player.vel.z) > 5;
   let speed = player.fly ? (sprint ? 30 : 14) : (sprint ? 6.5 : 4.3);
   if (has('swift')) speed *= 1.5;
   if (inWater && !player.fly) speed *= 0.6;
@@ -124,7 +127,7 @@ export function updatePlayer(dt) {
   }
 }
 
-export function raycast(o, dir, max) {
+export function raycast(o, dir, max, hits = solid) {
   let x = Math.floor(o.x), y = Math.floor(o.y), z = Math.floor(o.z);
   const sx = Math.sign(dir.x), sy = Math.sign(dir.y), sz = Math.sign(dir.z);
   const tdx = Math.abs(1 / dir.x), tdy = Math.abs(1 / dir.y), tdz = Math.abs(1 / dir.z);
@@ -132,7 +135,7 @@ export function raycast(o, dir, max) {
   let n = [0, 0, 0], t = 0;
   while (t <= max) {
     const id = getBlock(x, y, z);
-    if (solid(id) && id !== BEDROCK) return { x, y, z, n, t };
+    if (hits(id) && id !== BEDROCK) return { x, y, z, n, t };
     if (tx < ty && tx < tz) { x += sx; t = tx; tx += tdx; n = [-sx, 0, 0]; }
     else if (ty < tz) { y += sy; t = ty; ty += tdy; n = [0, -sy, 0]; }
     else { z += sz; t = tz; tz += tdz; n = [0, 0, -sz]; }

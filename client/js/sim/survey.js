@@ -1,15 +1,16 @@
 // The world seen from straight above: a colour for each column, and how a being shows on a map.
 // ui/minimap.js paints real blocks a chunk at a time, and ui/map.js paints the whole world from the terrain alone.
-import { AIR, BL, GLASS, WATER, solid } from './blocks.js';
+import { AIR, BL, GLASS, ID, WATER, solid } from './blocks.js';
 import { chunks } from './chunks.js';
 import { NZ, hash3 } from './noise.js';
 import { player } from './player.js';
-import { B, CS, H, SEA, biomeAt, chunkKey as key, heightAt, idx, landOf, settlement } from './terrain.js';
+import { roadAt } from './roads.js';
+import { B, CS, H, SEA, biomeAt, chunkKey as key, heightAt, idx, inTown, landOf } from './terrain.js';
 
 const RELIEF = 0.06, MAX_RELIEF = 0.32; // how much each block of slope lights or shades a column
 const DEEP = 30;                        // blocks of water that hide the sea floor completely
 const MUTED = 0.2;                      // block colours are vivid until the game's lighting softens them, so this softens them too
-const TREES = { [B.ELF]: [9, 0.75], [B.KINGDOM]: [7, 0.16], [B.BEAST]: [32, 0.08] }; // the leaves, and how much of the land they cover at full density
+const TREES = { [B.ELF]: [ID.ElvenLeaves, 0.75], [B.KINGDOM]: [ID.OakLeaves, 0.16], [B.BEAST]: [ID.AcaciaLeaves, 0.08] }; // the leaves, and how much of the land they cover at full density
 
 // The light comes from the north-west, so a column standing above its neighbours on that side catches it.
 const relief = (y, n, w) => 1 + Math.max(-MAX_RELIEF, Math.min(MAX_RELIEF, (2 * y - n - w) * RELIEF));
@@ -30,7 +31,7 @@ export function mapColour(id, light = 1) {
 
 function surface(d, x, z) {
   let y = H - 1;
-  while (y > 0 && (d[idx(x, y, z)] === AIR || d[idx(x, y, z)] === GLASS)) y--;
+  while (y > 0 && (d[idx(x, y, z)] === AIR || d[idx(x, y, z)] === GLASS || BL[d[idx(x, y, z)]].passable)) y--;
   return y;
 }
 
@@ -56,28 +57,27 @@ export function surveyChunk({ cx, cz, d }) {
 // ---------- the whole world, without loading it ----------
 // The short version of genChunk's choice of top block. Only the map depends on it, so a difference is just a slightly different shade.
 function groundOf(b, h, det) {
-  if (b === B.ELF) return 10;
-  if (b === B.BEAST) return det > 0.5 ? 25 : 24;
-  if (b === B.DEMON) return det > 0.55 ? 36 : 35;
-  if (b === B.PEAKS) return h > SEA + 46 ? 17 : det > 0.2 ? 1 : 3;
-  return b === B.KINGDOM ? 1 : 4; // the rest is sand: beaches and the sea bed
+  if (b === B.ELF) return ID.FaeGrass;
+  if (b === B.BEAST) return h > SEA + 11 ? ID.Terracotta : det > 0.5 ? ID.RedClay : ID.SavannaGrass;
+  if (b === B.DEMON) return det > 0.58 ? ID.Magma : ID.AshenGround;
+  if (b === B.PEAKS) return h > SEA + 46 ? ID.Snow : det > 0.15 ? ID.Grass : ID.Stone;
+  return b === B.KINGDOM ? ID.Grass : ID.Sand; // the rest is sand: beaches and the sea bed
 }
 // Trees are round blobs on a staggered four-block grid, as many as the land's density allows. Towns stand on cleared ground.
 const onCellEdge = v => (v & 3) === 0 || (v & 3) === 3;
 function canopy(x, z, b) {
   const trees = TREES[b], L = landOf(x, z), cell = x + ((z >> 2 & 1) << 1);
-  if (!trees || (onCellEdge(cell) && onCellEdge(z)) || hash3(cell >> 2, 0, z >> 2) >= trees[1] * L.density) return null;
-  if (L.settlement != null) { const S = settlement(L.settlement); if (Math.hypot(x - S.cx, z - S.cz) < 30) return null; }
+  if (!trees || (onCellEdge(cell) && onCellEdge(z)) || hash3(cell >> 2, 0, z >> 2) >= trees[1] * L.density || inTown(x, z)) return null;
   return BL[trees[0]].top;
 }
 const seaLevelled = (x, z) => Math.max(SEA, heightAt(x, z));
-// RGBA for one row of the world. This asks only for heights, because generating chunks here would queue their creatures' spawn hints.
-export function surveyRow(z, x0, width) {
-  const pixels = new Uint8ClampedArray(width * 4);
-  for (let i = 0; i < width; i++) {
-    const x = x0 + i, h = heightAt(x, z), b = biomeAt(x, z, h), ground = BL[groundOf(b, h, NZ.D(x / 9, z / 9))].top;
-    const colour = h < SEA ? throughWater(ground, SEA - h) : canopy(x, z, b) ?? ground;
-    paint(pixels, i * 4, colour, relief(Math.max(h, SEA), seaLevelled(x, z - 1), seaLevelled(x - 1, z)));
+// RGBA for one chunk's worth of the world. This asks only for heights and roads, because generating chunks here would queue their creatures' spawn hints.
+export function surveyTile(cx, cz) {
+  const pixels = new Uint8ClampedArray(CS * CS * 4);
+  for (let i = 0; i < CS; i++) for (let j = 0; j < CS; j++) {
+    const x = cx * CS + j, z = cz * CS + i, h = heightAt(x, z), b = biomeAt(x, z, h), road = roadAt(x, z), ground = BL[groundOf(b, h, NZ.D(x / 9, z / 9))].top;
+    const colour = road ? BL[road].top : h < SEA ? throughWater(ground, SEA - h) : canopy(x, z, b) ?? ground;
+    paint(pixels, (j + i * CS) * 4, colour, relief(Math.max(h, SEA), seaLevelled(x, z - 1), seaLevelled(x - 1, z)));
   }
   return pixels;
 }

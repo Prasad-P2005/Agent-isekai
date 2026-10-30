@@ -1,4 +1,4 @@
-"""The finite world: an 8 x 8 grid of 64 x 64-block lands, surrounded by the endless sea."""
+"""The finite world: an 8 x 8 grid of 128 x 128-block lands, surrounded by the endless sea."""
 from __future__ import annotations
 
 from ..content import REALMS as REALM_DATA, WORLD
@@ -53,5 +53,5 @@ def build_map() -> tuple[list[list[Land]], list[Settlement], tuple[int, int]]:
                 s.coastal = True
                 s.shore_direction = direction
                 break
-        s.layout = make_layout(s)
+        s.layout, s.streets = make_layout(s)
     return lands, settlements, demon_land

@@ -56,6 +56,7 @@ class Settlement(BaseModel):
     ruler: str | None = None
     version: int = 0
     layout: list[Building] = Field(default_factory=list)
+    streets: list[list[int]] = Field(default_factory=list)  # [from x, from z, to x, to z, width], see world/layouts.py
     residents: list[Resident] = Field(default_factory=list)
 
 

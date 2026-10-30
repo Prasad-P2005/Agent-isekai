@@ -2,11 +2,14 @@
 import * as THREE from 'three';
 import { on } from '../core/events.js';
 import { STEP } from '../core/loop.js';
+import { WATER } from '../sim/blocks.js';
+import { getBlock } from '../sim/chunks.js';
 import { ss } from '../sim/noise.js';
 import { ents } from '../sim/entities.js';
 import { player } from '../sim/player.js';
 import { buildAvatar, lookFor } from './avatar.js';
 import { buildCreature } from './creatures.js';
+import { spray } from './fireball.js';
 import { newMotion } from './pose.js';
 import { scene } from './scene.js';
 
@@ -14,6 +17,11 @@ const STRIKE_TIME = 0.42, TURN_EASE = 12, PACE_EASE = 10, AIR_EASE = 14, HEAD_EA
 const STRIDE_WALK = 5.2, STRIDE_RUN = 4.2, TALL = 1.8, RUN_FROM = 2, RUN_AT = 3.4, FAST = 9;
 const LOOK_RANGE = 5, GLARE_RANGE = 12, MAX_LOOK = 0.9, MAX_NOD = 0.4, STILL_BEYOND = 64;
 const HURT_TINT = 0x880000, ICE_TINT = 0x1f6a9a, BANK = 12, MAX_BANK = 0.45;
+const SWIM_EASE = 6, LAND_FADE = 7, HARD_LANDING = 0.5, GAZE_GAP = [2.5, 7], GAZE_REACH = 0.7, WORK_GAP = [1.1, 2.6];
+const WORKERS = new Set(['blacksmith', 'farmer', 'hunter', 'baker', 'fisherman']); // jobs that are done with the arm, so they keep at it while nobody needs them
+const FALL_TIME = 0.75, FALL_EASE = 9, FALL_TINT = 0x660000, POOF = 6; // a body drops, then goes in a little puff of cubes
+const POOF_KIND = { palette: [0xd8d4cc, 0xa8a4a0, 0x77736f].map(c => new THREE.Color(c)), life: [0.3, 0.6], size: [0.14, 0.3], speed: [0.5, 2], spread: 0.45, drag: 3, lift: 0.5, fall: 0 };
+const between = ([a, b]) => a + Math.random() * (b - a);
 const ease = (rate, dt) => 1 - Math.exp(-rate * dt);
 const clamp = (v, n) => Math.max(-n, Math.min(n, v));
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
@@ -39,20 +47,39 @@ on('entity:spawned', e => {
   const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 80;
   const tex = new THREE.CanvasTexture(canvas), sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, sizeAttenuation: false }));
   sprite.scale.set(0.24, 0.075, 1); sprite.position.y = D.h + 0.35; g.add(sprite); // constant on-screen size
-  e.view = { g, mats, extra, pose, canvas, tex, sprite, motion: newMotion(Math.abs(seed)), yaw: e.yaw, pace: 0, strikeAge: STRIKE_TIME, label: labelState(e), tint: 0 };
+  e.view = { g, mats, extra, pose, canvas, tex, sprite, motion: newMotion(Math.abs(seed)), yaw: e.yaw, pace: 0, strikeAge: STRIKE_TIME, label: labelState(e), tint: 0, gaze: 0, gazeT: between(GAZE_GAP), workT: between(WORK_GAP) };
   drawLabel(e);
   g.position.set(e.pos.x, e.pos.y, e.pos.z);
   g.rotation.y = e.yaw;
   scene.add(g);
 });
-on('entity:removed', e => {
-  scene.remove(e.view.g);
-  e.view.g.traverse(o => {
+function dispose(g) {
+  scene.remove(g);
+  g.traverse(o => {
     o.skeleton?.dispose();
     if (o.geometry) o.geometry.dispose();
     if (o.material && !o.material.userData.shared) { o.material.map?.dispose(); o.material.dispose(); }
   });
+}
+const fallen = [];
+on('entity:removed', e => {
+  if (!e.fell) return dispose(e.view.g);
+  const v = e.view, side = Math.random() < 0.5 ? 1 : -1;
+  v.sprite.visible = false;
+  for (const m of v.mats) m.emissive?.setHex(FALL_TINT);
+  fallen.push({ g: v.g, side, age: 0, tall: e.def.h });
 });
+function layDown(dt) {
+  for (let i = fallen.length - 1; i >= 0; i--) {
+    const f = fallen[i];
+    f.age += dt;
+    f.g.rotation.z += (f.side * Math.PI / 2 - f.g.rotation.z) * ease(FALL_EASE, dt);
+    if (f.age < FALL_TIME) continue;
+    spray(POOF_KIND, f.g.position, POOF, null, Math.max(1, f.tall / 2));
+    dispose(f.g);
+    fallen.splice(i, 1);
+  }
+}
 const strike = e => { if (e?.view) e.view.strikeAge = 0; };
 on('entity:struck', strike);
 on('foe:shot', ({ killer }) => strike(killer));
@@ -68,7 +95,11 @@ function moveBody(e, v, dt) {
   m.run = ss(RUN_FROM, RUN_AT, relative);
   m.phase += dt * v.pace * (STRIDE_WALK + (STRIDE_RUN - STRIDE_WALK) * m.run) / reach;
   m.phase %= Math.PI * 2000;
-  m.air += ((!e.onGround && !D.fly && !D.sacred && !D.swim ? 1 : 0) - m.air) * ease(AIR_EASE, dt);
+  const wet = getBlock(Math.floor(e.pos.x), Math.floor(e.pos.y + D.h * 0.5), Math.floor(e.pos.z)) === WATER;
+  m.swim += ((wet ? 1 : 0) - m.swim) * ease(SWIM_EASE, dt);
+  if (e.onGround && m.air > HARD_LANDING) m.land = 1;
+  m.land *= Math.exp(-LAND_FADE * dt);
+  m.air += ((!e.onGround && !D.fly && !D.sacred && !D.swim && !wet ? 1 : 0) - m.air) * ease(AIR_EASE, dt);
   m.rise = clamp(e.vel.y / FAST, 1);
   v.strikeAge = Math.min(STRIKE_TIME, v.strikeAge + dt);
   m.strike = v.strikeAge < STRIKE_TIME ? v.strikeAge / STRIKE_TIME : 0;
@@ -78,8 +109,13 @@ function moveBody(e, v, dt) {
 
   const dx = player.pos.x - e.pos.x, dz = player.pos.z - e.pos.z, dy = player.pos.y - e.pos.y, dist = Math.hypot(dx, dz);
   m.near = D.friendly && dist < LOOK_RANGE;
-  const watching = m.near || (!D.friendly && dist < GLARE_RANGE);
-  m.look += ((watching ? clamp(wrap(Math.atan2(-dx, -dz) - v.yaw), MAX_LOOK) : 0) - m.look) * ease(HEAD_EASE, dt); // turns to look at you
+  const watching = m.near || (!D.friendly && dist < GLARE_RANGE), idle = m.walk < 0.1 && !watching;
+  if (idle) { // with nothing to do, a body looks about and gets on with its work
+    v.gazeT -= dt;
+    if (v.gazeT <= 0) { v.gazeT = between(GAZE_GAP); v.gaze = Math.random() < 0.4 ? 0 : (Math.random() - 0.5) * 2 * GAZE_REACH; }
+    if (e.res && WORKERS.has(e.res.job)) { v.workT -= dt; if (v.workT <= 0) { v.workT = between(WORK_GAP); v.strikeAge = 0; } }
+  }
+  m.look += ((watching ? clamp(wrap(Math.atan2(-dx, -dz) - v.yaw), MAX_LOOK) : idle ? v.gaze : 0) - m.look) * ease(HEAD_EASE, dt); // turns to look at you
   m.nod += ((watching ? clamp(Math.atan2(dy, dist + 1), MAX_NOD) : 0) - m.nod) * ease(HEAD_EASE, dt);
   m.bank += (clamp(wrap(e.yaw - v.yaw) * BANK, MAX_BANK) - m.bank) * ease(HEAD_EASE, dt); // leans into a turn, by how far the body is behind it
   v.pose(v.extra, m);
@@ -101,4 +137,5 @@ function syncBody(e, dt, blend) {
 
 export function syncBodies(dt, blend) {
   for (const e of ents) syncBody(e, dt, blend);
+  layDown(dt);
 }

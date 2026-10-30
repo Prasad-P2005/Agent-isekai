@@ -10,7 +10,7 @@ import { CS, LAND, SEA, genChunk, heightAt, idx, landOf, setWorldData } from '..
 const world = JSON.parse(readFileSync(new URL('./world.json', import.meta.url)));
 const CHUNKS = world.lands.length * LAND / CS; // chunks along one side of the map
 // Changing this means every saved world changes shape under its player. Only update it on purpose.
-const WORLD_HASH = 'b710d63f4bb18dbb6de639acde1436e94ddc0d8e6bccb4fd3e119359eee4d7b2';
+const WORLD_HASH = 'b7fd7e5df477cc0a1e263d011c23702c769922122de0a7d94afdb00e04a04c6c';
 
 function useSeed(seed) { initNoise(seed); setWorldData(world); }
 function* allChunks() { for (let cz = 0; cz < CHUNKS; cz++) for (let cx = 0; cx < CHUNKS; cx++) yield genChunk(cx, cz); }

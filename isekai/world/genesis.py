@@ -9,6 +9,7 @@ from ..core.state import Pos, Settlement, World
 from ..systems.laws import DEFAULT_LAWS, LOCAL_LAWS
 from ..systems.lines import fill
 from ..systems.people.roster import make_roster
+from .layouts import TOWNS
 from .map import build_map
 
 RAID_MINUTES = (5.0, 11.0)
@@ -22,6 +23,13 @@ def ruler_of(world: World, s: Settlement) -> tuple[str | None, str | None]:
     if s.id == world.capital().id:
         return "king", world.king_name
     return "queen", s.ruler
+
+
+def first_spawn(world: World) -> Pos:
+    """Just south of the village nearest the capital, on dry ground beyond its farmers."""
+    capital = world.capital()
+    village = min(world.settlements_of("human"), key=lambda s: (s.cx - capital.cx) ** 2 + (s.cz - capital.cz) ** 2)
+    return Pos(x=village.cx + 5.5, z=village.cz + TOWNS["human"]["reach"] + 3.5)
 
 
 def _name_places(world: World, rng: random.Random) -> None:
@@ -56,6 +64,5 @@ def run_genesis(world: World) -> None:
     for s in world.settlements:
         job, name = ruler_of(world, s)
         make_roster(s, world.seed, job, name)
-    village = min(world.settlements_of("human"), key=lambda s: (s.cx - world.capital().cx) ** 2 + (s.cz - world.capital().cz) ** 2)
-    world.spawn = Pos(x=village.cx + 5.5, z=village.cz + 35.5)  # just beyond the village work ring, not among the farmers
+    world.spawn = first_spawn(world)
     world.genesis_done = True

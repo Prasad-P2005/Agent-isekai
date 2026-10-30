@@ -10,6 +10,7 @@ export const newMotion = (seed = 0) => ({
   air: 0, rise: 0,        // off the ground, and whether going up (1) or down (-1)
   strike: 0, hurt: 0, scared: 0, // strike runs 0 to 1 over a blow; 0 is no blow
   look: 0, nod: 0, near: false, cross: false, bank: 0,
+  swim: 0, land: 0,       // how far into a swim, and the knees taking a landing, fading from 1
 });
 
 // A blow: drawn back, brought down, then a slower recovery.
@@ -30,12 +31,14 @@ export function poseFigure(x, m) {
   const idle = m.t + m.seed, s = Math.sin(m.phase), c = Math.cos(m.phase), still = 1 - walk;
   const up = drawn(strike), hit = landed(strike), stride = mix(0.46, 1, run) * walk;
 
-  x.hips.position.y = x.hipY + (Math.cos(m.phase * 2) * mix(0.5, 1.5, run) * walk + Math.sin(idle * 1.8) * 0.25 * still) * x.bob + (x.hover ? Math.sin(idle * 3.1) * 1.6 : 0);
+  const swim = x.swims ? 0 : m.swim, stroke = Math.sin(m.phase * 0.5), drop = m.land * x.bob * 2.2;
+  x.hips.position.y = x.hipY + (Math.cos(m.phase * 2) * mix(0.5, 1.5, run) * walk + Math.sin(idle * 1.8) * 0.25 * still) * x.bob + (x.hover ? Math.sin(idle * 3.1) * 1.6 : 0) - drop;
   x.hips.rotation.y = s * 0.14 * walk;
-  x.hips.rotation.z = c * 0.05 * walk;
+  x.hips.rotation.z = c * 0.05 * walk + Math.sin(idle * 0.6) * 0.022 * still; // the weight shifts from foot to foot while it waits
   if (x.swims) x.hips.rotation.x = -1.15 * walk; // a mermaid lies out flat to swim, and only stands up in the water to look at you
+  else x.hips.rotation.x = -1.2 * swim * Math.max(0.35, walk); // anyone else does what they can
   const lean = x.hunch + 0.24 * run * walk - 0.3 * hurt + 0.22 * hit - 0.12 * up;
-  x.chest.rotation.x = -lean;
+  x.chest.rotation.x = -lean + Math.sin(idle * 1.25) * 0.016 * still; // and it breathes
   x.chest.rotation.y = -s * 0.26 * walk - 0.45 * up + 0.55 * hit;
   x.chest.rotation.z = -c * 0.03 * walk;
   x.head.rotation.x = m.nod + lean * 0.7 + Math.sin(idle * 1.1) * 0.03 + (x.swims ? 0.9 * walk : 0);
@@ -44,9 +47,9 @@ export function poseFigure(x, m) {
 
   x.legs.forEach((thigh, i) => {
     const forward = i ? -s : s, lifting = Math.max(0, i ? -c : c), leads = i === 0;
-    thigh.rotation.x = forward * stride + air * (leads ? 0.75 : -0.2) + x.dangle;
+    thigh.rotation.x = mix(forward * stride + air * (leads ? 0.75 : -0.2) + x.dangle, Math.sin(m.phase * 2 + i * Math.PI) * 0.4, swim) + m.land * 0.5;
     thigh.rotation.z = (i ? 1 : -1) * (0.02 + 0.1 * air);
-    x.shins[i].rotation.x = -(0.08 * walk + lifting * mix(0.75, 1.5, run) * walk + air * (leads ? 1.15 : 0.5) + x.dangle * 1.2);
+    x.shins[i].rotation.x = -(0.08 * walk + lifting * mix(0.75, 1.5, run) * walk * (1 - swim) + air * (leads ? 1.15 : 0.5) + x.dangle * 1.2 + m.land * 0.9);
   });
   x.arms.forEach((arm, i) => {
     const out = i ? 1 : -1, carried = x.carry[i], swing = (i ? s : -s) * mix(0.5, 1.05, run) * walk * (carried ? 0.45 : 1);
@@ -56,6 +59,9 @@ export function poseFigure(x, m) {
     forward = mix(forward, 2.7 + Math.sin(m.phase * 2 + i * 3.14) * 0.25, scared);
     spread = mix(spread, 0.25, scared);
     elbow = mix(elbow, 0.35, scared);
+    forward = mix(forward, 2.5 + stroke * 0.55, swim); // a breaststroke: arms out ahead, sweeping apart and back
+    spread = mix(spread, 0.3 + (stroke + 1) * 0.42, swim);
+    elbow = mix(elbow, 0.2 + (1 - stroke) * 0.35, swim);
     if (i === 1) { // the right arm carries the blow
       forward = mix(mix(forward, 2.8, up), 0.8, hit);
       spread = mix(spread, 0.16, up);

@@ -8,7 +8,7 @@ import { on } from '../../client/js/core/events.js';
 import { G } from '../../client/js/core/state.js';
 import { Vec3 } from '../../client/js/core/vec3.js';
 import { castBlink, castChainLightning, castFireball, castFrostNova, castHeal, castManaWard, castMeteor, drank } from '../../client/js/sim/abilities.js';
-import { AIR, dropOf, hardness } from '../../client/js/sim/blocks.js';
+import { AIR, BL, dropOf, hardness, solid } from '../../client/js/sim/blocks.js';
 import { chunks, getBlock, setBlock, streamChunks } from '../../client/js/sim/chunks.js';
 import { applyEffects, applyState } from '../../client/js/sim/effects.js';
 import { edits, loadEdits, requeueEdits, takeUnsentEdits } from '../../client/js/sim/edits.js';
@@ -25,18 +25,26 @@ import { WORLD_EVENTS } from '../../client/js/sim/worldevents.js';
 import { CS, H, SEA, heightAt, hintQueue, idx, setWorldData, chunkKey } from '../../client/js/sim/terrain.js';
 
 const fixture = JSON.parse(readFileSync(new URL('./world.json', import.meta.url)));
-let OPEN_LAND = [224, 224]; // moved in the setup below to a spot with no trees around it
+let OPEN_LAND = [448, 448]; // moved in the setup below to a spot with no trees around it
 
 function newProfile() { return { gold: 30, blocks: {}, abilities: [], max_hp: 20, max_mana: 100, weapon: 0, armor: 0, tool: 1, bounty: 0 }; }
 function worldData() {
   return { ...fixture, player: newProfile(), spawn: { x: OPEN_LAND[0] + 0.5, z: OPEN_LAND[1] + 0.5 }, demon_lord_dead: false, demon_lord_name: 'Malzareth',
     settlements: fixture.settlements.map(s => ({ ...s, residents: [] })) };
 }
+// Tufts of grass grow nearly everywhere and these tests want bare ground, so they go, without counting as the player's edits.
+function mow(x, z) {
+  for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) {
+    const px = x + a, pz = z + b, y = heightAt(px, pz) + 1, ch = chunks.get(chunkKey(Math.floor(px / CS), Math.floor(pz / CS)));
+    if (BL[getBlock(px, y, pz)].passable) ch.d[idx(px - ch.cx * CS, y, pz - ch.cz * CS)] = AIR;
+  }
+}
 // Stands the player on the ground at x, z with the world around them loaded.
 function goTo(x, z) {
   player.pos.set(x + 0.5, heightAt(x, z) + 1, z + 0.5);
   player.vel.set(0, 0, 0);
   streamChunks(player.pos.x, player.pos.z, Infinity);
+  mow(x, z);
 }
 function run(seconds, step = updateEntities) { for (let i = 0; i < seconds * 60; i++) step(STEP); }
 const heard = name => { const got = []; on(name, d => got.push(d)); return got; };
@@ -49,7 +57,7 @@ function findClearGround() {
     for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) {
       const h = heightAt(x + a, z + b);
       if (h !== heightAt(x, z) || getBlock(x + a, h, z + b) !== 1) return false;
-      for (let y = h + 1; y < H; y++) if (getBlock(x + a, y, z + b) !== AIR) return false;
+      for (let y = h + 1; y < H; y++) if (solid(getBlock(x + a, y, z + b))) return false;
     }
     return true;
   };
@@ -206,40 +214,41 @@ test('a saved game continues where it stopped', () => {
 });
 
 test('saved edits rebuild the world', () => {
-  const cx = 6, cz = 6, k = chunkKey(cx, cz), i = idx(5, 150, 5);
+  const cx = (OPEN_LAND[0] >> 4) - 4, cz = (OPEN_LAND[1] >> 4) - 4, k = chunkKey(cx, cz), i = idx(5, 150, 5);
   loadEdits({ [k]: { [i]: 18 } });
   chunks.clear();
   streamChunks(player.pos.x, player.pos.z, Infinity);
   assert.equal(getBlock(cx * CS + 5, 150, cz * CS + 5), 18);
 });
 
+const NEARBY = () => [OPEN_LAND[0] - 60, 150, OPEN_LAND[1] - 60]; // inside the loaded world, wherever the tests are standing
 test('changed blocks wait to be sent, once', () => {
-  setBlock(100, 150, 100, 18);
+  setBlock(...NEARBY(), 18);
   const sent = takeUnsentEdits();
   assert.equal(Object.keys(sent).length, 1);
   assert.deepEqual(takeUnsentEdits(), {});
 });
 
 test('a failed send is tried again, without undoing newer changes', () => {
-  setBlock(100, 150, 100, 18);
+  setBlock(...NEARBY(), 18);
   const failed = takeUnsentEdits();
-  setBlock(100, 150, 100, 19);
+  setBlock(...NEARBY(), 19);
   requeueEdits(failed);
   const [changes] = Object.values(takeUnsentEdits());
   assert.deepEqual(Object.values(changes), [19]);
 });
 
 test('a failed send keeps its changes for next time', () => {
-  setBlock(100, 150, 100, 18);
+  setBlock(...NEARBY(), 18);
   requeueEdits(takeUnsentEdits());
   assert.equal(Object.keys(takeUnsentEdits()).length, 1);
 });
 
 test('a block changed in an unloaded chunk comes back when the chunk does', () => {
-  setBlock(100, 150, 100, 18);
+  setBlock(...NEARBY(), 18);
   chunks.clear();
   streamChunks(player.pos.x, player.pos.z, Infinity);
-  assert.equal(getBlock(100, 150, 100), 18);
+  assert.equal(getBlock(...NEARBY()), 18);
 });
 
 // ---------- mining and building ----------
@@ -604,7 +613,7 @@ test('a potion only works if the server says you had one', () => {
 });
 
 // ---------- creature lifetimes ----------
-const CASTLE = [480, 32];
+const CASTLE = [960, 64];
 let lordHint = null; // terrain only announces him the first time his chunk is built, so the tests share what it said
 function lordSpot() {
   goTo(...CASTLE);

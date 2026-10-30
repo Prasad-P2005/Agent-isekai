@@ -6,6 +6,7 @@ from ..systems.people.jobs import POPULATION
 from ..systems.people.roster import rebalance_roster, rehome
 from ..systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
 from ..systems.story import BEATS, advance
+from ..world.genesis import first_spawn
 from ..world.layouts import make_layout
 from ..world.map import LAND
 
@@ -50,7 +51,7 @@ def _to_4(world: World) -> None:
     _coastline(world)
     _clear_initial_spawn(world)
     for settlement in world.settlements:
-        settlement.layout = make_layout(settlement)
+        settlement.layout, settlement.streets = make_layout(settlement)
         target = POPULATION[settlement.type][2] if settlement.type == "city" else len(settlement.residents)
         rebalance_roster(settlement, world.seed, target)
 
@@ -68,7 +69,7 @@ def _replace_the_lost_dead(world: World) -> None:
 def _to_5(world: World) -> None:
     """City houses no longer overlap, and schedules moved from wall-clock time to the game clock."""
     for s in world.settlements_of("city"):
-        s.layout = make_layout(s)
+        s.layout, s.streets = make_layout(s)
         rehome(s, world.seed)
     world.cooldowns.clear()
     world.festival_until = 0
@@ -105,7 +106,19 @@ def _to_7(world: World) -> None:
         world.player.max_mana += BEATS["elf_oath"]["max_mana"]
 
 
-STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7}
+def _to_8(world: World) -> None:
+    """Lands doubled in width and towns were replanned around streets, so everything with a position moves. Progress,
+    people and the bag all carry over. Blocks the player placed go: the ground they stood on no longer exists."""
+    for s in world.settlements:
+        s.cx, s.cz = s.lx * LAND + LAND // 2, s.lz * LAND + LAND // 2
+        s.layout, s.streets = make_layout(s)
+        rehome(s, world.seed)
+    world.block_edits.clear()
+    world.player.pos = None  # wakes at the spawn: wherever they stood may now be inside a hill
+    world.spawn = first_spawn(world)
+
+
+STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8}
 CURRENT_VERSION = max(STEPS)
 
 

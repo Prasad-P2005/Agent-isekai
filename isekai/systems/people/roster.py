@@ -6,6 +6,7 @@ import random
 
 from ...content import WORLD
 from ...core.state import Pos, Resident, Settlement
+from ...world.layouts import SIZE, TOWNS
 from ...world.map import LAND
 from .jobs import BASE_KIND, ELF_KIND, FILLER, JOBS, POPULATION, RACE_OF, REQUIRED, ROYAL
 from .names import gen_name
@@ -15,9 +16,15 @@ ID_BASE = WORLD["resident_id_base"]  # a resident's settlement can be read back 
 
 
 def _spot(s: Settlement, where: str, rng: random.Random) -> Pos:
+    town = TOWNS[s.type]
+    edge = town.get("wall", town["reach"])  # the wall where there is one: everyone who works outside works beyond it
     if where == "field":
+        farms = [b for b in s.layout if b.kind == "farm"]
+        if farms:
+            b, (hw, hd) = rng.choice(farms), SIZE["farm"]
+            return Pos(x=b.x + 0.5 + rng.uniform(1 - hw, hw - 1), z=b.z + 0.5 + rng.uniform(1 - hd, hd - 1))
         a = rng.random() * math.tau
-        d = (30.2 + rng.random() * 0.7) if s.type == "city" else (25 + rng.random() * 5)
+        d = edge + 2 + rng.random() * 3 if "wall" in town else edge - rng.random() * 6
         x, z = s.cx + math.cos(a) * d, s.cz + math.sin(a) * d
         return Pos(x=_inside_land(x, s.lx), z=_inside_land(z, s.lz))
     if where == "shore":
@@ -25,12 +32,12 @@ def _spot(s: Settlement, where: str, rng: random.Random) -> Pos:
             return _spot(s, "field", rng)
         direction = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}[s.shore_direction]
         dx, dz = direction
-        radius, along = (30.2, rng.uniform(-2, 2)) if s.type == "city" else (29, rng.uniform(-3, 3))
+        radius, along = edge + 6, rng.uniform(-3, 3)
         x, z = s.cx + dx * radius - dz * along, s.cz + dz * radius + dx * along
         return Pos(x=_inside_land(x, s.lx), z=_inside_land(z, s.lz))
     if where == "gate":
         ox, oz = rng.choice([(0, -1), (1, 0), (0, 1), (-1, 0)])
-        d = 30 if s.type == "city" else 28 if s.type == "elfcity" else 27
+        d = edge + 1.5 if "wall" in town else edge - 1
         return Pos(x=s.cx + ox * d + 0.5, z=s.cz + oz * d + 0.5)
     spots = [b for b in s.layout if b.kind == where]
     if where == "street_stall" and not spots:

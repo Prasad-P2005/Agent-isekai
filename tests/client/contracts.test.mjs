@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { ABILITIES, CREATURES, EVENTS, GUILD, JOBS, LAWS, REALMS, SERVICES } from '../../client/js/core/content.js';
 import { WORLD_EVENTS } from '../../client/js/sim/worldevents.js';
 import { B, REALM } from '../../client/js/sim/terrain.js';
+import { BLOCKS } from '../../client/js/core/content.js';
+import { tileIndex } from '../../client/js/view/blocktex.js';
 import { OUTFITS } from '../../client/js/view/outfits.js';
 
 test('every world event does something on the client', () => {
@@ -28,6 +30,11 @@ test('every service a job offers has a panel', () => {
 test('every friendly race can be murdered under the law', () => {
   const races = new Set(Object.values(CREATURES).filter(c => c.friendly && !c.sacred).map(c => c.race));
   assert.deepEqual([...races].filter(r => !LAWS.crimes[`kill_${r}`]), []);
+});
+
+test('every block is painted', () => {
+  const blocks = BLOCKS.filter(b => b.name !== 'Air' && b.name !== 'Water');
+  assert.deepEqual(blocks.filter(b => !b.tex || [].concat(b.tex).some(t => tileIndex(t) === undefined)).map(b => b.name), []);
 });
 
 test('every realm has a biome', () => {

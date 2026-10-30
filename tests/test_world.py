@@ -3,6 +3,7 @@ from collections import Counter
 from pathlib import Path
 
 from isekai.persistence.saves import load, save
+from isekai.world.layouts import SIZE
 from isekai.world.map import LAND, build_map
 
 TERRAIN_WORLD = Path(__file__).parent / "client" / "world.json"
@@ -39,19 +40,24 @@ def test_every_settlement_has_its_required_jobs(world):
 
 
 def test_buildings_do_not_overlap(world):
-    # half width, half depth of each BUILD entry in client/js/terrain.js; neighbours may share a wall
-    size = {"guild": (4, 3), "hospital": (4, 3), "inn": (3, 3), "smithy": (3, 2), "church": (3, 4), "house": (2, 2),
-            "stall": (2, 1), "street_stall": (1, 0), "well": (1, 1), "treehouse": (6, 6), "elfhall": (3, 3), "hut": (3, 3), "chief": (3, 3), "lodge": (3, 2),
-            "shrine": (0, 0), "keep": (3, 3), "palace": (6, 6)}
+    # neighbours may share a wall
     overlaps = []
     for s in world.settlements:
         bs = s.layout
         for i, a in enumerate(bs):
             for b in bs[i + 1:]:
-                (ax, az), (bx, bz) = size[a.kind], size[b.kind]
+                (ax, az), (bx, bz) = SIZE[a.kind], SIZE[b.kind]
                 if abs(a.x - b.x) <= ax + bx - 1 and abs(a.z - b.z) <= az + bz - 1:
                     overlaps.append((s.name, a.kind, a.x, a.z, b.kind, b.x, b.z))
     assert overlaps == []
+
+
+def test_every_town_has_streets_inside_its_land(world):
+    half = LAND // 2
+    for s in world.settlements:
+        assert s.streets
+        for ax, az, bx, bz, _ in s.streets:
+            assert all(abs(x - s.cx) <= half and abs(z - s.cz) <= half for x, z in ((ax, az), (bx, bz)))
 
 
 def test_cities_keep_all_their_houses(world):

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from isekai.core.game import Game
-from isekai.core.state import World
+from isekai.core.state import Vec3, World
 from isekai.persistence.migrations import CURRENT_VERSION, migrate
 from isekai.persistence.saves import load, save
 from isekai.systems.story import CHAPTERS
@@ -101,7 +101,7 @@ def test_upgrading_moves_the_old_port_village_to_the_coast(world):
     village.lx, village.cx, village.coastal = 2, 2 * 64 + 32, False
     old_save(world, 3)
     migrate(world)
-    assert (village.lx, village.lz, village.cx) == (1, 5, 96) and village.coastal
+    assert (village.lx, village.lz, village.cx) == (1, 5, 192) and village.coastal
     assert coast.settlement == village.id and old_site.settlement is None
 
 
@@ -117,6 +117,19 @@ def test_upgrading_rebuilds_city_layouts_and_rehomes_people(world):
     keep = next(b for b in city.layout if b.kind == "keep")
     assert (keep.x, keep.z) == (city.cx, city.cz) and king.work.x > 0
     assert village.layout == untouched
+
+
+def test_upgrading_moves_everyone_onto_the_bigger_map(world):
+    s = world.settlements[0]
+    world.block_edits = {"5": {"7": 18}}
+    world.player.pos = Vec3(x=10, y=60, z=10)
+    world.player.blocks = {"19": 12}
+    s.cx, s.cz, s.streets = s.lx * 64 + 32, s.lz * 64 + 32, []
+    s.residents[0].work.x = -1
+    old_save(world, 7)
+    migrate(world)
+    assert (s.cx, s.cz) == (s.lx * 128 + 64, s.lz * 128 + 64) and s.streets and s.residents[0].work.x > 0
+    assert world.block_edits == {} and world.player.pos is None and world.player.blocks == {"19": 12}
 
 
 def test_upgrading_clears_times_from_the_old_wall_clock(world):

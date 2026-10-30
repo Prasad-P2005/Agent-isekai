@@ -1,10 +1,11 @@
 // Chunk storage, block access and streaming around the player. Drawing them is view/chunkmesh.js.
 import { emit } from '../core/events.js';
-import { AIR, BEDROCK } from './blocks.js';
+import { AIR, BEDROCK, EMIT } from './blocks.js';
 import { edits, recordEdit } from './edits.js';
-import { CS, H, genChunk, idx, chunkKey as key } from './terrain.js';
+import { CS, H, genChunk, idx, chunkKey as key, topOf } from './terrain.js';
 
-export const RD = 7; // render distance in chunks
+export const RD = 10; // render distance in chunks
+export const LIGHT_REACH = 12; // how many blocks a lamp's light crosses, so how far a change to one must spread
 export const chunks = new Map();
 
 export function getBlock(wx, y, wz) {
@@ -22,13 +23,14 @@ export function setBlock(wx, y, wz, id) {
   if (y < 1 || y >= H) return;
   const cx = Math.floor(wx / CS), cz = Math.floor(wz / CS), k = key(cx, cz), ch = chunks.get(k);
   if (!ch) return;
-  const lx = wx - cx * CS, lz = wz - cz * CS, i = idx(lx, y, lz);
-  ch.d[i] = id; ch.dirty = true;
+  const lx = wx - cx * CS, lz = wz - cz * CS, i = idx(lx, y, lz), reach = EMIT[ch.d[i]] || EMIT[id] ? LIGHT_REACH : 1;
+  ch.d[i] = id; ch.dirty = true; ch.lamps = null; ch.top = Math.max(ch.top, y);
   recordEdit(k, i, id);
   emit('chunk:edited', { cx, cz });
   const mark = (a, b) => { const n = chunks.get(key(a, b)); if (n) n.dirty = true; };
-  if (lx === 0) mark(cx - 1, cz); if (lx === CS - 1) mark(cx + 1, cz);
-  if (lz === 0) mark(cx, cz - 1); if (lz === CS - 1) mark(cx, cz + 1);
+  const west = lx < reach, east = lx >= CS - reach, north = lz < reach, south = lz >= CS - reach;
+  if (west) mark(cx - 1, cz); if (east) mark(cx + 1, cz); if (north) mark(cx, cz - 1); if (south) mark(cx, cz + 1);
+  if (reach > 1) { if (west && north) mark(cx - 1, cz - 1); if (east && north) mark(cx + 1, cz - 1); if (west && south) mark(cx - 1, cz + 1); if (east && south) mark(cx + 1, cz + 1); }
 }
 
 // Generates what is missing, nearest first, until the deadline. The nearest chunk is always done, so a slow machine still loads.
@@ -40,8 +42,8 @@ export function streamChunks(px, pz, deadline) {
   }
   toGen.sort((a, b) => a[0] - b[0]);
   for (let i = 0; i < toGen.length && (!i || performance.now() < deadline); i++) {
-    const [, cx, cz] = toGen[i], k = key(cx, cz);
-    chunks.set(k, { cx, cz, d: genChunk(cx, cz, edits.get(k)), dirty: false });
+    const [, cx, cz] = toGen[i], k = key(cx, cz), d = genChunk(cx, cz, edits.get(k));
+    chunks.set(k, { cx, cz, d, top: topOf(d), lamps: null, dirty: false });
   }
   for (const [k, ch] of chunks) {
     if (Math.abs(ch.cx - pcx) > RD + 3 || Math.abs(ch.cz - pcz) > RD + 3) {

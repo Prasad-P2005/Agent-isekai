@@ -112,7 +112,7 @@ Saves from older versions upgrade themselves when they load. A save that cannot 
 ## How a playthrough goes
 
 1. **Heaven**: talk with the god, then descend. A "Chapter I" card introduces the world.
-2. **The finite world**: an 8×8 grid of 64×64-block lands: 4 human villages, 2 walled human cities with rulers,
+2. **The finite world**: an 8×8 grid of 128×128-block lands whose borders wander and blend, tied together by rivers and roads: 4 human villages, 2 walled human cities with rulers,
    the walled elven capital with its Elf King or Queen, 2 elven villages, 4 beastkin villages, mermaid seas, the Dragonspine Peaks and the Demon Lord's castle.
 3. **The storyline**, in `content/story.json`:
    - **Act I**: the King explains the First Law: no mortal hand can wound the Demon Lord, unless every people swears to amend it.

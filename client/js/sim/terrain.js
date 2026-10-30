@@ -1,442 +1,228 @@
-// Terrain and structure generation. The world layout (lands, settlements, buildings) comes from the server;
-// this module turns it into blocks deterministically.
-import { BIOMES, REALMS, WORLD } from '../core/content.js';
-import { NZ, fbm, ss, mulberry, hash2 } from './noise.js';
+// Terrain generation. The world layout (lands, settlements, buildings) comes from the server and the shape of the land from
+// sim/land.js; this turns them into blocks deterministically, chunk by chunk.
+import { ID } from './blocks.js';
+import { acacia, baobab, birch, boulder, bush, cactus, deadTree, elfTree, fallenLog, giantTree, greatOak, oak, palm, spruce } from './flora.js';
+import { B, CS, H, LAND, LAVA_LEVEL, ROCK_LINE, SEA, SNOW_LINE, biomeAt, columnsOf, heightAt, inTown, landOf, rollBiome, setLandData, settlement, slopeAt } from './land.js';
+import { NZ, hash2, hash3, mulberry, noise3, ss } from './noise.js';
+import { deckFor, lampsIn, layRoads, roadAt, roadsIn } from './roads.js';
+import { crystals, demonCastle, hint, magmaSpike, palace, raiseSight, reef, ruins, spire } from './structures.js';
+import { clearOfBuildings, townChunk } from './towns.js';
 
-export const CS = WORLD.chunk, H = WORLD.height, SEA = WORLD.sea, LAND = WORLD.land;
-export const B = Object.fromEntries(BIOMES.map((b, i) => [b.key, i]));
-export const REALM = BIOMES.map(b => [b.name, b.kind]);
-const REALM_B = Object.fromEntries(Object.entries(REALMS).map(([name, r]) => [name, B[r.biome]]));
-const BASE_H = [SEA - 16, SEA + 1, SEA + 7, SEA + 5, SEA + 5, SEA + 24, SEA + 8];
-const OCEAN_LAND = { b: B.OCEAN, structure: 'none', density: 0.2, settlement: null, name: 'The Endless Sea' };
+export { B, CS, H, LAND, REALM, SEA, TOWNS, biomeAt, chunkKey, climateAt, columnsOf, heightAt, inTown, landName, landOf, settlement, settlements } from './land.js';
+export { hintQueue } from './structures.js';
 
-export const chunkKey = (cx, cz) => (cx + 16384) * 32768 + (cz + 16384);
-
-let W = null;
-// Every chunk also runs its neighbours' features, so the same columns are asked for again and again and each
-// miss costs eight noise samples. Height only depends on the column, so each one is computed once.
-const heightCache = new Map(); // chunk key -> column heights; 0 = not computed yet, real heights are at least 4
-export function setWorldData(w) { W = w; heightCache.clear(); for (const row of w.lands) for (const L of row) delete L._c; }
-export const settlement = id => W.settlements[id];
-function land(lx, lz) {
-  const L = W.lands[lz]?.[lx];
-  if (!L) return OCEAN_LAND;
-  return L._c || (L._c = { b: REALM_B[L.realm], structure: L.structure, density: L.density, settlement: L.settlement, name: L.name });
-}
-export const landOf = (x, z) => land(Math.floor(x / LAND), Math.floor(z / LAND));
-export const landName = L => (L.settlement != null ? settlement(L.settlement).name : L.name) || REALM[L.b][0];
-
-export function heightAt(x, z) { // whole block coordinates
-  const k = chunkKey(x >> 4, z >> 4), i = (x & 15) + (z & 15) * CS;
-  let column = heightCache.get(k);
-  if (!column) heightCache.set(k, column = new Int16Array(CS * CS));
-  return column[i] || (column[i] = columnHeight(x, z));
-}
-function columnHeight(x, z) {
-  const fx = x / LAND - 0.5, fz = z / LAND - 0.5, lx = Math.floor(fx), lz = Math.floor(fz);
-  let tx = fx - lx, tz = fz - lz;
-  tx = tx * tx * (3 - 2 * tx); tz = tz * tz * (3 - 2 * tz);
-  let base = 0, mt = 0, landness = 0;
-  for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
-    const w = (i ? tx : 1 - tx) * (j ? tz : 1 - tz), b = land(lx + i, lz + j).b;
-    base += w * BASE_H[b]; mt += w * (b === B.PEAKS); landness += w * (b !== B.OCEAN);
-  }
-  const hl = fbm(NZ.H, x / 90, z / 90, 4), m = Math.max(0, fbm(NZ.M, x / 110, z / 110, 4) + 0.35);
-  let h = base + hl * (3 + 6 * landness) + mt * m * m * 60;
-  const L = landOf(x, z);
-  if (L.settlement != null) { // settlements sit on levelled ground
-    const S = settlement(L.settlement), t = 1 - ss(24, 31, Math.hypot(x - S.cx, z - S.cz));
-    h = h * (1 - t) + (SEA + 5) * t;
-  }
-  return Math.max(4, Math.min(H - 24, Math.floor(h)));
-}
-export function biomeAt(x, z, h) {
-  if (h < SEA) return B.OCEAN;
-  if (h <= SEA + 1) return B.BEACH;
-  const b = landOf(x, z).b;
-  if (b === B.DEMON) return B.DEMON;
-  if (b === B.OCEAN) return B.BEACH;
-  if (h > SEA + 38) return B.PEAKS;
-  return b;
-}
-
-// spawn hints for creatures that live in structures (mermaids in palaces, the Demon Lord in his castle)
+const {
+  Air, Bedrock, Stone, Dirt, Sand, Sandstone, Gravel, Grass, FaeGrass, SavannaGrass, Moss, Snow, SnowLayer, Water, Magma, Blackstone, Basalt, AshenGround, RedClay, Terracotta, DarkTerracotta,
+  Planks, OakLog, Fence, Lantern, CoalOre, IronOre, ManaOre, OakLeaves, BirchLeaves, TallGrass, Fern, Poppy, Dandelion, Cornflower, FaeBloom, DryGrass, DeadBush, SeaGrass, LilyPad, Glowshroom, RedMushroom,
+} = ID;
+const CHUNKS_WIDE = LAND / CS, HEART = CHUNKS_WIDE / 2 - 1;
 const DRAGON_PERCH = 13; // blocks above the ground: a dragon starts on the wing, not walking out of a mountainside
-export const hintQueue = [];
-const hintSeen = new Set();
-function hint(kind, x, y, z) { const k = kind + x + ',' + y + ',' + z; if (hintSeen.has(k)) return; hintSeen.add(k); hintQueue.push({ kind, x, y, z }); }
+const STEEP = 3;         // a step this high shows bare rock, and nothing takes root on it
+const TRIES = 18;        // spots a chunk tries for its trees and rocks
+const STRATA = [Terracotta, RedClay, Sandstone, DarkTerracotta, RedClay, Terracotta, Sandstone]; // the bands in a mesa's side
+const VEINS = [{ id: CoalOre, count: 9, low: 8, high: 92, size: 8 }, { id: IronOre, count: 6, low: 6, high: 60, size: 6 }, { id: ManaOre, count: 2, low: 6, high: 30, size: 4 }];
+const CAVE_STEP = 4, CAVE_SIZE = 0.085, CAVE_TOP = 96, CAVE_ROOF = 6, LAVA_FLOOR = 9;
 
-// ===================== structures =====================
-function blob(set, cx, cy, cz, rx, ry, rz, id, r) {
-  for (let dx = -rx; dx <= rx; dx++) for (let dy = -ry; dy <= ry; dy++) for (let dz = -rz; dz <= rz; dz++) {
-    const d = (dx * dx) / (rx * rx + .5) + (dy * dy) / (ry * ry + .5) + (dz * dz) / (rz * rz + .5);
-    if (d <= 1 && (d < 0.7 || r() > 0.3)) set(cx + dx, cy + dy, cz + dz, id, true);
-  }
-}
-function oak(x, y, z, set, r) { const th = 4 + Math.floor(r() * 3); blob(set, x, y + th, z, 2, 2, 2, 7, r); for (let i = 0; i < th; i++) set(x, y + i, z, 6); }
-function elfTree(x, y, z, set, r) {
-  const th = 8 + Math.floor(r() * 5);
-  blob(set, x, y + th, z, 3, 3, 3, 9, r); blob(set, x, y + th - 3, z, 2, 1, 2, 9, r);
-  for (let i = 0; i < th; i++) set(x, y + i, z, 8);
-  if (r() < 0.5) set(x + 2, y + th - 4, z, 22, true);
-  if (r() < 0.5) set(x - 2, y + th - 4, z, 22, true);
-}
-function giantTree(x, y, z, set, r) {
-  const th = 20 + Math.floor(r() * 5), py = y + 9;
-  for (let dx = -5; dx <= 6; dx++) for (let dz = -5; dz <= 6; dz++) {
-    const d = Math.hypot(dx - 0.5, dz - 0.5);
-    if (d < 5.6) set(x + dx, py, z + dz, 18);
-    if (d >= 4.8 && d < 5.6 && (dx + dz) % 2 === 0) set(x + dx, py + 1, z + dz, 8);
-  }
-  for (const [dx, dz] of [[-4, 0], [5, 1], [1, -4], [0, 5]]) { set(x + dx, py + 1, z + dz, 8); set(x + dx, py + 2, z + dz, 22); }
-  for (let dx = 2; dx <= 4; dx++) for (let dz = -3; dz <= -1; dz++) for (let dy = 1; dy <= 3; dy++) {
-    const edge = dx === 2 || dx === 4 || dz === -3 || dz === -1;
-    set(x + dx, py + dy, z + dz, dy === 3 ? 9 : edge ? (dy === 2 ? 21 : 8) : 0);
-  }
-  blob(set, x, y + th, z, 6, 4, 6, 9, r); blob(set, x + 3, y + th - 6, z - 2, 3, 2, 3, 9, r); blob(set, x - 3, y + th - 8, z + 3, 3, 2, 3, 9, r);
-  for (let i = -1; i < th; i++) for (const [dx, dz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) set(x + dx, y + i, z + dz, 8);
-  for (const [dx, dz] of [[-1, -1], [2, -1], [-1, 2], [2, 2]]) { set(x + dx, y, z + dz, 8); set(x + dx, y - 1, z + dz, 8); }
-  for (let i = 0; i < 5; i++) set(x + Math.floor(r() * 9) - 4, y, z + Math.floor(r() * 9) - 4, 26, true);
-}
-function foundation(set, x, y, z, id) { const g = heightAt(x, z); for (let yy = y; yy > g; yy--) set(x, yy, z, id); }
-function house(x, y, z, set, r, small) {
-  const hw = small || r() < 0.5 ? 2 : 3, hd = small || r() < 0.5 ? 2 : 3;
-  for (let dx = -hw; dx <= hw; dx++) for (let dz = -hd; dz <= hd; dz++) {
-    foundation(set, x + dx, y - 1, z + dz, 19);
-    set(x + dx, y - 1, z + dz, 18);
-    const ex = Math.abs(dx) === hw, ez = Math.abs(dz) === hd;
-    for (let dy = 0; dy < 4; dy++) {
-      let id = 0;
-      if (ex && ez) id = 6;
-      else if (ex || ez) id = (dy === 1 && (dx === 0 || dz === 0)) ? 21 : (dy === 3 ? 6 : 18);
-      if (dx === 0 && dz === hd && dy < 2) id = 0;
-      set(x + dx, y + dy, z + dz, id);
-    }
-  }
-  set(x, y + 3, z, 22);
-  for (let k = 0; ; k++) {
-    const ex = hw + 1 - k, ez = hd + 1 - k;
-    if (ex < 0 || ez < 0) break;
-    for (let dx = -ex; dx <= ex; dx++) for (let dz = -ez; dz <= ez; dz++) set(x + dx, y + 4 + k, z + dz, 20);
-  }
-}
-function tower(x, y, z, set) {
-  const top = y + 14;
-  for (let dx = -4; dx <= 4; dx++) for (let dz = -4; dz <= 4; dz++) {
-    const d = dx * dx + dz * dz;
-    if (d > 10) continue;
-    foundation(set, x + dx, y - 1, z + dz, 19);
-    for (let yy = y; yy <= top; yy++) set(x + dx, yy, z + dz, d > 4.5 ? 19 : ((yy - y) % 5 === 4 ? 18 : 0));
-    if (d > 4.5 && (dx + dz) % 2 === 0) set(x + dx, top + 1, z + dz, 19);
-  }
-  for (let yy = y; yy < y + 2; yy++) set(x, yy, z - 3, 0);
-  set(x, top + 1, z, 22);
-  for (const [dx, dz] of [[4, 0], [-4, 0], [0, 4]]) for (let yy = top - 6; yy < top - 1; yy++) set(x + dx, yy, z + dz, 30);
-  for (let yy = y + 5; yy < top; yy += 4) set(x + 3, yy, z, 21);
-}
-function acacia(x, y, z, set, r) {
-  const th = 4 + Math.floor(r() * 2), ox = r() < 0.5 ? 1 : -1, oz = r() < 0.5 ? 1 : -1;
-  for (let i = 0; i < th; i++) set(x, y + i, z, 6);
-  set(x + ox, y + th, z + oz, 6); set(x + 2 * ox, y + th + 1, z + 2 * oz, 6);
-  const cx = x + 2 * ox, cy = y + th + 2, cz = z + 2 * oz;
-  for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) {
-    const d = dx * dx + dz * dz;
-    if (d <= 10) set(cx + dx, cy, cz + dz, 32, true);
-    if (d <= 3) set(cx + dx, cy + 1, cz + dz, 32, true);
-  }
-}
-function hut(x, y, z, set) {
-  for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) {
-    const d = dx * dx + dz * dz;
-    if (d > 10) continue;
-    foundation(set, x + dx, y - 1, z + dz, 25);
-    set(x + dx, y - 1, z + dz, 25);
-    for (let dy = 0; dy < 3; dy++) set(x + dx, y + dy, z + dz, d > 5 ? (dy === 1 ? 18 : 6) : 0);
-  }
-  set(x, y, z + 3, 0); set(x, y + 1, z + 3, 0); set(x, y + 1, z - 3, 0);
-  for (let k = 0; k <= 4; k++) {
-    const rr = 4 - k;
-    for (let dx = -rr; dx <= rr; dx++) for (let dz = -rr; dz <= rr; dz++) if (dx * dx + dz * dz <= rr * rr + 1) set(x + dx, y + 3 + k, z + dz, 23);
-  }
-  for (let i = 0; i < 4; i++) set(x + 5, y + i, z, i % 2 ? 33 : 6);
-  set(x + 5, y + 4, z, 22);
-  set(x, y - 1, z + 6, 19); set(x, y, z + 6, 22);
-}
-function crystals(x, y, z, set, r) {
-  const n = 3 + Math.floor(r() * 3);
-  for (let i = 0; i < n; i++) {
-    let px = x + Math.floor(r() * 5) - 2;
-    const pz = z + Math.floor(r() * 5) - 2, len = 3 + Math.floor(r() * 5), lx = r() < 0.3 ? (r() < 0.5 ? 1 : -1) : 0, py = heightAt(px, pz) + 1;
-    for (let k = 0; k < len; k++) { set(px, py + k, pz, 16); if (k === 2) px += lx; }
-  }
-}
-function reef(x, y, z, set, r) {
-  if (r() < 0.4) { const len = Math.min(SEA - 2 - y, 3 + Math.floor(r() * 12)); for (let k = 0; k < len; k++) set(x, y + k, z, 14); return; }
-  const id = 11 + Math.floor(r() * 3);
-  let px = x, py = y, pz = z;
-  for (let k = 0; k < 6 + r() * 8 && py < SEA - 1; k++) {
-    set(px, py, pz, id);
-    const m = Math.floor(r() * 4);
-    if (m === 0) px += r() < 0.5 ? 1 : -1; else if (m === 1) pz += r() < 0.5 ? 1 : -1; else py++;
-  }
-}
-function palace(x, y, z, set, r) {
-  const R = 6;
-  for (let dx = -R; dx <= R; dx++) for (let dz = -R; dz <= R; dz++) {
-    foundation(set, x + dx, y - 1, z + dz, 15);
-    set(x + dx, y - 1, z + dz, 15);
-    for (let dy = 0; dy <= R; dy++) {
-      const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (d > R + 0.5) continue;
-      set(x + dx, y + dy, z + dz, d > R - 0.6 ? (dy === 2 && (dx === 0 || dz === 0) ? 21 : 15) : 5);
-    }
-  }
-  for (let dy = 0; dy < 4; dy++) set(x, y + dy, z, dy === 3 ? 16 : 15);
-  set(x, y + 4, z, 22);
-  hint('mermaid', x + 2, y + 1, z); hint('mermaid', x - 2, y + 1, z + 1); hint('mermaid_queen', x, y + 1, z + 2);
-  for (const [dx, dz] of [[-5, -5], [5, -5], [-5, 5], [5, 5]]) { for (let dy = -1; dy < 8; dy++) set(x + dx, y + dy, z + dz, 15); set(x + dx, y + 8, z + dz, 16); }
-  for (let i = 0; i < 12; i++) set(x + Math.floor(r() * 15) - 7, y, z + Math.floor(r() * 15) - 7, 11 + Math.floor(r() * 3), true);
-}
-function spire(x, y, z, set) {
-  for (let dy = -1; dy < 26; dy++) {
-    const rad = dy < 3 ? 3 : Math.max(0, 2.6 - dy / 10);
-    for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) if (dx * dx + dz * dz <= rad * rad + 0.5) set(x + dx, y + dy, z + dz, dy < 3 ? 15 : 16);
-  }
-  set(x, y + 26, z, 22);
-  hint('law_stone', x + 5, heightAt(x + 5, z) + 1, z);
-}
-function ruins(x, y, z, set, r) {
-  for (let dx = -5; dx <= 5; dx++) for (let dz = -5; dz <= 5; dz++) {
-    if (Math.abs(dx) !== 5 && Math.abs(dz) !== 5 && !(dx === 0 && Math.abs(dz) < 5 && r() < 0.3)) continue;
-    const g = heightAt(x + dx, z + dz), hgt = Math.floor(r() * 6);
-    for (let dy = 1; dy <= hgt; dy++) set(x + dx, g + dy, z + dz, r() < 0.15 ? 7 : 19);
-  }
-  set(x, heightAt(x, z) + 1, z, 16);
-}
-function stall(x, y, z, set, r) {
-  const roof = r() < 0.5 ? 20 : 30;
-  for (let dx = -2; dx <= 2; dx++) for (let dz = -1; dz <= 1; dz++) {
-    foundation(set, x + dx, y - 1, z + dz, 19);
-    for (let dy = 0; dy < 3; dy++) set(x + dx, y + dy, z + dz, 0);
-    set(x + dx, y + 3, z + dz, roof);
-  }
-  for (let dx = -2; dx <= 2; dx++) set(x + dx, y, z - 1, 18);
-  for (const dx of [-2, 2]) for (const dz of [-1, 1]) for (let dy = 0; dy < 3; dy++) set(x + dx, y + dy, z + dz, 6);
-  set(x, y + 1, z - 1, 22);
-}
-function streetStall(x, y, z, set, r) {
-  const awning = r() < 0.5 ? 20 : 30;
-  for (let dx = -1; dx <= 1; dx++) {
-    set(x + dx, y - 1, z, 18);
-    set(x + dx, y, z, 18);
-    if (Math.abs(dx) === 1) { set(x + dx, y + 1, z, 6); set(x + dx, y + 2, z, 6); }
-    set(x + dx, y + 3, z, awning);
-  }
-  set(x, y + 1, z, 22);
-}
-function demonCastle(x, y, z, set) {
-  for (let dx = -10; dx <= 10; dx++) for (let dz = -10; dz <= 10; dz++) {
-    const d = Math.hypot(dx, dz);
-    if (d > 10.5) continue;
-    if (d > 8.5) { set(x + dx, heightAt(x + dx, z + dz), z + dz, 36); continue; } // magma moat
-    foundation(set, x + dx, y - 1, z + dz, 37);
-    set(x + dx, y - 1, z + dz, 37);
-    for (let dy = 0; dy < 22; dy++) set(x + dx, y + dy, z + dz, d > 6.5 ? 37 : (dy % 7 === 6 && d > 2 ? 34 : 0));
-    if (d > 6.5 && (dx + dz) % 2 === 0) { set(x + dx, y + 22, z + dz, 37); set(x + dx, y + 23, z + dz, 36); }
-  }
-  for (let dy = 0; dy < 3; dy++) for (let dx = -1; dx <= 1; dx++) for (let dz = -9; dz <= -6; dz++) set(x + dx, y + dy, z + dz, 0);
-  for (const [dx, dz] of [[4, 0], [-4, 0], [0, 4]]) set(x + dx, y - 1, z + dz, 36);
-  hint('demon_lord', x, y, z);
-  hint('demon_knight', x + 3, y, z + 3); hint('demon_knight', x - 3, y, z + 3);
-}
-function magmaSpike(x, y, z, set, r) { const n = 2 + Math.floor(r() * 5); for (let i = 0; i < n; i++) set(x, y + i, z, i === n - 1 ? 36 : 37); }
-function deadTree(x, y, z, set, r) { const n = 3 + Math.floor(r() * 4); for (let i = 0; i < n; i++) set(x, y + i, z, 34); set(x + 1, y + n - 1, z, 34); set(x - 1, y + n - 2, z, 34); }
+export function setWorldData(w) { setLandData(w); layRoads(); }
+const mod = (a, b) => ((a % b) + b) % b;
+export const idx = (x, y, z) => x + z * CS + y * CS * CS;
 
-// ---- settlement buildings, placed from the server's layout ----
-const DOORV = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
-let STYLE = null; // 'elf' while building the elven capital: elderwood walls, living-leaf roofs
-function building(x, y, z, set, o) {
-  if (STYLE === 'elf') o = { ...o, wall: 8, corner: 8, roof: 9, floor: o.floor === 15 ? 15 : 18 };
-  const { hw, hd, h } = o;
-  for (let dx = -hw; dx <= hw; dx++) for (let dz = -hd; dz <= hd; dz++) {
-    foundation(set, x + dx, y - 1, z + dz, 19);
-    set(x + dx, y - 1, z + dz, o.floor);
-    const ex = Math.abs(dx) === hw, ez = Math.abs(dz) === hd;
-    for (let dy = 0; dy < h; dy++) {
-      let id = 0;
-      if (ex && ez) id = o.corner;
-      else if (ex || ez) id = o.windows && (dy === 1 || dy === 2) && ((dx + dz) & 1) ? 21 : o.wall;
-      set(x + dx, y + dy, z + dz, id);
-    }
+// ---------- the ground ----------
+function ground(b, h, y, det, steep) {
+  const depth = h - y;
+  if (b === B.OCEAN) return depth < 3 ? (h < SEA - 12 && det > 0 ? Gravel : Sand) : Stone;
+  if (b === B.BEACH) return depth < 4 ? Sand : depth < 7 ? Sandstone : Stone;
+  if (b === B.PEAKS) {
+    if (depth > 0) return steep && depth < 3 ? Gravel : Stone;
+    return h > SNOW_LINE + det * 5 ? Snow : steep ? Stone : det > 0.15 ? Grass : Stone;
   }
-  const [fx, fz] = DOORV[o.door || 's'], doorX = x + fx * hw, doorZ = z + fz * hd;
-  set(doorX, y, doorZ, 0); set(doorX, y + 1, doorZ, 0); set(doorX, y + 2, doorZ, 22);
-  for (let k = 0; ; k++) {
-    const ex = hw + 1 - k, ez = hd + 1 - k;
-    if (ex < 0 || ez < 0) break;
-    for (let dx = -ex; dx <= ex; dx++) for (let dz = -ez; dz <= ez; dz++) set(x + dx, y + h + k, z + dz, o.roof);
+  if (b === B.DEMON) {
+    if (depth === 0) return det > 0.58 ? Magma : det < -0.5 ? Basalt : AshenGround;
+    return depth < 3 ? Blackstone : Stone;
   }
-  set(x, y + h - 1, z, 22);
-  return { fx, fz, px: fz ? 1 : 0, pz: fx ? 1 : 0, doorX, doorZ, depth: fz ? hd : hw, top: y + h + Math.min(hw, hd) + 1 };
+  if (b === B.BEAST) {
+    if (h > SEA + 11 && depth < 24) return STRATA[mod(y + Math.round(det * 1.2), STRATA.length)]; // mesas show their bands right to the top
+    if (depth === 0) return steep ? Terracotta : det > 0.5 ? RedClay : SavannaGrass;
+    return depth < 4 ? RedClay : Stone;
+  }
+  if (b === B.ELF) return depth === 0 ? (steep ? Stone : det > 0.62 ? Moss : FaeGrass) : depth < 4 ? Dirt : Stone;
+  return depth === 0 ? (steep ? Stone : Grass) : depth < 4 ? Dirt : Stone;
 }
-const BUILD = {
-  house: (b, y, set, r) => house(b.x, y, b.z, set, r, true),
-  stall: (b, y, set, r) => stall(b.x, y, b.z, set, r),
-  street_stall: (b, y, set, r) => streetStall(b.x, y, b.z, set, r),
-  treehouse: (b, y, set, r) => giantTree(b.x, y, b.z, set, r),
-  hut: (b, y, set, r) => hut(b.x, y, b.z, set, r),
-  keep: () => {}, // built with the city walls
-  well: (b, y, set) => {
-    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { set(b.x + dx, y - 1, b.z + dz, dx || dz ? 19 : 5); set(b.x + dx, y + 3, b.z + dz, 18); }
-    for (const dx of [-1, 1]) for (const dz of [-1, 1]) for (let dy = 0; dy < 3; dy++) set(b.x + dx, y + dy, b.z + dz, 6);
-  },
-  guild: (b, y, set) => {
-    const g = building(b.x, y, b.z, set, { hw: 4, hd: 3, h: 5, wall: 18, corner: 6, roof: 20, floor: 18, windows: 1, door: b.door });
-    const cx = b.x - g.fx * (g.depth - 2), cz = b.z - g.fz * (g.depth - 2);
-    for (let k = -2; k <= 2; k++) set(cx + g.px * k, y, cz + g.pz * k, 18); // reception counter
-    set(cx + g.px * 2, y + 1, cz + g.pz * 2, 22);
-    for (const k of [-2, 2]) for (let dy = 2; dy <= 3; dy++) set(g.doorX + g.px * k, y + dy, g.doorZ + g.pz * k, 30);
-  },
-  hospital: (b, y, set) => {
-    const g = building(b.x, y, b.z, set, { hw: 4, hd: 3, h: 5, wall: 15, corner: 15, roof: 20, floor: 15, windows: 1, door: b.door });
-    for (const [k, dy] of [[0, 2], [0, 3], [0, 4], [-1, 3], [1, 3]]) set(g.doorX + g.px * k, y + dy, g.doorZ + g.pz * k, 20); // red cross
-    for (let k = -3; k <= 3; k += 2) set(b.x - g.fx * (g.depth - 1) + g.px * k, y, b.z - g.fz * (g.depth - 1) + g.pz * k, 20); // beds
-  },
-  inn: (b, y, set) => {
-    const g = building(b.x, y, b.z, set, { hw: 3, hd: 3, h: 6, wall: 18, corner: 6, roof: 23, floor: 18, windows: 1, door: b.door });
-    for (const k of [-1, 1]) { set(b.x + g.px * k * 2, y, b.z + g.pz * k * 2, 18); set(b.x + g.px * k * 2, y + 1, b.z + g.pz * k * 2, 22); }
-  },
-  smithy: (b, y, set) => {
-    const g = building(b.x, y, b.z, set, { hw: 3, hd: 2, h: 4, wall: 19, corner: 19, roof: 34, floor: 19, windows: 0, door: b.door });
-    const fx = b.x - g.fx * (g.depth - 1), fz = b.z - g.fz * (g.depth - 1);
-    set(fx, y, fz, 36); set(fx, y + 1, fz, 36); set(b.x, y, b.z, 37);
-  },
-  church: (b, y, set) => {
-    const g = building(b.x, y, b.z, set, { hw: 3, hd: 4, h: 7, wall: 15, corner: 3, roof: 37, floor: 15, windows: 1, door: b.door });
-    for (let i = 0; i < 4; i++) set(b.x, g.top + i, b.z, 15);
-    set(b.x, g.top + 4, b.z, 16);
-  },
-  elfhall: (b, y, set) => { building(b.x, y, b.z, set, { hw: 3, hd: 3, h: 5, wall: 8, corner: 8, roof: 9, floor: 18, windows: 1, door: b.door }); set(b.x + 1, y, b.z + 1, 26); set(b.x - 1, y, b.z - 1, 26); },
-  lodge: (b, y, set) => building(b.x, y, b.z, set, { hw: 3, hd: 2, h: 4, wall: 6, corner: 33, roof: 23, floor: 25, windows: 0, door: b.door }),
-  shrine: (b, y, set, r) => {
-    giantTree(b.x, y, b.z, set, r);
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, x = b.x + Math.round(Math.cos(a) * 8), z = b.z + Math.round(Math.sin(a) * 8); set(x, y, z, 16); set(x, y + 1, z, 16); }
-  },
-  palace: (b, y, set, r) => { // the World Tree palace of the elven ruler
-    giantTree(b.x, y, b.z, set, r);
-    giantTree(b.x + 1, y + 1, b.z + 1, set, r);
-    for (let i = 0; i < 12; i++) {
-      const a = i / 12 * Math.PI * 2, x = b.x + Math.round(Math.cos(a) * 9), z = b.z + Math.round(Math.sin(a) * 9);
-      for (let dy = 0; dy < 4; dy++) set(x, y + dy, z, dy === 3 ? 16 : 15);
+
+// Caves are the lines where two slow noises both cross zero, read on a coarse lattice because most of a chunk is nowhere near one.
+function carveCaves(cx, cz, d, cols) {
+  const n = Math.floor(CS / CAVE_STEP) + 1, layers = Math.floor(CAVE_TOP / CAVE_STEP) + 1, A = new Float32Array(n * n * layers), Z = new Float32Array(n * n * layers);
+  const at = (i, j, k) => i + j * n + k * n * n;
+  for (let k = 0; k < layers; k++) for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const x = cx * CS + i * CAVE_STEP, y = k * CAVE_STEP, z = cz * CS + j * CAVE_STEP;
+    A[at(i, j, k)] = noise3(NZ.CA, x / 30, y / 20, z / 30); Z[at(i, j, k)] = noise3(NZ.CB, x / 30, y / 20, z / 30);
+  }
+  for (let k = 1; k < layers - 1; k++) for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) {
+    let lowA = 9, highA = -9, lowZ = 9, highZ = -9;
+    for (let c = 0; c < 8; c++) {
+      const p = at(i + (c & 1), j + (c >> 1 & 1), k + (c >> 2 & 1)), a = A[p], z = Z[p];
+      if (a < lowA) lowA = a; if (a > highA) highA = a; if (z < lowZ) lowZ = z; if (z > highZ) highZ = z;
     }
-    for (let dx = 2; dx <= 4; dx++) for (let dz = 2; dz <= 4; dz++) set(b.x + dx, y - 1, b.z + dz, 15); // throne dais
-    set(b.x + 3, y, b.z + 4, 16); set(b.x + 3, y + 1, b.z + 4, 16);
-  },
-  chief: (b, y, set, r) => {
-    hut(b.x, y, b.z, set, r);
-    for (const [dx, dz] of [[6, 6], [-6, 6], [6, -6], [-6, -6]]) { for (let i = 0; i < 5; i++) set(b.x + dx, y + i, b.z + dz, i % 2 ? 33 : 6); set(b.x + dx, y + 5, b.z + dz, 22); }
-  },
-};
-function settlementChunk(cx, cz, S, set) {
-  const bx = cx * CS, bz = cz * CS;
-  for (let x = bx; x < bx + CS; x++) for (let z = bz; z < bz + CS; z++) {
-    const dx = x - S.cx, dz = z - S.cz, d = Math.hypot(dx, dz), g = heightAt(x, z);
-    const largeCity = S.type === 'city', road = (Math.abs(dx) <= 1 || Math.abs(dz) <= 1) && d < (largeCity ? 28.5 : 27);
-    if (S.type === 'city' || S.type === 'elfcity') {
-      const M = S.type === 'elfcity' ? { wall: 8, top: 9, road: 15, post: 8, lamp: 26 } : { wall: 19, top: 19, road: 29, post: 6, lamp: 22 };
-      if (road) set(x, g, z, M.road);
-      const wallInner = largeCity ? 28.5 : 26.5, wallOuter = largeCity ? 29.5 : 28;
-      if (d >= wallInner && d < wallOuter) { // wall with four gates
-        const gate = Math.abs(dx) <= 2 || Math.abs(dz) <= 2;
-        for (let y = g + 1; y <= g + 6; y++) if (!gate || y >= g + 5) set(x, y, z, M.wall);
-        if ((x + z) % 2 === 0) set(x, g + 7, z, M.top);
-        if (gate && (Math.abs(dx) === 2 || Math.abs(dz) === 2)) set(x, g + 4, z, M.lamp);
+    if (lowA > CAVE_SIZE || highA < -CAVE_SIZE || lowZ > CAVE_SIZE || highZ < -CAVE_SIZE) continue;
+    for (let dx = 0; dx < CAVE_STEP; dx++) for (let dz = 0; dz < CAVE_STEP; dz++) {
+      const x = i * CAVE_STEP + dx, z = j * CAVE_STEP + dz, col = x + z * CS, h = cols.h[col];
+      if (cols.town[col] || h <= SEA + 2) continue; // never under a town or a seabed
+      const open = slopeAt(cx * CS + x, cz * CS + z) >= STEEP ? h : h - CAVE_ROOF, tx = dx / CAVE_STEP, tz = dz / CAVE_STEP; // a cave only breaks the surface on a slope, where nothing grows to be left hanging
+      for (let dy = 0; dy < CAVE_STEP; dy++) {
+        const y = k * CAVE_STEP + dy;
+        if (y > open || y < 3) continue;
+        const ty = dy / CAVE_STEP;
+        if (Math.abs(trilinear(A, at, i, j, k, tx, ty, tz)) < CAVE_SIZE && Math.abs(trilinear(Z, at, i, j, k, tx, ty, tz)) < CAVE_SIZE) d[idx(x, y, z)] = y < LAVA_FLOOR ? Magma : Air;
       }
-      if (largeCity && d >= wallOuter && d <= 31.5 && (Math.abs(dx) <= 1 || Math.abs(dz) <= 1)) set(x, g, z, M.road);
-      if (d < wallInner - 1 && d > 10 && (Math.abs(dx) === 2 || Math.abs(dz) === 2) && ((dx + dz) & 7) === 0) { set(x, g + 1, z, M.post); set(x, g + 2, z, M.post); set(x, g + 3, z, M.lamp); }
-    } else if (S.type !== 'elf' && d <= 27 && (road || d < 4.5)) set(x, g, z, S.type === 'beast' ? 25 : d < 4.5 ? 19 : 29);
+    }
   }
-  if (S.type === 'city' && Math.floor(S.cx / CS) - 1 === cx && Math.floor(S.cz / CS) - 1 === cz) tower(S.cx, heightAt(S.cx, S.cz) + 1, S.cz, set);
-  STYLE = S.type === 'elfcity' ? 'elf' : null;
-  for (const b of S.layout) {
-    if (Math.floor(b.x / CS) !== cx || Math.floor(b.z / CS) !== cz) continue;
-    BUILD[b.kind](b, heightAt(b.x, b.z) + 1, set, mulberry(hash2(b.x, b.z)));
+}
+function trilinear(f, at, i, j, k, tx, ty, tz) {
+  const c = (a, b, e) => f[at(i + a, j + b, k + e)], l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(c(0, 0, 0), c(1, 0, 0), tx), l(c(0, 1, 0), c(1, 1, 0), tx), tz), l(l(c(0, 0, 1), c(1, 0, 1), tx), l(c(0, 1, 1), c(1, 1, 1), tx), tz), ty);
+}
+function layOres(cx, cz, d) {
+  const r = mulberry(hash2(cx * 7 + 3, cz * 13 + 1));
+  for (const { id, count, low, high, size } of VEINS) for (let n = 0; n < count; n++) {
+    let x = Math.floor(r() * CS), y = low + Math.floor(r() * (high - low)), z = Math.floor(r() * CS);
+    for (let i = 0; i < size; i++) {
+      if (x >= 0 && z >= 0 && x < CS && z < CS && d[idx(x, y, z)] === Stone) d[idx(x, y, z)] = id;
+      const m = Math.floor(r() * 3), s = r() < 0.5 ? 1 : -1;
+      if (m === 0) x += s; else if (m === 1) y += s; else z += s;
+    }
   }
-  STYLE = null;
 }
 
-// features of a chunk: settlements, landmarks, then vegetation
+// ---------- roads ----------
+function layRoad(cx, cz, set) {
+  const row = roadsIn(cx, cz);
+  if (!row) return;
+  const bx = cx * CS, bz = cz * CS;
+  for (let i = 0; i < row.length; i++) {
+    if (!row[i]) continue;
+    const x = bx + (i & 15), z = bz + (i >> 4), g = heightAt(x, z), deck = deckFor(g);
+    if (!deck) { set(x, g, z, g <= SEA + 1 && row[i] === ID.DirtPath ? Sand : row[i]); continue; }
+    set(x, deck, z, Planks);
+    if ((x + z) % 5 === 0) for (let y = deck - 1; y > g; y--) set(x, y, z, OakLog); // a bridge stands on legs
+  }
+}
+
+// ---------- what grows ----------
+function growTree(b, x, h, z, set, r) {
+  const y = h + 1, roll = r();
+  if (b === B.ELF) { if (roll < 0.1) fallenLog(x, y, z, ID.Elderwood, set, r); else if (roll < 0.2) bush(x, y, z, OakLeaves, set, r); else elfTree(x, y, z, set, r); }
+  else if (b === B.KINGDOM) { if (roll < 0.06) greatOak(x, y, z, set, r); else if (roll < 0.3) birch(x, y, z, set, r); else if (roll < 0.85) oak(x, y, z, set, r); else if (roll < 0.95) bush(x, y, z, roll < 0.9 ? OakLeaves : BirchLeaves, set, r); else fallenLog(x, y, z, OakLog, set, r); }
+  else if (b === B.BEAST) { if (roll < 0.08) baobab(x, y, z, set, r); else if (roll < 0.6) acacia(x, y, z, set, r); else if (roll < 0.85) cactus(x, y, z, set, r); else boulder(x, y, z, set, r); }
+  else if (b === B.PEAKS) { if (h > ROCK_LINE) { if (roll < 0.5) crystals(x, y, z, set, r); else boulder(x, y, z, set, r); } else if (roll < 0.75) spruce(x, y, z, set, r); else boulder(x, y, z, set, r); }
+  else if (b === B.DEMON) { if (roll < 0.5) magmaSpike(x, y, z, set, r); else deadTree(x, y, z, set, r); }
+  else if (b === B.BEACH) { if (h >= SEA && roll < 0.8) palm(x, y, z, set, r); }
+  else if (b === B.OCEAN && h < SEA - 3) reef(x, y, z, set, r);
+}
+// How likely a spot is to carry a tree, by biome: forests stand in clumps with meadows and glades between them.
+const PLENTY = { [B.ELF]: 0.95, [B.KINGDOM]: 0.5, [B.BEAST]: 0.16, [B.PEAKS]: 0.55, [B.DEMON]: 0.3, [B.BEACH]: 0.14, [B.OCEAN]: 0.5 };
+function growth(cx, cz, L, skipX, skipZ, set, r) {
+  const bx = cx * CS, bz = cz * CS, town = L.settlement != null ? settlement(L.settlement) : null, density = 0.2 + 1.6 * L.density;
+  for (let i = 0; i < TRIES; i++) {
+    const x = bx + Math.floor(r() * CS), z = bz + Math.floor(r() * CS), rr = r(), pass = r();
+    if (skipX != null && Math.abs(x - skipX) < 9 && Math.abs(z - skipZ) < 9) continue;
+    const h = heightAt(x, z);
+    let b = biomeAt(x, z, h);
+    if (b === B.ELF || b === B.KINGDOM || b === B.BEAST) b = rollBiome(x, z, rr); // the two sides of a border mingle
+    const clump = b === B.OCEAN || b === B.BEACH ? 1 : ss(-0.3, 0.35, NZ.F(x / 64, z / 64));
+    if (pass > (PLENTY[b] ?? 0) * density * clump || (h <= SEA && b !== B.OCEAN) || (h >= SEA && (b === B.OCEAN || slopeAt(x, z) >= STEEP)) || roadAt(x, z)) continue;
+    if (inTown(x, z)) { if (!town || pass > 0.25 || !clearOfBuildings(town, x, z)) continue; } // a yard may keep one tree
+    growTree(b, x, h, z, set, r);
+  }
+}
+// One tuft, flower or mushroom per column at most, each decided by the column alone.
+function plantColumn(d, x, z, wx, wz, h, b) {
+  const roll = hash3(wx, 11, wz), top = d[idx(x, h, z)], up = idx(x, h + 1, z);
+  if (h < SEA) {
+    const still = landOf(wx, wz).b; // rivers and lakes, not the open sea
+    if (h >= SEA - 3 && roll > 0.94 && (still === B.KINGDOM || still === B.ELF) && d[idx(x, SEA + 1, z)] === Air) d[idx(x, SEA + 1, z)] = LilyPad;
+    else if (roll < 0.16 && d[up] === Water && (top === Sand || top === Gravel)) d[up] = SeaGrass;
+    return;
+  }
+  if (d[up] !== Air || h + 1 >= H) return;
+  const patch = NZ.F(wx / 16 + 9, wz / 16 - 4);
+  if (top === Stone || top === Gravel) { if (h > SNOW_LINE - 4 + patch * 3) d[up] = SnowLayer; return; }
+  if (top === FaeGrass || top === Moss) {
+    if (patch > 0.3 && roll < 0.2) d[up] = FaeBloom;
+    else if (patch < -0.4 && roll < 0.1) d[up] = Glowshroom;
+    else if (roll < 0.3) d[up] = roll < 0.08 ? Fern : TallGrass;
+  } else if (top === SavannaGrass) {
+    if (roll < 0.26) d[up] = roll < 0.02 ? DeadBush : DryGrass;
+  } else if (top === Grass) {
+    if (b === B.PEAKS) { if (roll < 0.1) d[up] = Fern; else if (h > SNOW_LINE - 6 && roll < 0.5) d[up] = SnowLayer; }
+    else if (patch > 0.28) { if (roll < 0.34) d[up] = [Poppy, Dandelion, Cornflower][Math.floor(hash3(wx >> 3, 3, wz >> 3) * 3)]; else if (roll < 0.6) d[up] = TallGrass; } // a whole meadow of one flower
+    else if (roll < 0.22) d[up] = roll < 0.015 ? RedMushroom : TallGrass;
+  } else if (top === AshenGround) { if (roll < 0.03) d[up] = DeadBush; }
+  else if (top === Sand && h > SEA + 1 && roll < 0.02) d[up] = DeadBush;
+}
+
+// ---------- what stands on it: settlements, landmarks, then vegetation ----------
 function features(cx, cz, set) {
-  const r = mulberry(hash2(cx, cz)), bx = cx * CS, bz = cz * CS;
-  const L = landOf(bx + 8, bz + 8);
-  const ix = ((cx % 4) + 4) % 4, iz = ((cz % 4) + 4) % 4, heart = ix === 1 && iz === 1;
+  const r = mulberry(hash2(cx, cz)), bx = cx * CS, bz = cz * CS, L = landOf(bx + 8, bz + 8);
+  const ix = mod(cx, CHUNKS_WIDE), iz = mod(cz, CHUNKS_WIDE), heart = ix === HEART && iz === HEART;
   const sx = bx + 4 + Math.floor(r() * 8), sz = bz + 4 + Math.floor(r() * 8), sh = heightAt(sx, sz), roll = r();
-  let big = false;
-  if (L.settlement != null) {
-    const S = settlement(L.settlement);
-    settlementChunk(cx, cz, S, set);
-    if (S.type !== 'elf' && S.type !== 'elfcity') return;
-    big = true;
-  } else {
-    const hx = bx + 16, hz = bz + 16;
+  let skipX = null, skipZ = null;
+  const clear = () => { skipX = sx; skipZ = sz; };
+  if (L.settlement != null) townChunk(cx, cz, settlement(L.settlement), set);
+  else {
+    const hx = bx + CS, hz = bz + CS;
     switch (L.structure) {
       // Every open land of the Peaks keeps a dragon. The spires have none, or the Law Stones would be guarded by something the story can't get past.
       case 'none': if (heart && L.b === B.PEAKS) hint('dragon', hx, heightAt(hx, hz) + DRAGON_PERCH, hz); break;
-      case 'treehouse_grove': if (sh > SEA + 1 && roll < 0.45) { giantTree(sx, sh + 1, sz, set, r); big = true; } break;
-      case 'mermaid_palace': if (heart && sh < SEA - 9) { palace(sx, sh + 1, sz, set, r); big = true; } break;
-      case 'crystal_spire': if (heart) { spire(hx, heightAt(hx, hz) + 1, hz, set); big = true; } break;
-      case 'demon_castle': if (heart) { demonCastle(hx, heightAt(hx, hz) + 1, hz, set); big = true; } break;
+      case 'treehouse_grove': if (sh > SEA + 1 && roll < 0.45) { giantTree(sx, sh + 1, sz, set, r); clear(); } break;
+      case 'mermaid_palace': if (heart && sh < SEA - 9) { palace(sx, sh + 1, sz, set, r); clear(); } break;
+      case 'crystal_spire': if (heart) { spire(hx, heightAt(hx, hz) + 1, hz, set, r); clear(); } break;
+      case 'demon_castle': if (heart) { demonCastle(hx, heightAt(hx, hz) + 1, hz, set); clear(); } break;
       case 'ruins':
         if (heart) hint('cairn', sx + 1, heightAt(sx + 1, sz) + 1, sz); // the story needs it, so it can't depend on the roll
-        if (roll < 0.4) { ruins(sx, sh, sz, set, r); big = true; }
+        if (roll < 0.14) { ruins(sx, sh, sz, set, r); clear(); }
         break;
     }
+    // Each open land has four sites a sight of its realm may stand on, well clear of whatever its middle holds.
+    if (ix % 4 === 1 && iz % 4 === 1 && roll > 0.55) { raiseSight(biomeAt(sx, sz, sh), sx, sz, set, r); clear(); }
   }
-  const base = [12, 1, 6, 2, 2, 3, 4][biomeAt(bx + 8, bz + 8, heightAt(bx + 8, bz + 8))];
-  const count = Math.round(base * (0.2 + 1.6 * L.density));
-  for (let i = 0; i < count; i++) {
-    const x = bx + Math.floor(r() * CS), z = bz + Math.floor(r() * CS), rr = r();
-    if (big && Math.abs(x - sx) < 8 && Math.abs(z - sz) < 8) continue;
-    if (L.settlement != null) { const S = settlement(L.settlement); if (Math.hypot(x - S.cx, z - S.cz) < 30) continue; }
-    const h = heightAt(x, z), b = biomeAt(x, z, h);
-    if (b === B.ELF) elfTree(x, h + 1, z, set, r);
-    else if (b === B.KINGDOM) oak(x, h + 1, z, set, r);
-    else if (b === B.BEAST) { if (rr < 0.5) acacia(x, h + 1, z, set, r); }
-    else if (b === B.PEAKS) { if (rr < 0.6) crystals(x, h + 1, z, set, r); }
-    else if (b === B.OCEAN) reef(x, h + 1, z, set, r);
-    else if (b === B.DEMON) { if (rr < 0.5) magmaSpike(x, h + 1, z, set, r); else deadTree(x, h + 1, z, set, r); }
-  }
+  growth(cx, cz, L, skipX, skipZ, set, r);
 }
 
-export const idx = (x, y, z) => x + z * CS + y * CS * CS;
 export function genChunk(cx, cz, edits) {
-  const d = new Uint8Array(CS * CS * H), bx = cx * CS, bz = cz * CS;
+  const d = new Uint8Array(CS * CS * H), bx = cx * CS, bz = cz * CS, cols = columnsOf(cx, cz);
   for (let x = 0; x < CS; x++) for (let z = 0; z < CS; z++) {
-    const wx = bx + x, wz = bz + z, h = heightAt(wx, wz), b = biomeAt(wx, wz, h), det = NZ.D(wx / 9, wz / 9);
-    d[idx(x, 0, z)] = 31;
-    for (let y = 1; y <= h; y++) {
-      const depth = h - y;
-      let id = 3;
-      if (b === B.OCEAN) id = depth < 3 ? (h < SEA - 14 && det > 0 ? 29 : 4) : 3;
-      else if (b === B.BEACH) id = depth < 4 ? 4 : 3;
-      else if (b === B.PEAKS) id = depth === 0 ? (h > SEA + 46 ? 17 : det > 0.2 ? 1 : 3) : 3;
-      else if (b === B.ELF) id = depth === 0 ? 10 : depth < 4 ? 2 : 3;
-      else if (b === B.DEMON) id = depth === 0 ? (det > 0.55 ? 36 : 35) : depth < 3 ? 34 : 3;
-      else if (b === B.BEAST) id = depth === 0 ? (det > 0.5 ? 25 : 24) : depth < 4 ? 25 : 3;
-      else id = depth === 0 ? 1 : depth < 4 ? 2 : 3;
-      d[idx(x, y, z)] = id;
-    }
-    for (let y = h + 1; y <= SEA; y++) d[idx(x, y, z)] = 5;
+    const wx = bx + x, wz = bz + z, h = cols.h[x + z * CS], b = biomeAt(wx, wz, h), det = NZ.D(wx / 9, wz / 9), steep = slopeAt(wx, wz) >= STEEP;
+    d[idx(x, 0, z)] = Bedrock;
+    for (let y = 1; y <= h; y++) d[idx(x, y, z)] = ground(b, h, y, det, steep);
+    for (let y = h + 1; y <= SEA; y++) d[idx(x, y, z)] = Water;
+    if (b === B.DEMON) for (let y = h + 1; y <= LAVA_LEVEL; y++) d[idx(x, y, z)] = Magma; // the Wastes' rivers run with fire
   }
+  carveCaves(cx, cz, d, cols);
+  layOres(cx, cz, d);
   const set = (wx, y, wz, id, soft) => {
     const x = wx - bx, z = wz - bz;
     if (x < 0 || z < 0 || x >= CS || z >= CS || y < 1 || y >= H) return;
     const i = idx(x, y, z);
-    if (soft && d[i] !== 0 && d[i] !== 5) return;
-    if (id === 0 && y <= SEA && d[i] === 5) return;
+    if (soft && d[i] !== Air && d[i] !== Water) return;
+    if (id === Air && y <= SEA && d[i] === Water) return;
     d[i] = id;
   };
+  layRoad(cx, cz, set);
   for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) features(cx + dx, cz + dz, set);
+  for (const { x, z } of lampsIn(cx, cz)) {
+    const g = heightAt(x, z), lx = x - bx, lz = z - bz;
+    if (g <= SEA || roadAt(x, z) || d[idx(lx, g + 1, lz)] !== Air || d[idx(lx, g + 3, lz)] !== Air) continue;
+    d[idx(lx, g + 1, lz)] = Fence; d[idx(lx, g + 2, lz)] = Fence; d[idx(lx, g + 3, lz)] = Lantern;
+  }
+  for (let x = 0; x < CS; x++) for (let z = 0; z < CS; z++) {
+    const wx = bx + x, wz = bz + z, h = cols.h[x + z * CS];
+    if (!roadAt(wx, wz)) plantColumn(d, x, z, wx, wz, h, biomeAt(wx, wz, h));
+  }
   if (edits) for (const [i, id] of edits) d[i] = id;
   return d;
+}
+// The highest layer with anything in it, so that light and meshing can skip the empty sky.
+export function topOf(d) {
+  for (let i = d.length - 1; i >= 0; i--) if (d[i]) return Math.floor(i / (CS * CS));
+  return 0;
 }

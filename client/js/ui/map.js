@@ -1,10 +1,12 @@
-// The world map: a page of the book that fills the window. The terrain is surveyed once, a row at a time, with the
+// The world map: a page of the book that fills the window. The terrain is surveyed once, a chunk at a time, with the
 // towns drawn onto it from their layouts. The canvas holds that sheet; names and sprites sit over it as elements.
+import { WORLD } from '../core/content.js';
 import { G } from '../core/state.js';
 import { questMarks } from '../sim/marks.js';
 import { player } from '../sim/player.js';
-import { mapColour, surveyRow } from '../sim/survey.js';
-import { LAND, REALM, landName, landOf } from '../sim/terrain.js';
+import { ID } from '../sim/blocks.js';
+import { mapColour, surveyTile } from '../sim/survey.js';
+import { CS, LAND, REALM, landName, landOf } from '../sim/terrain.js';
 import { esc, icon, markIcon } from './art.js';
 import { definePage, togglePage } from './panels.js';
 
@@ -21,19 +23,18 @@ const LANDMARKS = {
   treehouse_grove: ['grove', 'Treehouse grove'], crystal_spire: ['crystal', 'Crystal spire'], demon_castle: ['demon', "The Demon Lord's castle"],
   mermaid_palace: ['palace', 'Mermaid palace'], ruins: ['ruins', 'Ruins'],
 };
-// Block ids, as settlementChunk in sim/terrain.js builds them. `walled` is where the city wall runs, in blocks from the centre.
-const TOWNS = {
-  city: { road: 29, roof: 20, wall: 19, walled: [28.5, 29.5] },
-  elfcity: { road: 15, roof: 9, wall: 8, walled: [26.5, 28] },
-  human: { road: 29, roof: 20 },
-  beast: { road: 25, roof: 23 },
-  elf: { roof: 9 },
+// Block ids of what a town is mostly seen from above as: its roofs, and its wall where it has one.
+const TOWN_INK = {
+  city: { roof: ID.SlateTiles, wall: ID.StoneBricks },
+  elfcity: { roof: ID.ElvenLeaves, wall: ID.Elderwood },
+  human: { roof: ID.RoofTiles },
+  beast: { roof: ID.Thatch, wall: ID.OakLog },
+  elf: { roof: ID.ElvenLeaves },
 };
-const ROAD_REACH = 27, TOWN_REACH = 30;
-const FOOTPRINT = { treehouse: 6, shrine: 6, palace: 7, keep: 4, stall: 2, street_stall: 1, well: 1 }; // half widths in blocks; the rest are about 3
+const WALL_DOTS = 720; // points along a wall's ring, enough to leave no gaps at any size
 
 const canvas = $('worldcanvas'), ctx = canvas.getContext('2d');
-let sheet = null, sheetCtx = null, world = 0, side = 0, rows = 0; // the surveyed world and how much of it is done
+let sheet = null, sheetCtx = null, world = 0, side = 0, tile = 0; // the surveyed world and how much of it is done
 let width = 0, height = 0, fitZoom = 1, marks = [];
 const view = { x: 0, z: 0, zoom: 1 }; // the block at the middle of the window
 let opened = false, dirty = false, drag = null, wheel = 0;
@@ -47,31 +48,30 @@ function startSheet() {
   sheetCtx = sheet.getContext('2d');
 }
 function paintTown(S) {
-  const { road, roof, wall, walled } = TOWNS[S.type] ?? TOWNS.human;
-  const roadColour = road == null ? null : mapColour(road), wallColour = walled ? mapColour(wall) : null;
-  for (let dx = -TOWN_REACH; dx <= TOWN_REACH; dx++) for (let dz = -TOWN_REACH; dz <= TOWN_REACH; dz++) {
-    const d = Math.hypot(dx, dz);
-    const colour = walled && d >= walled[0] && d < walled[1] ? wallColour : roadColour && d < ROAD_REACH && (Math.abs(dx) <= 1 || Math.abs(dz) <= 1) ? roadColour : null;
-    if (!colour) continue;
-    sheetCtx.fillStyle = colour;
-    sheetCtx.fillRect(S.cx + dx + MARGIN, S.cz + dz + MARGIN, 1, 1);
+  const { roof, wall } = TOWN_INK[S.type] ?? TOWN_INK.human, ring = WORLD.towns[S.type].wall;
+  if (ring) {
+    sheetCtx.fillStyle = mapColour(wall);
+    for (let i = 0; i < WALL_DOTS; i++) { const a = i / WALL_DOTS * Math.PI * 2; sheetCtx.fillRect(Math.round(S.cx + Math.cos(a) * ring + MARGIN), Math.round(S.cz + Math.sin(a) * ring + MARGIN), 2, 2); }
   }
   const lit = mapColour(roof, 1.1), shade = mapColour(roof, 0.7);
   for (const b of S.layout) {
-    const r = FOOTPRINT[b.kind] ?? 3, x = b.x - r + MARGIN, z = b.z - r + MARGIN, size = 2 * r + 1;
-    sheetCtx.fillStyle = shade; sheetCtx.fillRect(x, z, size, size);
-    sheetCtx.fillStyle = lit; sheetCtx.fillRect(x, z, size - 1, size - 1);
+    const [hw, hd] = WORLD.buildings[b.kind], x = b.x - hw + MARGIN, z = b.z - hd + MARGIN, wide = 2 * hw + 1, deep = 2 * hd + 1;
+    sheetCtx.fillStyle = shade; sheetCtx.fillRect(x, z, wide, deep);
+    sheetCtx.fillStyle = lit; sheetCtx.fillRect(x, z, wide - 1, deep - 1);
   }
 }
+const tilesWide = () => side / CS;
 function survey(deadline) {
+  const wide = tilesWide(), total = wide * wide, off = MARGIN / CS;
   do {
-    sheetCtx.putImageData(new ImageData(surveyRow(rows - MARGIN, -MARGIN, side), side, 1), 0, rows);
-    rows++;
-  } while (rows < side && performance.now() < deadline);
-  if (rows === side) G.world.settlements.forEach(paintTown);
+    const cx = tile % wide, cz = Math.floor(tile / wide);
+    sheetCtx.putImageData(new ImageData(surveyTile(cx - off, cz - off), CS, CS), cx * CS, cz * CS);
+    tile++;
+  } while (tile < total && performance.now() < deadline);
+  if (tile === total) G.world.settlements.forEach(paintTown);
   if (!opened) return;
   dirty = true;
-  $('mapreadout').textContent = rows < side ? `Charting the world… ${Math.floor(100 * rows / side)}%` : HINT;
+  $('mapreadout').textContent = tile < total ? `Charting the world… ${Math.floor(100 * tile / total)}%` : HINT;
 }
 
 // ---------- the view ----------
@@ -208,7 +208,7 @@ function panWithKeys(dt) {
 }
 export function updateWorldMap(dt) {
   if (!sheet) startSheet();
-  if (rows < side) survey(performance.now() + (opened ? SURVEY_MS.open : SURVEY_MS.closed));
+  if (tile < tilesWide() ** 2) survey(performance.now() + (opened ? SURVEY_MS.open : SURVEY_MS.closed));
   if (!opened) return;
   panWithKeys(dt);
   if (dirty) draw();

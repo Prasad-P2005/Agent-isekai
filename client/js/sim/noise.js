@@ -27,10 +27,14 @@ function makeSimplex(seed) {
   };
 }
 export function fbm(n, x, z, o) { let s = 0, a = 1, f = 1, t = 0; for (let i = 0; i < o; i++) { s += a * n(x * f, z * f); t += a; a *= 0.5; f *= 2; } return s / t; }
+// Three slices of 2D noise, which is all a cave needs and a third of the price of the real thing per sample.
+export const noise3 = (n, x, y, z) => (n(x, y) + n(y + 31.7, z) + n(z - 17.3, x)) / 1.5;
 export const ss = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
 export const NZ = {};
 export function initNoise(seed) {
   SEED = seed;
   // the seed offsets are part of the terrain: changing one reshapes every existing world
   NZ.H = makeSimplex(seed + 1); NZ.M = makeSimplex(seed + 2); NZ.D = makeSimplex(seed + 5);
+  NZ.W = makeSimplex(seed + 7); NZ.R = makeSimplex(seed + 11); NZ.F = makeSimplex(seed + 13);
+  NZ.CA = makeSimplex(seed + 17); NZ.CB = makeSimplex(seed + 19);
 }

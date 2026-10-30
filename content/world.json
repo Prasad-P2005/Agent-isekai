@@ -1,7 +1,21 @@
 {
-  "land": 64,
+  "land": 128,
   "chunk": 16,
   "height": 160,
   "sea": 48,
-  "resident_id_base": 1000
+  "resident_id_base": 1000,
+  "towns": {
+    "human": { "reach": 44 },
+    "city": { "reach": 62, "wall": 58 },
+    "elfcity": { "reach": 54, "wall": 50 },
+    "elf": { "reach": 42 },
+    "beast": { "reach": 44, "wall": 40 }
+  },
+  "buildings": {
+    "house": [3, 3], "stall": [2, 1], "street_stall": [1, 0], "well": [1, 1], "fountain": [3, 3],
+    "guild": [5, 4], "hospital": [5, 4], "inn": [4, 4], "smithy": [4, 3], "church": [3, 6], "keep": [13, 13],
+    "farm": [7, 5], "windmill": [3, 3], "barn": [4, 3],
+    "treehouse": [6, 6], "elfhall": [4, 4], "shrine": [6, 6], "palace": [7, 7],
+    "hut": [3, 3], "chief": [4, 4], "lodge": [3, 3]
+  }
 }

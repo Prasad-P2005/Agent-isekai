@@ -8,7 +8,7 @@ import { chunkReady } from './chunks.js';
 import { applyEffects } from './effects.js';
 import { ents, spawnEntity, removeEntity, fitsAt, spawnNear, isNight, pickEntity } from './entities.js';
 import { player, lineOfSight } from './player.js';
-import { landOf, settlement, heightAt } from './terrain.js';
+import { TOWNS, landOf, settlement, heightAt } from './terrain.js';
 
 // ---------- residents: only the ones near the player physically exist ----------
 const MAX_RESIDENTS = 34, MAX_SPAWNS_PER_TICK = 6, SPAWN_DIST = 56, DESPAWN_DIST = 76;
@@ -56,7 +56,7 @@ function inCity(x, z) {
   const L = landOf(x, z);
   if (L.settlement == null) return false;
   const S = settlement(L.settlement);
-  return (S.type === 'city' || S.type === 'elfcity') && Math.hypot(x - S.cx, z - S.cz) <= 28;
+  return (S.type === 'city' || S.type === 'elfcity') && Math.hypot(x - S.cx, z - S.cz) <= TOWNS[S.type].wall;
 }
 function witnesses(victim) {
   const eye = new Vec3(player.pos.x, player.pos.y + 1.6, player.pos.z), range = isNight() ? 12 : 26;

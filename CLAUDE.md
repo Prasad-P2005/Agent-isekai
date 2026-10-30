@@ -21,7 +21,7 @@ There is no linter, formatter or JS build step. If a map or terrain change is de
 
 The client is plain ES modules served as-is from `client/`, with three.js vendored in `client/vendor/` and resolved by the import map in `index.html` (and again in `lookbook.html`). The interface's sprites in `client/img/ui/` and `client/css/icons.css` are drawn by `python tools/make_ui_art.py` (standard library only), so change the art there and commit what it writes. The fonts are vendored in `client/vendor/fonts/`.
 
-Settings are environment variables read once in `isekai/config.py`. Besides the ones in the README there are `ISEKAI_HOST`, `ISEKAI_CLIENT_DIR` and `ISEKAI_CONTENT_DIR`.
+Settings are environment variables read once in `isekai/config.py`, and the README lists them all.
 
 Debugging: `http://localhost:8000/lookbook.html` renders every character; in the browser console, `isekai.teleport('name')`, `isekai.G`, `isekai.ents`.
 

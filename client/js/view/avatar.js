@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 
 import { AMBER, CLAY, COAL, COVER, CREAM, DUSK, GOLD, LEAF, LEATHER, LILAC, LINEN, MAUVE, PALE, PLUM, RED, ROSE, SKY, SLATE, lookFor } from './outfits.js';
-import { both, cloth, flesh, hair, leather, metal, plain, torn, wood } from './paint.js';
+import { both, cloth, flesh, hair, leather, metal, muscle, plain, torn, wood } from './paint.js';
 import { poseFigure } from './pose.js';
 import { INK, Rig, figureBones, handBoxes, held, mixHex } from './voxel.js';
 
@@ -119,15 +119,15 @@ const BACK_ITEMS = {
 };
 
 // ---------------- the body ----------------
-// Numbers are art pixels. `chest` and `belly` are width and depth. Heads are all one size, which is what sets the
-// proportions: about a fifth of the height, except on the small and the sweet.
+// Numbers are art pixels. `chest` and `belly` are width and depth. `headScale` is what sets the proportions: a head is about
+// a fifth of the height, except on the small and the sweet.
 const BUILDS = {
-  normal: { leg: 30, trunk: 24, span: 13, upper: 13, fore: 12, armW: 7, legW: 8, stance: 4.5, chest: [19, 11], belly: [16, 10], stature: 1 },
-  strong: { leg: 30, trunk: 26, span: 16, upper: 14, fore: 13, armW: 9, legW: 10, stance: 5.5, chest: [25, 14], belly: [20, 12], stature: 1.05 },
-  slim: { leg: 33, trunk: 24, span: 11.5, upper: 14, fore: 13, armW: 6, legW: 7, stance: 4, chest: [17, 10], belly: [13, 9], stature: 1.03 },
-  stout: { leg: 26, trunk: 25, span: 15, upper: 12, fore: 11, armW: 8, legW: 9, stance: 5, chest: [23, 15], belly: [24, 17], stature: 0.95 },
-  small: { leg: 20, trunk: 18, span: 10, upper: 9, fore: 9, armW: 5, legW: 6, stance: 3.5, chest: [15, 9], belly: [13, 8], stature: 0.8, headScale: 1.16 },
-  giant: { leg: 44, trunk: 34, span: 19, upper: 18, fore: 17, armW: 11, legW: 13, stance: 7, chest: [31, 16], belly: [24, 14], stature: 1 },
+  normal: { leg: 30, trunk: 24, span: 13, upper: 13, fore: 12, armW: 7, legW: 8, stance: 4.5, chest: [19, 11], belly: [16, 10], stature: 1, headScale: 1.12 },
+  strong: { leg: 30, trunk: 26, span: 16, upper: 14, fore: 13, armW: 9, legW: 10, stance: 5.5, chest: [25, 14], belly: [20, 12], stature: 1.05, headScale: 1.12 },
+  slim: { leg: 33, trunk: 24, span: 11.5, upper: 14, fore: 13, armW: 6, legW: 7, stance: 4, chest: [17, 10], belly: [13, 9], stature: 1.03, headScale: 1.1 },
+  stout: { leg: 26, trunk: 25, span: 15, upper: 12, fore: 11, armW: 8, legW: 9, stance: 5, chest: [23, 15], belly: [24, 17], stature: 0.95, headScale: 1.12 },
+  small: { leg: 20, trunk: 18, span: 10, upper: 9, fore: 9, armW: 5, legW: 6, stance: 3.5, chest: [15, 9], belly: [13, 8], stature: 0.8, headScale: 1.3 },
+  giant: { leg: 44, trunk: 34, span: 19, upper: 18, fore: 17, armW: 11, legW: 13, stance: 7, chest: [31, 16], belly: [24, 14], stature: 1, headScale: 1.35 },
 };
 const CROWN = 18; // from the neck to the top of the hair
 
@@ -239,7 +239,7 @@ function dressTrunk(rig, x, L, P) {
 }
 function dressArms(rig, x, L, P) {
   const W = P.armW, bare = L.bareArms, sleeveC = L.coat || L.top, cuffC = L.trim || (L.armor ? L.armor : darker(sleeveC, 0.3));
-  const sleeve = bare ? flesh(L.skin) : cloth(sleeveC), fore = bare ? flesh(L.skin) : cloth(sleeveC, { draw: { all: [[0, -3, 0, 3, cuffC]] } });
+  const sleeve = bare ? muscle(L.skin) : cloth(sleeveC), fore = bare ? muscle(L.skin, { draw: { all: [[0, -4, 0, 4, darker(L.skin, 0.1)]] } }) : cloth(sleeveC, { draw: { all: [[0, -3, 0, 3, cuffC]] } });
   const palm = L.gloves ? (L.plate ? metal(L.gloves) : leather(L.gloves)) : flesh(L.skin), k = W / 7;
   x.arms.forEach((arm, i) => {
     const upper = [[W, P.upper + 1, W + 1, 0, 0.5 - P.upper / 2, 0, sleeve]];
@@ -303,7 +303,7 @@ function helmetOf(L) {
 }
 function hoodOf(c) {
   const shell = cloth(c, { cut: (i, j, W, H, f) => f === 'bottom' || (f === 'front' && j >= 2 && j < H - 1 && i >= 2 && i < W - 2) }), peak = cloth(darker(c, 0.1));
-  return [[18, 18, 18, 0, 9, 0.3, shell], [12, 3, 12, 0, 19, 1, peak], [9, 6, 5, 0, 15, 11, peak], [6, 5, 4, 0, 11, 14, peak], [3, 4, 3, 0, 7, 16, peak]];
+  return [[18, 18, 18, 0, 9, 0.3, shell], [12, 2.4, 12, 0, 19, 1, peak], [9, 6, 5, 0, 15, 11, peak], [6, 5, 4, 0, 11, 14, peak], [3, 4, 3, 0, 7, 16, peak]];
 }
 function hatOf(L) {
   const c = L.hatColor, list = [];

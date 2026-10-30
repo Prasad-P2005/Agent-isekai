@@ -33,7 +33,7 @@ test('every open land of the Peaks keeps a dragon, out of reach of the Law Stone
   const dragons = named('dragon');
   assert.equal(dragons.length, 3);
   assert.ok(dragons.every(h => world.lands[Math.floor(h.z / LAND)][Math.floor(h.x / LAND)].realm === 'peaks' && landOf(h.x, h.z).structure === 'none'));
-  for (const d of dragons) for (const s of named('law_stone')) assert.ok(Math.hypot(d.x - s.x, d.z - s.z) > 48); // the range beings appear at
+  for (const d of dragons) for (const s of named('law_stone')) assert.ok(Math.hypot(d.x - s.x, d.z - s.z) > 58); // it notices you at 40, and circles 18 out from its lair
 });
 
 test('generating a chunk again does not place him twice', () => {

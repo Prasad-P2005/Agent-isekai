@@ -58,22 +58,24 @@ function surface(c, grain, { draw, cut, bevel = 1 } = {}) {
 
 // ---------------- materials ----------------
 export const plain = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i, j, s) - 0.5) * 0.5, o);
-export const cloth = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i >> 1, 0, s) - 0.5) * 1.5 + (hash(i, j >> 2, s + 1) - 0.5) * 0.8, o);
+export const cloth = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i >> 1, 0, s) - 0.5) * 1.1 + (hash(i >> 1, j >> 3, s + 1) - 0.5) * 0.5, o);
 export const flesh = (c, o) => surface(c, () => 0, { bevel: 0.5, ...o });
+// Bare arms: a shadow down the middle and under the swell of the muscle, so that strength reads as shape and not as a flat block.
+export const muscle = (c, o) => surface(c, (i, j, W, H) => (Math.abs(i - (W - 1) / 2) < 1 && j > H * 0.45 ? -1 : 0) + (j > H * 0.72 ? -0.7 : j < H * 0.3 ? 0.5 : 0), { bevel: 0.7, ...o });
 export const leather = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i >> 1, j >> 1, s) - 0.5) * 1.4 - ((i === 1 || i === W - 2) && j % 3 === 0 ? 1 : 0), o);
 export const wood = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i, j >> 3, s) - 0.5) * 1.5, { bevel: 0.6, ...o });
 // A hard shine that runs across the plate, and a dark edge so that one plate reads against another.
-export const metal = (c, o) => surface(c, (i, j, W, H, f, s) => ((i + j * 2) % 13 < 2 ? 1.6 : 0) + (hash(i, j, s) - 0.5) * 0.4, { bevel: 1.5, ...o });
+export const metal = (c, o) => surface(c, (i, j, W, H, f, s) => ((i + j * 2) % 23 < 2 ? 1.6 : 0) + (hash(i, j, s) - 0.5) * 0.4, { bevel: 1.5, ...o });
 export const hair = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i, 0, s) - 0.5) * 2 + (f !== 'top' && Math.abs(j / H - 0.3) < 0.1 ? 1.3 : 0), { bevel: 0.5, ...o });
 export const fur = (c, o) => surface(c, (i, j, W, H, f, s) => (hash(i, j >> 1, s) - 0.5) * 2.2, { bevel: 0.4, ...o });
 export const stone = (c, o) => surface(c, (i, j, W, H, f, s) => {
   const cell = hash(i >> 2, j >> 2, s), seam = (i & 3) === 0 && hash(i >> 2, j >> 2, s + 1) < 0.4 || (j & 3) === 0 && hash(i >> 2, j >> 2, s + 2) < 0.4;
   return (cell - 0.5) * 1.2 + (hash(i, j, s) - 0.5) * 0.5 - (seam ? 1.6 : 0);
 }, o);
-// Rows of overlapping scales, each lit at the top and dark along its lower lip.
+// Rows of overlapping scales, each lit along its top and dark along its lower lip. Broad ones, or at any distance they turn to static.
 export const scales = (c, o) => surface(c, (i, j, W, H, f, s) => {
-  const row = j >> 1, u = (i + (row & 1) * 2) & 3, lip = (j & 1) === 1 && u !== 1;
-  return (lip || u === 0 ? -1.3 : 0.5) + (hash(row, (i + (row & 1) * 2) >> 2, s) - 0.5) * 1.1;
+  const row = Math.floor(j / 3), x = i + (row & 1) * 3, u = x % 6, v = j % 3;
+  return (v === 2 || u === 0 ? -0.9 : v === 0 ? 0.4 : 0) + (hash(row, Math.floor(x / 6), s) - 0.5) * 0.6;
 }, { bevel: 0.5, ...o });
 // The broad plates along a belly, in bands across the body.
 export const plates = (c, o) => surface(c, (i, j, W, H, f, s) => (j % 5 === 4 ? -2 : j % 5 === 0 ? 0.8 : 0) + (hash(i, j >> 2, s) - 0.5) * 0.4, { bevel: 0.5, ...o });

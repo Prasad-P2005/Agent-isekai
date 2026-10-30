@@ -11,7 +11,7 @@ import { player, damagePlayer, has, eye, lookDir } from './player.js';
 
 export const ENT = CREATURES;
 export const ents = [];
-const MAX_BEINGS = 60, MAX_HOSTILE = 25;
+const MAX_BEINGS = 60, MAX_HOSTILE = 25, APPEAR_RANGE = 48, LAIR_RING = 18;
 const BOLT_SPEED = 16, BOSS_BOLT_DMG = 9, BOSS_BOLT_GAP = [0, 4, 2.5], BREATH_GAP = 5, BREATH_RANGE = [5, 24]; // rare on purpose: fire costs particles
 
 export function spawnEntity(kind, x, y, z, opts = {}) {
@@ -109,7 +109,10 @@ function updateEntity(e, dt) {
   if (flee) { mx = -dx / dist; mz = -dz / dist; speed *= 1.5; }
   else if (tp) { const tx = tp.x - p.x, tz = tp.z - p.z, l = Math.hypot(tx, tz) || 1; mx = tx / l; mz = tz / l; }
   else if (D.friendly && dist < 4) { e.yaw = Math.atan2(-dx, -dz); speed = 0; }
-  else {
+  else if (D.fly && e.home) { // it circles above its lair, and a chase that pulled it away only bends the circle back
+    const hx = e.home.x - p.x, hz = e.home.z - p.z, r = Math.hypot(hx, hz) || 1, pull = Math.max(-1, Math.min(1, (r - LAIR_RING) / LAIR_RING)), round = 1 - Math.abs(pull);
+    mx = (hx * pull - hz * round) / r; mz = (hz * pull + hx * round) / r; speed *= 0.7;
+  } else {
     // residents keep to their schedule: work by day, home by night
     const home = e.res && (isNight() ? e.res.night : e.res.work);
     if (home && Math.hypot(home.x - p.x, home.z - p.z) > 5) {
@@ -125,7 +128,8 @@ function updateEntity(e, dt) {
   e.kb.multiplyScalar(Math.max(0, 1 - 5 * dt));
   e.vel.x = mx * speed + e.kb.x; e.vel.z = mz * speed + e.kb.z;
   if (D.fly) {
-    const ty = tp ? tp.y + (Math.hypot(tp.x - p.x, tp.z - p.z) > 7 ? 7 : 0.5) : Math.max(p.y, heightAt(p.x | 0, p.z | 0) + 12);
+    const hover = D.hover || 0; // what a big body needs to clear the ground, and whoever it is biting
+    const ty = tp ? tp.y + hover + (Math.hypot(tp.x - p.x, tp.z - p.z) > 7 ? 7 : 0.5) : Math.max(p.y, heightAt(p.x | 0, p.z | 0) + 12 + hover);
     e.vel.y = Math.max(-7, Math.min(7, (ty - p.y) * 2));
     p.addScaledVector(e.vel, dt);
   } else {
@@ -260,7 +264,7 @@ function structureSpawning(dt) {
   hintTimer = 0.5;
   for (let i = hintQueue.length - 1; i >= 0; i--) {
     const h = hintQueue[i], d = Math.hypot(h.x - player.pos.x, h.z - player.pos.z);
-    if (d > 48 || !chunkReady(h.x, h.z)) continue;
+    if (d > (ENT[h.kind]?.seen_from ?? APPEAR_RANGE) || !chunkReady(h.x, h.z)) continue;
     if (h.kind === 'demon_lord' && G.world.demon_lord_dead) { hintQueue.splice(i, 1); continue; }
     let y = h.y; while (!fitsAt(h.x + 0.5, y, h.z + 0.5) && y < H - 2) y++;
     const hp = h.hp ?? (h.kind === 'demon_lord' ? G.world.boss_hp : undefined); // wounds outlast a reload

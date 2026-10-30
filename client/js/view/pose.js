@@ -9,7 +9,7 @@ export const newMotion = (seed = 0) => ({
   phase: 0, walk: 0, run: 0, // where the stride has got to, how much of it shows, and how much of that is a run
   air: 0, rise: 0,        // off the ground, and whether going up (1) or down (-1)
   strike: 0, hurt: 0, scared: 0, // strike runs 0 to 1 over a blow; 0 is no blow
-  look: 0, nod: 0, near: false, cross: false,
+  look: 0, nod: 0, near: false, cross: false, bank: 0,
 });
 
 // A blow: drawn back, brought down, then a slower recovery.
@@ -72,7 +72,6 @@ function flap(x, rate, reach, idle) {
   x.wings.forEach((wing, i) => {
     const out = i ? 1 : -1;
     wing.rotation.z = out * (Math.sin(idle * rate) * reach + 0.15);
-    if (x.tips) x.tips[i].rotation.z = out * (Math.sin(idle * rate - 1.2) * reach * 0.8 - 0.1);
   });
 }
 export function poseFlier(x, m) {
@@ -97,16 +96,29 @@ export function poseBeast(x, m) {
   x.wag.forEach((b, i) => { b.rotation.y = Math.sin(idle * mix(2, 9, m.walk) - i) * 0.3; b.rotation.x = -0.25 + 0.3 * m.run * m.walk; });
 }
 
+// Something this big beats its wings slowly and heavily, and the whole body rides each stroke. The neck holds an S, as a
+// swan's does, and rolls into the turns.
+const NECK_S = [0.5, 0.2, -0.3, -0.38];
 export function poseDragon(x, m) {
-  const idle = m.t + m.seed, bite = drawn(m.strike) + landed(m.strike);
-  flap(x, mix(2.6, 4, m.run), 0.55, idle);
-  x.spine.position.y = x.spineY + Math.sin(idle * mix(2.6, 4, m.run) - 1.5) * 2.5;
-  x.neck.forEach((b, i) => { b.rotation.x = Math.sin(idle * 1.2 - i) * 0.1 - 0.12; b.rotation.y = m.look * 0.3; });
-  x.head.rotation.x = m.nod + 0.2;
-  x.head.rotation.y = m.look * 0.4;
-  x.jaw.rotation.x = -0.15 - 0.6 * bite;
-  x.wag.forEach((b, i) => { b.rotation.y = Math.sin(idle * 1.6 - i * 0.8) * 0.2; b.rotation.x = Math.sin(idle * 1.1 - i) * 0.06; });
-  x.legs.forEach(leg => { leg.rotation.x = 0.5; });
+  const idle = m.t + m.seed, beat = idle * mix(1.7, 3, m.run), bite = drawn(m.strike) + landed(m.strike), down = Math.sin(beat);
+  x.wings.forEach((wing, i) => {
+    const out = i ? 1 : -1;
+    wing.rotation.z = out * (0.24 + down * 0.5);
+    x.elbows[i].rotation.z = out * (-0.14 + Math.sin(beat - 1.1) * 0.42);
+    x.tips[i].rotation.z = out * (-0.1 + Math.sin(beat - 2) * 0.36);
+  });
+  x.spine.position.y = x.spineY - down * 3;
+  x.spine.rotation.x = 0.05 * m.run - 0.04 * down;
+  x.spine.rotation.z = m.bank;
+  x.neck.forEach((b, i) => {
+    b.rotation.x = NECK_S[i] + Math.sin(idle * 1.1 - i * 0.7) * 0.05 + down * 0.03 - (i < 2 ? 0.2 : -0.2) * bite;
+    b.rotation.y = m.look * 0.2;
+  });
+  x.head.rotation.x = m.nod + 0.06 - 0.25 * bite;
+  x.head.rotation.y = m.look * 0.2;
+  x.jaw.rotation.x = -0.1 - 0.7 * bite;
+  x.wag.forEach((b, i) => { b.rotation.y = Math.sin(idle * 1.3 - i * 0.7) * 0.11 - m.bank * 0.14; b.rotation.x = Math.sin(idle * 1.05 - i * 0.6) * 0.05 - 0.03; });
+  x.legs.forEach((leg, i) => { leg.rotation.x = -0.75; x.shins[i].rotation.x = 0.95; }); // drawn up in flight
 }
 
 // A slime is one muscle: it stretches when it leaps, flattens when it lands and wobbles while it waits.

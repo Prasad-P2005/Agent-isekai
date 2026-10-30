@@ -18,7 +18,7 @@
   "goblin": {"label": "Goblin", "hp": 14, "dmg": 3, "speed": 3, "w": 0.6, "h": 1.3, "body": "#5a3a1a", "head": "#5a8a2a", "hair": "#3f2029", "ears": true, "loot": {"name": "Goblin Ear", "value": 6}},
   "wolf": {"label": "Dire Wolf", "hp": 16, "dmg": 4, "speed": 4.6, "w": 0.8, "h": 1.0, "body": "#77758b", "head": "#86849a", "quad": true, "loot": {"name": "Wolf Pelt", "value": 5}},
   "orc": {"label": "Orc", "hp": 40, "dmg": 7, "speed": 2.4, "w": 0.9, "h": 2.2, "body": "#4a3020", "head": "#5f8f4a", "hair": "#3f2029", "loot": {"name": "Orc Tusk", "value": 14}},
-  "dragon": {"label": "Dragon", "hp": 180, "dmg": 12, "speed": 5.5, "w": 2.4, "h": 2.2, "body": "#c02c42", "head": "#e4586a", "quad": true, "wings": true, "fly": true, "loot": {"name": "Dragon Scale", "value": 120}, "breath": 8},
+  "dragon": {"label": "Dragon", "hp": 180, "dmg": 12, "speed": 5.5, "w": 6, "h": 6, "hover": 3, "seen_from": 90, "body": "#3f2a3f", "head": "#5a3348", "hair": "#b02a3a", "quad": true, "wings": true, "fly": true, "loot": {"name": "Dragon Scale", "value": 120}, "breath": 8},
   "imp": {"label": "Imp", "demon": true, "hp": 14, "dmg": 3, "speed": 4, "w": 0.5, "h": 1.0, "body": "#c02c42", "head": "#e4586a", "hair": "#3f2029", "catEars": true, "fly": true, "loot": {"name": "Imp Wing", "value": 8}},
   "demon_knight": {"label": "Demon Knight", "demon": true, "hp": 55, "dmg": 8, "speed": 3, "w": 0.8, "h": 2.2, "body": "#2a1a30", "head": "#5a1a2a", "hair": "#ff3020", "catEars": true, "loot": {"name": "Demon Horn", "value": 25}},
   "demon_lord": {"label": "Demon Lord", "demon": true, "boss": true, "avatar": true, "hp": 2400, "dmg": 18, "speed": 3.2, "w": 1.3, "h": 3.4, "body": "#3a0a4a", "head": "#7a1a3a", "hair": "#ffd36b", "catEars": true}

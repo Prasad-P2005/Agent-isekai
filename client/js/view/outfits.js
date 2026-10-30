@@ -7,7 +7,7 @@ export const COVER = 0x7a3f33, LEATHER = 0xa8603f, PEACH = 0xf7caa0, CLAY = 0xcf
 export const GOLD = 0xfac13c, AMBER = 0xd67a10, RED = 0xc02c42, ROSE = 0xe4586a, WINE = 0x7d1730;
 export const BLUE = 0x2f78b8, SKY = 0x52bdf5, NAVY = 0x2e3a66, GREEN = 0x2e9150, LEAF = 0x62c47a, MOSS = 0x1b6237;
 export const SLATE = 0x45445a, DUSK = 0x545361, MAUVE = 0x86849a, STEEL = 0xb3aabb, PALE = 0xd9cfe0, PLUM = 0x5a2a5e, LILAC = 0xc79cff, TEAL = 0x2fb5b5;
-export const COAL = 0x2c2733, UMBER = 0x4a3028, OLIVE = 0x5a6340, RUST = 0x8a4a2e;
+export const COAL = 0x2c2733, UMBER = 0x4a3028, OLIVE = 0x5a6340;
 
 export const HAIR = { pink: 0xd9809c, silver: 0xc9c2d2, blonde: 0xd9b45a, black: 0x2c2733, brown: 0x5a3426, red: 0xa83a30, blue: 0x34587f,
   lavender: 0x9a84c0, mint: 0x6fb89c, orange: 0xc06a34, white: 0xe8e0d8, chestnut: 0x8a4e2e, navy: 0x2e3a66, ash: 0x6e6670, teal: 0x4aa8a0 };

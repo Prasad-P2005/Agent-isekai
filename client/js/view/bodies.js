@@ -13,7 +13,7 @@ import { scene } from './scene.js';
 const STRIKE_TIME = 0.42, TURN_EASE = 12, PACE_EASE = 10, AIR_EASE = 14, HEAD_EASE = 8, SCARED_EASE = 8;
 const STRIDE_WALK = 5.2, STRIDE_RUN = 4.2, TALL = 1.8, RUN_FROM = 2, RUN_AT = 3.4, FAST = 9;
 const LOOK_RANGE = 5, GLARE_RANGE = 12, MAX_LOOK = 0.9, MAX_NOD = 0.4, STILL_BEYOND = 64;
-const HURT_TINT = 0x880000, ICE_TINT = 0x1f6a9a;
+const HURT_TINT = 0x880000, ICE_TINT = 0x1f6a9a, BANK = 12, MAX_BANK = 0.45;
 const ease = (rate, dt) => 1 - Math.exp(-rate * dt);
 const clamp = (v, n) => Math.max(-n, Math.min(n, v));
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
@@ -81,6 +81,7 @@ function moveBody(e, v, dt) {
   const watching = m.near || (!D.friendly && dist < GLARE_RANGE);
   m.look += ((watching ? clamp(wrap(Math.atan2(-dx, -dz) - v.yaw), MAX_LOOK) : 0) - m.look) * ease(HEAD_EASE, dt); // turns to look at you
   m.nod += ((watching ? clamp(Math.atan2(dy, dist + 1), MAX_NOD) : 0) - m.nod) * ease(HEAD_EASE, dt);
+  m.bank += (clamp(wrap(e.yaw - v.yaw) * BANK, MAX_BANK) - m.bank) * ease(HEAD_EASE, dt); // leans into a turn, by how far the body is behind it
   v.pose(v.extra, m);
 }
 function syncBody(e, dt, blend) {
@@ -95,7 +96,7 @@ function syncBody(e, dt, blend) {
   if (label !== v.label) { v.label = label; drawLabel(e); }
   const far = Math.hypot(player.pos.x - p.x, player.pos.z - p.z);
   v.sprite.visible = far < (D.friendly ? 14 : 28) || e.hp < e.maxHp; // no label clutter from afar
-  if (far < STILL_BEYOND && !(e.frozenT > 0)) moveBody(e, v, dt); // ice holds a body in whatever pose it was caught
+  if (far < Math.max(STILL_BEYOND, D.seen_from ?? 0) && !(e.frozenT > 0)) moveBody(e, v, dt); // ice holds a body in whatever pose it was caught
 }
 
 export function syncBodies(dt, blend) {

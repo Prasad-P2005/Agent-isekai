@@ -9,8 +9,9 @@ import { ss } from '../sim/noise.js';
 import { player } from '../sim/player.js';
 import { heroLook } from './avatar.js';
 import { GOLD } from './outfits.js';
+import { cloth, flesh, leather, plain } from './paint.js';
 import { ambientLight, camera, renderer } from './scene.js';
-import { INK, mixHex, solid } from './voxel.js';
+import { Atlas, INK, mixHex, solid } from './voxel.js';
 
 const PX = 0.02; // one art pixel of the hand, in view units
 // It comes in from the corner of the view at an angle, thumb side up, so that it is the hand you see and not the length of the arm.
@@ -29,28 +30,29 @@ rig.add(arm, palmFire);
 arm.scale.setScalar(PX);
 
 // ---------------- the hand itself ----------------
-const look = heroLook(), material = new THREE.MeshLambertMaterial({ vertexColors: true });
-const skin = look.skin, knuckle = mixHex(skin, INK, 0.12), sleeve = look.top, bracer = look.armor ?? mixHex(sleeve, INK, 0.3), strap = look.belt ?? mixHex(bracer, INK, 0.3);
+const look = heroLook(), sheet = new Atlas(128), material = new THREE.MeshLambertMaterial();
+const skin = flesh(look.skin), knuckle = plain(mixHex(look.skin, INK, 0.16)), sleeve = cloth(look.top), bracer = leather(look.armor ?? mixHex(look.top, INK, 0.3)), strap = plain(look.belt ?? mixHex(look.top, INK, 0.5));
 const WRIST_AT = -34, FINGERS_AT = -13, FINGER_LEN = 4.5;
 
-arm.add(solid([[11, 11, 30, 0, 0, -11, sleeve], [13, 13, 9, 0, 0, -29, bracer], [13.4, 13.4, 1.6, 0, 0, -26, strap], [13.4, 13.4, 1.6, 0, 0, -32, strap], [3, 1, 3, 0, 6.8, -29, GOLD]], material));
+arm.add(solid([[11, 11, 30, 0, 0, -11, sleeve], [13, 13, 9, 0, 0, -29, bracer], [13.4, 13.4, 1.6, 0, 0, -26, strap], [13.4, 13.4, 1.6, 0, 0, -32, strap], [3, 1, 3, 0, 6.8, -29, plain(GOLD)]], sheet, material));
 wrist.position.z = WRIST_AT;
 arm.add(wrist);
-wrist.add(solid([[11, 10, 3, 0, 0, -1, skin], [15, 7, 13, 0, 0, -6.5, skin], [15.4, 1, 3, 0, 3.8, -11, knuckle]], material));
+wrist.add(solid([[11, 10, 3, 0, 0, -1, skin], [15, 7, 13, 0, 0, -6.5, skin], [15.4, 1, 3, 0, 3.8, -11, knuckle]], sheet, material));
 // Four fingers of two joints each, and a thumb, so that the hand can close into a fist and open flat.
 const fingers = [-5.4, -1.8, 1.8, 5.4].map((x, i) => {
   const base = new THREE.Group(), tip = new THREE.Group(), length = FINGER_LEN - Math.abs(i - 1.5) * 0.5;
   base.position.set(x, 0.5, FINGERS_AT);
   tip.position.z = -length;
-  base.add(solid([[3.2, 4.4, length + 0.4, 0, 0, -length / 2, skin]], material), tip);
-  tip.add(solid([[3.2, 4, length, 0, 0, -length / 2, skin], [3.4, 0.6, 1.4, 0, 2.1, -length + 0.8, knuckle]], material));
+  base.add(solid([[3.2, 4.4, length + 0.4, 0, 0, -length / 2, skin]], sheet, material), tip);
+  tip.add(solid([[3.2, 4, length, 0, 0, -length / 2, skin], [3.4, 0.6, 1.4, 0, 2.1, -length + 0.8, knuckle]], sheet, material));
   wrist.add(base);
   return { base, tip };
 });
 const thumb = new THREE.Group();
 thumb.position.set(-7.5, -1.5, -4);
-thumb.add(solid([[4, 4, 8, 0, 0, -4, skin]], material));
+thumb.add(solid([[4, 4, 8, 0, 0, -4, skin]], sheet, material));
 wrist.add(thumb);
+material.map = sheet.texture(); // only now that every part has been painted onto it
 
 function closeHand(curl) {
   for (const { base, tip } of fingers) { base.rotation.x = -curl * 1.25; tip.rotation.x = -curl * 1.45; }

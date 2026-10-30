@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 
-from ..state import Building, Settlement
+from ..core.state import Building, Settlement
 
 
 def _r(v: float) -> int:
@@ -32,8 +32,8 @@ def make_layout(s: Settlement) -> list[Building]:
         for ox, oz in ((7, 7), (-7, 7), (7, -7), (-7, -7)):
             add("stall", ox, oz)
         # A broad residential quarter surrounds the civic and market center.
-        ring("house", 16, 16.5, math.radians(11))
-        ring("house", 24, 23.5, math.radians(7))
+        ring("house", 16, 21, math.radians(10))
+        ring("house", 24, 25, math.radians(6))
         # Peddlers and traveling traders work beyond the city gates.
         ring("street_stall", 4, 31)
     elif s.type == "elfcity":

@@ -5,19 +5,19 @@ from __future__ import annotations
 import asyncio
 import re
 import logging
-import time
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
-from ..laws.laws import CRIMES, PUNISHMENTS, SCOPES, law_text, validate_law
-from ..story.stages import objective
+from ..content import EVENTS as WORLD_EVENTS
+from ..systems.laws import CRIMES, PUNISHMENTS, SCOPES, law_text, validate_law
+from ..systems.story import objective
 
 if TYPE_CHECKING:
-    from ..game import Game
+    from ..core.game import Game
 
 log = logging.getLogger(__name__)
-EVENTS = ["none", "demon_raid", "merchant_caravan", "festival", "monster_horde"]
+EVENTS = ["none", *WORLD_EVENTS]
 
 
 def clean_text(s: str) -> str:
@@ -66,7 +66,7 @@ def run_event(game: "Game", event: str, cause: str = "the god") -> bool:
     elif event == "merchant_caravan":
         w.push("event", "🐎 A merchant caravan arrives nearby, its wagons full of goods.", event="merchant_caravan")
     elif event == "festival":
-        w.festival_until = time.time() + 180
+        w.festival_until = w.clock + 180
         w.push("event", "🎉 A festival begins! Merchants lower their prices for a while.", event="festival")
     elif event == "monster_horde":
         w.push("event", "🌑 A horde of monsters stirs in the darkness…", event="monster_horde")
@@ -77,7 +77,6 @@ class Narrator:
     def __init__(self, game: "Game"):
         self.game = game
         self.queue: asyncio.Queue[str] = asyncio.Queue()
-        self.last = 0.0
 
     def call(self, reason: str) -> None:
         if self.queue.qsize() < 3:
@@ -95,7 +94,7 @@ class Narrator:
         g, w = self.game, self.game.world
         if not w or not w.genesis_done:
             return
-        self.last = time.time()
+        w.mark("narration")
         p, ctx = w.player, g.ctx
         allowed = allowed_events(g)
         prompt = f"""You are {w.god_name}, the casual, friendly {w.god_is} of "{w.name}", narrating the hero's story like a fun anime narrator. You cannot touch the mortal world directly. You act ONLY through its rules:

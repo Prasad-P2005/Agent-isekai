@@ -1,0 +1,19 @@
+{
+  "biomes": [
+    { "key": "OCEAN", "realm": "ocean", "name": "Thalassa Deep", "kind": "Mermaid Sea" },
+    { "key": "BEACH", "realm": "ocean", "name": "Sunlit Shores", "kind": "Coast" },
+    { "key": "ELF", "realm": "elf", "name": "Sylvaris", "kind": "Elven Forest" },
+    { "key": "KINGDOM", "realm": "human", "name": "The Kingdom", "kind": "Human Lands" },
+    { "key": "BEAST", "realm": "beast", "name": "Beastkin Wilds", "kind": "Savanna" },
+    { "key": "PEAKS", "realm": "peaks", "name": "Dragonspine Peaks", "kind": "Crystal Mountains" },
+    { "key": "DEMON", "realm": "demon", "name": "Demon Wastes", "kind": "Demon Lord's Domain" }
+  ],
+  "realms": {
+    "ocean": { "letter": "O", "biome": "OCEAN", "label": "Open sea" },
+    "elf": { "letter": "E", "biome": "ELF", "label": "Elven forest" },
+    "human": { "letter": "H", "biome": "KINGDOM", "label": "Human lands" },
+    "beast": { "letter": "B", "biome": "BEAST", "label": "Beastkin wilds" },
+    "peaks": { "letter": "P", "biome": "PEAKS", "label": "Dragonspine Peaks" },
+    "demon": { "letter": "D", "biome": "DEMON", "label": "Demon wastes" }
+  }
+}

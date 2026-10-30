@@ -1,6 +1,10 @@
-from isekai.economy import guild, shop
-from isekai.laws import laws
-from isekai.story.stages import advance, objective
+from isekai.core.state import GuildQuest, Law
+from isekai.systems import guild, laws, shop
+from isekai.systems.story import advance, objective
+
+
+def law(punishment: str, severity: int = 2) -> Law:
+    return Law(name="Test Law", crime="kill_human", punishment=punishment, severity=severity)
 
 
 def test_murder_without_witness_goes_unpunished(world):
@@ -45,6 +49,135 @@ def test_shop_and_loot(world):
     assert world.player.loot["Orc Tusk"] == 0 and world.player.gold == 100 - shop.price(world, "iron_sword") + 28
 
 
+def test_a_bounty_punishment_raises_the_bounty(world):
+    fx = laws.punish(world, law("bounty"), "Mia")
+    assert world.player.bounty == 80 and fx["wanted"] == 100
+
+
+def test_a_fine_is_paid_from_your_gold(world):
+    world.player.gold = 100
+    fx = laws.punish(world, law("fine"), "Mia")
+    assert (world.player.gold, world.player.bounty, fx["wanted"]) == (40, 0, 0)
+
+
+def test_a_fine_you_cannot_pay_becomes_a_bounty(world):
+    world.player.gold = 20
+    laws.punish(world, law("fine"), "Mia")
+    assert (world.player.gold, world.player.bounty) == (0, 40)
+
+
+def test_a_curse_takes_an_ability(world):
+    world.player.abilities = ["heal"]
+    laws.punish(world, law("curse"), "the gods themselves")
+    assert world.player.abilities == [] and world.player.max_hp == 20
+
+
+def test_a_curse_on_someone_with_no_abilities_lowers_max_health(world):
+    laws.punish(world, law("curse"), "the gods themselves")
+    assert world.player.max_hp == 16
+
+
+def test_a_curse_never_lowers_max_health_below_ten(world):
+    world.player.max_hp = 12
+    laws.punish(world, law("curse"), "the gods themselves")
+    assert world.player.max_hp == 10
+
+
+def test_exile_tells_the_client_to_move_you(world):
+    fx = laws.punish(world, law("exile"), "Mia")
+    assert fx["exile"] is True and fx["wanted"] == 0
+
+
+def test_guards_come_angry(world):
+    fx = laws.punish(world, law("guards"), "Mia")
+    assert fx["spawn"] == [{"kind": "knight", "count": 3, "angry": True}]
+
+
+def test_you_cannot_buy_without_enough_money(world):
+    world.player.gold = 59
+    shop.buy(world, "iron_sword")
+    assert (world.player.gold, world.player.weapon) == (59, 0)
+
+
+def test_buying_an_unknown_item_changes_nothing(world):
+    world.player.gold = 100
+    shop.buy(world, "excalibur")
+    assert world.player.gold == 100
+
+
+def test_selling_one_keeps_the_rest(world):
+    world.player.gold = 0
+    world.player.loot["Orc Tusk"] = 3
+    shop.sell(world, "Orc Tusk", all_=False)
+    assert world.player.loot["Orc Tusk"] == 2 and world.player.gold == 14
+
+
+def test_you_cannot_sell_what_you_do_not_have(world):
+    world.player.gold = 0
+    shop.sell(world, "Orc Tusk", all_=True)
+    assert world.player.gold == 0
+
+
+def test_the_war_raises_prices(world):
+    world.raid_level = 5
+    assert shop.price(world, "potion") == 21
+
+
+def test_a_festival_lowers_prices(world):
+    world.festival_until = world.clock + 60
+    assert shop.price(world, "potion") == 12
+
+
+def test_a_potion_is_used_up_by_drinking(world):
+    assert shop.use_item(world, "potion") is True and world.player.potions == 0
+    assert shop.use_item(world, "potion") is False
+
+
+def test_services_cost_money(world):
+    world.player.gold = 100
+    _, effects = shop.use_service(world, "doctor", "treat", None)
+    assert world.player.gold == 90 and effects == {"heal": 999}
+
+
+def test_services_are_refused_without_money(world):
+    world.player.gold = 9
+    _, effects = shop.use_service(world, "doctor", "treat", None)
+    assert world.player.gold == 9 and effects == {}
+
+
+def test_a_service_nobody_offers_is_refused(world):
+    world.player.gold = 100
+    _, effects = shop.use_service(world, "doctor", "resurrect", None)
+    assert world.player.gold == 100 and effects == {}
+
+
+def test_a_priest_blesses_you_only_once(world):
+    world.player.gold = 1000
+    shop.use_service(world, "priest", "bless", 7)
+    shop.use_service(world, "priest", "bless", 7)
+    assert (world.player.max_hp, world.player.gold) == (25, 920)
+
+
+def test_a_second_priest_can_bless_you_too(world):
+    world.player.gold = 1000
+    shop.use_service(world, "priest", "bless", 7)
+    shop.use_service(world, "priest", "bless", 8)
+    assert world.player.max_hp == 30
+
+
+def test_paying_your_bounty_clears_it_for_a_fee(world):
+    world.player.gold, world.player.bounty = 200, 100
+    _, effects = shop.use_service(world, "bounty", "pay", None)
+    assert (world.player.gold, world.player.bounty) == (75, 0) and effects["clear_wanted"]
+
+
+def test_surrender_costs_half_your_money_and_all_your_loot(world):
+    world.player.gold, world.player.bounty = 101, 100
+    world.player.loot["Orc Tusk"] = 3
+    _, effects = shop.use_service(world, "bounty", "surrender", None)
+    assert (world.player.gold, world.player.bounty, world.player.loot) == (50, 0, {}) and effects["clear_wanted"]
+
+
 def test_guild_quest_flow(world):
     q = guild.board(world, 0)[0]
     guild.accept(world, 0, 0)
@@ -53,6 +186,35 @@ def test_guild_quest_flow(world):
     gold = world.player.gold
     assert "complete" in guild.turn_in(world)
     assert world.player.gold == gold + q.reward and world.player.guild_done == 1
+
+
+def test_only_one_quest_at_a_time(world):
+    guild.accept(world, 0, 0)
+    first = world.player.active_quest
+    guild.accept(world, 0, 1)
+    assert world.player.active_quest is first
+
+
+def test_a_quest_cannot_be_turned_in_early(world):
+    world.player.gold = 0
+    world.player.active_quest = GuildQuest(title="Hunt", kind="slime", count=2, reward=50, progress=1)
+    guild.turn_in(world)
+    assert world.player.gold == 0 and world.player.active_quest is not None
+
+
+def test_only_the_right_monster_counts_for_a_quest(world):
+    world.player.active_quest = GuildQuest(title="Hunt", kind="slime", count=2, reward=50)
+    guild.on_kill(world, "goblin")
+    assert world.player.active_quest.progress == 0
+
+
+def test_every_second_quest_raises_your_guild_rank(world):
+    ranks = []
+    for _ in range(4):
+        world.player.active_quest = GuildQuest(title="Hunt", kind="slime", count=1, reward=50, progress=1)
+        guild.turn_in(world)
+        ranks.append(world.player.guild_rank)
+    assert ranks == [0, 1, 1, 2]
 
 
 def test_story_advances_on_flags(world):
@@ -70,7 +232,7 @@ def test_llm_names_are_cleaned():
 
 
 def test_no_demon_raids_before_the_story_starts(world):
-    from isekai.game import Game
+    from isekai.core.game import Game
     from isekai.god.narrator import allowed_events
     g = Game.__new__(Game)
     g.world, g.ctx = world, {}

@@ -1,0 +1,62 @@
+{
+  "jobs": {
+    "king": { "label": "King", "work": "keep", "night": "keep", "kind": "king", "service": "king" },
+    "queen": { "label": "Queen", "work": "keep", "night": "keep", "kind": "king", "service": "king", "body": "#a02060" },
+    "elf_king": { "label": "Elf King", "work": "palace", "night": "palace", "kind": "elf_royal", "service": "king" },
+    "elf_queen": { "label": "Elf Queen", "work": "palace", "night": "palace", "kind": "elf_royal", "service": "king", "body": "#e8f4ff" },
+    "guild_master": { "label": "Guild Master", "work": "guild", "kind": "knight", "service": "guild", "body": "#5a3a2a", "hair": "#888888" },
+    "receptionist": { "label": "Guild Receptionist", "work": "guild", "service": "guild", "body": "#ff9ac8", "hair": "#ffd36b" },
+    "adventurer": { "label": "Adventurer", "work": "guild", "night": "inn", "kind": "adventurer" },
+    "doctor": { "label": "Doctor", "work": "hospital", "service": "doctor", "body": "#f4f4f4", "hair": "#3a2a1a" },
+    "nurse": { "label": "Nurse", "work": "hospital", "service": "doctor", "body": "#ffffff", "hair": "#d08050" },
+    "innkeeper": { "label": "Innkeeper", "work": "inn", "night": "inn", "service": "inn", "body": "#8a5a2a" },
+    "blacksmith": { "label": "Blacksmith", "work": "smithy", "service": "smith", "body": "#3a3a3a", "hair": "#111111" },
+    "priest": { "label": "Priest", "work": "church", "service": "priest", "body": "#f8f0d0", "hair": "#dddddd" },
+    "merchant": { "label": "Market Merchant", "work": "stall", "kind": "merchant", "service": "trade" },
+    "peddler": { "label": "Street Peddler", "work": "street_stall", "kind": "merchant", "service": "trade" },
+    "fisherman": { "label": "Fisher", "work": "shore", "body": "#477f91", "hair": "#493b32" },
+    "guard": { "label": "Guard", "work": "gate", "night": "gate", "kind": "knight" },
+    "farmer": { "label": "Farmer", "work": "field", "body": "#6a8a3a" },
+    "baker": { "label": "Baker", "work": "stall", "body": "#f0d8a0" },
+    "bard": { "label": "Bard", "work": "inn", "body": "#3a6ac8", "hair": "#c84a3a" },
+    "elder": { "label": "Elder", "work": "shrine", "service": "elder" },
+    "herbalist": { "label": "Herbalist", "work": "elfhall", "service": "doctor", "body": "#6ab06a" },
+    "ranger": { "label": "Ranger", "work": "field", "body": "#2a5a2a" },
+    "chief": { "label": "Chief", "work": "chief", "service": "chief", "body": "#8a3a1a", "hair": "#ffd36b" },
+    "shaman": { "label": "Shaman", "work": "lodge", "service": "priest", "body": "#5a2a6a" },
+    "hunter": { "label": "Hunter", "work": "field", "body": "#6a4a2a" },
+    "warrior": { "label": "Warrior", "work": "gate", "night": "gate", "kind": "adventurer", "body": "#8a2a1a" }
+  },
+  "race_of": { "human": "human", "city": "human", "elfcity": "elf", "elf": "elf", "beast": "beastkin" },
+  "elf_kind": { "knight": "elf_guard", "adventurer": "elf_guard", "merchant": "elf", "villager": "elf" },
+  "base_kind": { "human": "villager", "elf": "elf", "beastkin": "beastkin" },
+  "royal": ["king", "queen", "elf_king", "elf_queen"],
+  "jobs_for": {
+    "human": ["guild_master", "receptionist", "adventurer", "doctor", "nurse", "innkeeper", "blacksmith", "priest", "merchant", "peddler", "fisherman", "guard", "farmer", "baker", "bard"],
+    "city": ["king", "queen", "guild_master", "receptionist", "adventurer", "doctor", "nurse", "innkeeper", "blacksmith", "priest", "merchant", "peddler", "fisherman", "guard", "farmer", "baker", "bard"],
+    "elfcity": ["guild_master", "receptionist", "adventurer", "herbalist", "innkeeper", "priest", "merchant", "guard", "ranger", "bard", "elder"],
+    "elf": ["elder", "herbalist", "ranger", "merchant", "adventurer", "bard"],
+    "beast": ["chief", "shaman", "hunter", "warrior", "blacksmith", "merchant", "adventurer"]
+  },
+  "required": {
+    "human": ["guild_master", "receptionist", "doctor", "doctor", "innkeeper", "blacksmith", "priest", "merchant", "adventurer", "adventurer"],
+    "city": ["guild_master", "receptionist", "doctor", "doctor", "doctor", "innkeeper", "blacksmith", "priest", "merchant", "merchant", "adventurer", "adventurer", "adventurer", "guard", "guard"],
+    "elfcity": ["guild_master", "receptionist", "herbalist", "herbalist", "innkeeper", "priest", "merchant", "merchant", "adventurer", "adventurer", "guard", "guard", "elder"],
+    "elf": ["elder", "herbalist", "merchant", "ranger"],
+    "beast": ["chief", "shaman", "blacksmith", "merchant", "hunter"]
+  },
+  "filler": {
+    "human": ["farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "guard", "adventurer", "baker", "merchant", "peddler"],
+    "city": ["farmer", "farmer", "farmer", "farmer", "farmer", "guard", "guard", "guard", "adventurer", "adventurer", "merchant", "merchant", "merchant", "peddler", "peddler", "baker", "bard", "nurse"],
+    "elfcity": ["ranger", "ranger", "guard", "bard", "merchant", "herbalist"],
+    "elf": ["ranger", "ranger", "herbalist", "bard"],
+    "beast": ["hunter", "hunter", "warrior", "warrior"]
+  },
+  "population": {
+    "city": [100, 180, 130],
+    "elfcity": [50, 100, 70],
+    "human": [20, 60, 40],
+    "elf": [20, 60, 30],
+    "beast": [20, 60, 35]
+  }
+}

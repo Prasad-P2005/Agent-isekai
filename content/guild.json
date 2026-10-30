@@ -1,0 +1,11 @@
+{
+  "ranks": ["F", "E", "D", "C", "B", "A", "S"],
+  "quests": [
+    { "kind": "slime", "title": "Clear the slimes from the fields", "count": 4, "reward": 30 },
+    { "kind": "goblin", "title": "Drive off the goblin raiders", "count": 3, "reward": 50 },
+    { "kind": "wolf", "title": "Hunt the dire wolves", "count": 3, "reward": 45 },
+    { "kind": "orc", "title": "Slay the orc marauders", "count": 2, "reward": 90 },
+    { "kind": "imp", "title": "Shoot down the demon imps", "count": 4, "reward": 80 },
+    { "kind": "demon_knight", "title": "Defeat the demon knights", "count": 2, "reward": 160 }
+  ]
+}

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ..laws.laws import law_text
+from ..core.state import World
 from ..llm.client import LLM
-from ..state import World
+from ..systems.laws import law_text
 
 
 class Reply(BaseModel):

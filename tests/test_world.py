@@ -1,7 +1,12 @@
+import json
 from collections import Counter
+from pathlib import Path
 
-from isekai.people.roster import make_roster
-from isekai.state import load, save
+from isekai.persistence.saves import load, save
+from isekai.systems.people.roster import make_roster
+from isekai.world.map import LAND, build_map
+
+TERRAIN_WORLD = Path(__file__).parent / "client" / "world.json"
 
 
 def test_saves_keep_emoji_and_old_windows_saves_still_load(world, tmp_path):
@@ -45,12 +50,36 @@ def test_llm_plan_is_validated(world):
 
 
 def test_buildings_do_not_overlap(world):
-    size = {"guild": (4, 3), "hospital": (4, 3), "inn": (3, 3), "smithy": (3, 3), "church": (4, 4), "house": (3, 3),
-            "stall": (2, 2), "street_stall": (1, 0), "well": (1, 1), "treehouse": (6, 6), "elfhall": (3, 3), "hut": (4, 4), "chief": (4, 4), "lodge": (3, 3),
-            "shrine": (0, 0), "keep": (4, 4), "palace": (6, 6)}
+    # half width, half depth of each BUILD entry in client/js/terrain.js; neighbours may share a wall
+    size = {"guild": (4, 3), "hospital": (4, 3), "inn": (3, 3), "smithy": (3, 2), "church": (3, 4), "house": (2, 2),
+            "stall": (2, 1), "street_stall": (1, 0), "well": (1, 1), "treehouse": (6, 6), "elfhall": (3, 3), "hut": (3, 3), "chief": (3, 3), "lodge": (3, 2),
+            "shrine": (0, 0), "keep": (3, 3), "palace": (6, 6)}
+    overlaps = []
     for s in world.settlements:
         bs = s.layout
         for i, a in enumerate(bs):
             for b in bs[i + 1:]:
                 (ax, az), (bx, bz) = size[a.kind], size[b.kind]
-                assert abs(a.x - b.x) > ax + bx - 1 or abs(a.z - b.z) > az + bz - 1, (s.type, a, b)
+                if abs(a.x - b.x) <= ax + bx - 1 and abs(a.z - b.z) <= az + bz - 1:
+                    overlaps.append((s.name, a.kind, a.x, a.z, b.kind, b.x, b.z))
+    assert overlaps == []
+
+
+def test_cities_keep_all_their_houses(world):
+    for city in world.settlements_of("city"):
+        assert sum(b.kind == "house" for b in city.layout) == 40
+
+
+def terrain_world() -> dict:
+    lands, settlements, _ = build_map()
+    return {"land": LAND, "seed": 7, "lands": [[l.model_dump() for l in row] for row in lands],
+            "settlements": [s.model_dump(exclude={"residents"}) for s in settlements]}
+
+
+def test_the_client_tests_use_the_current_map():
+    """tests/client builds terrain from a stored copy of the map. After a deliberate map change, refresh it: python tests/test_world.py"""
+    assert json.loads(TERRAIN_WORLD.read_text(encoding="utf-8")) == terrain_world()
+
+
+if __name__ == "__main__":
+    TERRAIN_WORLD.write_text(json.dumps(terrain_world()), encoding="utf-8")

@@ -5,6 +5,7 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY isekai ./isekai
 COPY client ./client
+COPY content ./content
 
 RUN pip install --no-cache-dir .
 

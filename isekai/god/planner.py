@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from ..core.state import Settlement, World
 from ..llm.client import LLM
-from ..people.jobs import JOBS_FOR
-from ..people.roster import make_roster
-from ..state import Settlement, World
+from ..systems.people.jobs import JOBS_FOR, ROYAL
+from ..systems.people.roster import make_roster
 
 
 class Person(BaseModel):
@@ -36,7 +36,7 @@ def ruler_of(world: World, s: Settlement) -> tuple[str | None, str | None]:
 
 
 async def plan_settlement(world: World, llm: LLM, s: Settlement) -> bool:
-    jobs = [j for j in JOBS_FOR[s.type] if j not in ("king", "queen", "elf_king", "elf_queen") and (j != "fisherman" or s.coastal)]
+    jobs = [j for j in JOBS_FOR[s.type] if j not in ROYAL and (j != "fisherman" or s.coastal)]
     extra = ""
     if s.type in ("human", "city"):
         extra = "Must include: a guild master and a cute receptionist at the Adventurers' Guild, 2-3 doctors at the hospital, an innkeeper, a blacksmith, a priest, merchants and several adventurers."

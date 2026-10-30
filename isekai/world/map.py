@@ -1,10 +1,11 @@
 """The finite world: an 8 x 8 grid of 64 x 64-block lands, surrounded by the endless sea."""
 from __future__ import annotations
 
-from ..state import Land, Settlement
+from ..content import REALMS as REALM_DATA, WORLD
+from ..core.state import Land, Settlement
 from .layouts import make_layout
 
-LAND = 64
+LAND = WORLD["land"]
 # Realm letter: E elf, H human, B beastkin, P peaks, O ocean, D demon.
 # Feature letter: v village, C city, g grove, f forest, s spire, c demon castle, p mermaid palace, r ruins, . open land
 MAP_ROWS = [
@@ -17,7 +18,7 @@ MAP_ROWS = [
     "O. O. H. B. B. B. B. B.",
     "O. Op O. B. Br B. B. B.",
 ]
-REALMS = {"E": "elf", "H": "human", "B": "beast", "P": "peaks", "O": "ocean", "D": "demon"}
+REALMS = {spec["letter"]: name for name, spec in REALM_DATA.items()}
 FEATURES = {"g": "treehouse_grove", "s": "crystal_spire", "c": "demon_castle", "p": "mermaid_palace", "r": "ruins"}
 SETTLEMENT_STRUCTURE = {"city": "city", "elfcity": "elf_city", "elf": "elf_village", "beast": "beast_village", "human": "village"}
 

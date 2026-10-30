@@ -27,12 +27,13 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # first time only
 export ISEKAI_LLM_API_KEY=sk-or-...
 .venv/bin/python -m isekai         # http://localhost:8000
 .venv/bin/pytest                   # tests (no LLM needed)
+node --test "tests/client/*.test.mjs"   # the game simulation, terrain and shared data (Node 21+)
 ```
 
 Settings come from environment variables: `ISEKAI_LLM_API_KEY`, `ISEKAI_LLM_URL`, `ISEKAI_LLM_MODEL`, `ISEKAI_PORT`, `ISEKAI_SAVE_DIR`.
 `ISEKAI_LLM_MODEL` can be any OpenRouter model with a provider that supports both structured outputs and temperature.
 The default model is free, but OpenRouter caps free use at 20 requests a minute and 50 a day (1,000 a day once you have bought 10 credits). A new world uses 14 requests, and every person's reply and god narration uses one. Past the cap, the god goes quiet and people only answer "…" until the quota resets at midnight UTC. `ISEKAI_GOD_IDLE` sets the seconds between unprompted narrations (default 600); raise it to save requests.
-The world is saved to `saves/world.json` after every action.
+The world is saved to `saves/world.json` after every action, including the blocks you mine and place, where you stand and the time of day.
 
 ## How a playthrough goes
 
@@ -48,16 +49,17 @@ The world is saved to `saves/world.json` after every action.
 | System | Where | What it does |
 |---|---|---|
 | Genesis | `isekai/god/genesis.py` | The god names the world, rulers, settlements, Demon Lord, and writes the laws |
-| Settlement plans | `isekai/god/planner.py`, `isekai/people/` | The god plans each settlement's population and notable people (guild master, receptionist, doctors…); the engine guarantees required jobs, homes and workplaces |
-| Laws & crimes | `isekai/laws/laws.py`, `client/js/people.js` | Crimes need a law covering the place; witnessed crimes are punished (golems, guards, bounty, fine, exile, curse); civilian witnesses run to report you, so silence them or flee |
+| Settlement plans | `isekai/god/planner.py`, `isekai/systems/people/` | The god plans each settlement's population and notable people (guild master, receptionist, doctors…); the engine guarantees required jobs, homes and workplaces |
+| Laws & crimes | `isekai/systems/laws.py`, `client/js/sim/people.js` | Crimes need a law covering the place; witnessed crimes are punished (golems, guards, bounty, fine, exile, curse); civilian witnesses run to report you, so silence them or flee |
 | The god in the world | `isekai/god/narrator.py` | Narrates events, may decree new laws, may trigger only the world events the rules allow (raids, caravans, festivals, hordes) |
-| Economy & guild | `isekai/economy/` | Loot → merchants; potions, weapons, armor, skill scrolls; doctors, inns, priests; guild quests and ranks |
+| Economy & guild | `isekai/systems/shop.py`, `isekai/systems/guild.py` | Loot → merchants; potions, weapons, armor, skill scrolls; doctors, inns, priests; guild quests and ranks |
 | Dialogue | `isekai/god/dialogue.py` | Every person speaks in character with memory of past conversations |
-| Client | `client/js/` | three.js renderer, terrain from the server's world data, physics, creature AI, HUD |
+| Client | `client/js/` | `sim/` is the game (terrain, physics, combat, creature AI), `view/` draws it with three.js, `ui/` is the page, `net/` talks to the server |
+| Game data | `content/` | Blocks, creatures, items, jobs and laws, shared by the server and the client |
 
 ## Characters
 
-Everyone is a block character designed in code (`client/js/avatar.js`): pixel-art anime faces, anime hairstyles
+Everyone is a block character designed in code (`client/js/view/avatar.js`): pixel-art anime faces, anime hairstyles
 (twin-tails, ponytails, bobs, *ahoge*), outfits by job (guild uniform, royal gowns, armor, nurse cap, priest robes…),
 elf ears, beastkin cat ears and tails. Open `http://localhost:8000/lookbook.html` to see the whole cast.
 

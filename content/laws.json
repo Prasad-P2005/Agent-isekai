@@ -1,0 +1,25 @@
+{
+  "crimes": {
+    "kill_human": "murdered a human",
+    "kill_elf": "murdered an elf",
+    "kill_beastkin": "murdered a beastkin",
+    "kill_mermaid": "murdered a mermaid",
+    "attack_civilian": "attacked a civilian",
+    "vandalism": "vandalised a city"
+  },
+  "scopes": {
+    "everywhere": null,
+    "cities": null,
+    "human_kingdom": "human",
+    "elven_forest": "elf",
+    "beastkin_savanna": "beast"
+  },
+  "punishments": ["golem_hunters", "guards", "bounty", "fine", "exile", "curse"],
+  "default_laws": [
+    { "name": "Law of the Crown", "crime": "kill_human", "scope": "everywhere", "needs_witness": true, "punishment": "golem_hunters", "severity": 3 },
+    { "name": "Peace of the Market", "crime": "attack_civilian", "scope": "cities", "needs_witness": true, "punishment": "guards", "severity": 2 },
+    { "name": "Pact of the Elder Trees", "crime": "kill_elf", "scope": "everywhere", "needs_witness": false, "punishment": "curse", "severity": 2 },
+    { "name": "Blood Price of the Tribes", "crime": "kill_beastkin", "scope": "everywhere", "needs_witness": true, "punishment": "bounty", "severity": 2 },
+    { "name": "City Stones", "crime": "vandalism", "scope": "cities", "needs_witness": true, "punishment": "fine", "severity": 1 }
+  ]
+}

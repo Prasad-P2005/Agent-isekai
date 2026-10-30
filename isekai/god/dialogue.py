@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from ..core.state import Resident, Settlement, World
 from ..llm.client import LLM
+from ..systems.story import objective
 from .narrator import clean_text
-from ..state import Resident, Settlement, World
-from ..story.stages import objective
 
 
 class Line(BaseModel):

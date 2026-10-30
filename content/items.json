@@ -1,0 +1,10 @@
+{
+  "potion": { "name": "Health Potion (+10 HP, key G)", "base": 15, "sold_by": ["trade"] },
+  "mana": { "name": "Mana Potion (+50 mana, key V)", "base": 12, "sold_by": ["trade"] },
+  "iron_sword": { "name": "Iron Sword (+3 damage)", "base": 60, "weapon": 3, "sold_by": ["smith"] },
+  "mithril_sword": { "name": "Mithril Sword (+7 damage)", "base": 220, "weapon": 7, "sold_by": ["smith"] },
+  "iron_pickaxe": { "name": "Iron Pickaxe (mine 2.5x faster)", "base": 40, "tool": 2.5, "sold_by": ["smith"] },
+  "mithril_pickaxe": { "name": "Mithril Pickaxe (mine 5x faster)", "base": 160, "tool": 5.0, "sold_by": ["smith"] },
+  "leather": { "name": "Leather Armor (-20% damage)", "base": 50, "armor": 0.2, "sold_by": ["smith"] },
+  "plate": { "name": "Knight Plate (-45% damage)", "base": 200, "armor": 0.45, "sold_by": ["smith"] }
+}

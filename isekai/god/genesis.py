@@ -6,9 +6,9 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from ..laws.laws import CRIMES, DEFAULT_LAWS, PUNISHMENTS, SCOPES, validate_law
+from ..core.state import World
 from ..llm.client import LLM
-from ..state import World
+from ..systems.laws import CRIMES, DEFAULT_LAWS, PUNISHMENTS, SCOPES, validate_law
 
 Crime = Literal[tuple(CRIMES)]  # type: ignore[valid-type]
 Scope = Literal[tuple(SCOPES)]  # type: ignore[valid-type]

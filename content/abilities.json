@@ -1,0 +1,8 @@
+{
+  "fireball": { "label": "Q Fireball", "scroll": 130 },
+  "heal": { "label": "R Heal", "scroll": 100 },
+  "double_jump": { "label": "Double jump", "scroll": 80 },
+  "swift": { "label": "Swift", "scroll": 90 },
+  "giant_strength": { "label": "Giant strength", "scroll": 160 },
+  "flight": { "label": "F Flight", "scroll": 450 }
+}

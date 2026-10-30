@@ -1,0 +1,7 @@
+{
+  "land": 64,
+  "chunk": 16,
+  "height": 160,
+  "sea": 48,
+  "resident_id_base": 1000
+}

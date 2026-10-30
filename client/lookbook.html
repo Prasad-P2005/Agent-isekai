@@ -2,7 +2,7 @@
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }</script>
 <script type="module">
 import * as THREE from 'three';
-import { buildAvatar, lookFor } from './js/avatar.js';
+import { buildAvatar, lookFor } from './js/view/avatar.js';
 const W = 1500, H = 760;
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); document.body.appendChild(r.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0xcfe6ff);

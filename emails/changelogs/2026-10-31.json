@@ -1,0 +1,46 @@
+{
+  "subject": "Isekai Realms changelog: new characters, new magic and a dragon",
+  "date": "31 October 2026",
+  "build": "Build 0925d97",
+  "summary": "Everything that has changed since the last update on 24 October is now on main. The biggest change is how the whole world looks and moves.",
+  "sections": [
+    {
+      "kind": "new",
+      "items": [
+        { "head": "New character art.", "text": "Every person and creature is redrawn as a chunky Minecraft-style skin, with mixed body types, cute elf girls, majestic kings and mermaids with long tails." },
+        { "head": "A really big dragon.", "text": "About 25 blocks across the wings. One lives in each open land of the Dragonspine Peaks and circles its lair, well away from the Law Stones." },
+        { "head": "More magic.", "text": "Frost Nova, Chain Lightning, Blink, Mana Ward and Meteor. Your mana well deepens at a temple with Mana Crystals, and slowly with every spell." },
+        { "head": "A compass.", "text": "It runs along the top of the screen and shows which way you face and where everything you are after lies." },
+        { "head": "A first-person hand.", "text": "It stays in the corner of the view and does the work: mining, punching, placing blocks and throwing spells." }
+      ]
+    },
+    {
+      "kind": "changed",
+      "items": [
+        { "head": "Movement feels smoother.", "text": "You now speed up and slow down instead of starting and stopping dead, and the camera and creatures glide at any refresh rate." },
+        { "head": "No AI service needed.", "text": "The story, the people and every line of dialogue are written and shipped with the game, so it runs without a key." },
+        { "head": "A new interface.", "text": "Menus are now pages of one book, with a slate dock and bag for what your hands use." },
+        { "head": "Easier setup.", "text": "The README has copy-paste steps for Docker, Windows and macOS or Linux." }
+      ]
+    },
+    {
+      "kind": "fixed",
+      "items": [
+        { "head": "Ledges.", "text": "Walking up onto a one-block ledge no longer snaps you to the top instantly. The view now rises smoothly." },
+        { "head": "Flickering.", "text": "Faces and joints no longer shimmer where two surfaces overlapped." }
+      ]
+    },
+    {
+      "kind": "check",
+      "items": [
+        { "head": "Not tested yet.", "text": "The automated tests and a full play-through have not been run on this build, so expect some rough edges." }
+      ]
+    }
+  ],
+  "pictures": [
+    { "file": "gallery/dragon.png", "caption": "The dragon of the Dragonspine Peaks, with an adventurer for scale." },
+    { "file": "gallery/men.png", "caption": "The men of the realm." },
+    { "file": "gallery/girls.png", "caption": "The girls of the realm, with elves and mermaids." },
+    { "file": "gallery/creatures.png", "caption": "Monsters, stones and the Demon Lord." }
+  ]
+}

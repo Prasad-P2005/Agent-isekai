@@ -17,6 +17,8 @@ node --test "tests/client/*.test.mjs"                             # the simulati
 docker compose up --build
 ```
 
+Changelog emails live in `emails/`: write an entry in `emails/changelogs/`, run `python tools/make_changelog.py <entry>.json`, and send the `.html` and `.txt` it writes with `emails/title.png` attached under the content id `title`, from `noreply@system.solithix.com`. Pictures load from `gallery/` on GitHub, so push them before sending.
+
 There is no linter, formatter or JS build step. If a map or terrain change is deliberate, refresh the stored copy with `python tests/test_world.py` and update `WORLD_HASH` in `tests/client/terrain.test.mjs`.
 
 The client is plain ES modules served as-is from `client/`, with three.js vendored in `client/vendor/` and resolved by the import map in `index.html` (and again in `lookbook.html`). The interface's sprites in `client/img/ui/` and `client/css/icons.css` are drawn by `python tools/make_ui_art.py` (standard library only), so change the art there and commit what it writes. The fonts are vendored in `client/vendor/fonts/`.

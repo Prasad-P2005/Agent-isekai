@@ -57,7 +57,9 @@ export function needs(r) {
   return out;
 }
 export const timesCanMake = r => { if (creative()) return ITEMS[r.out].stack; return Math.min(...Object.entries(needs(r)).map(([id, n]) => Math.floor(countItem(id) / n))); };
-export const isKnown = (r, seen) => creative() || seen.includes(r.out) || Object.keys(needs(r)).some(id => seen.includes(id));
+// A recipe opens once its result, or everything that goes into it, has been held. Sticks do not count, or one stick would open every tool in the game.
+const telling = r => { const ids = Object.keys(needs(r)), rest = ids.filter(id => id !== 'stick'); return rest.length ? rest : ids; };
+export const isKnown = (r, seen) => creative() || seen.includes(r.out) || telling(r).every(id => seen.includes(id));
 export const recipesAt = kind => (kind === 'all' ? RECIPES : RECIPES.filter(r => (kind in GRIDS ? GRIDS[kind].at.includes(r.at) : r.at === kind)));
 // Straight from the bag, for shift-click in the book.
 export function craftFromBag(r, times) {

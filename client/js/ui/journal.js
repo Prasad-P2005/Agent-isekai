@@ -1,4 +1,5 @@
 // The journal in the book: the story so far, the laws, your powers, the creatures you have met and the controls.
+import { keyOf, spellKey } from '../core/bindings.js';
 import { G } from '../core/state.js';
 import { ABILITIES, BESTIARY, CREATURES } from '../core/content.js';
 import { hasSeen } from '../sim/bestiary.js';
@@ -6,7 +7,6 @@ import { maxMana } from '../sim/player.js';
 import { esc, icon, power, rich } from './art.js';
 import { storyFeed } from './hud.js';
 import { definePage } from './panels.js';
-import { mouse, setMouseSpeed } from './pointer.js';
 
 const $ = id => document.getElementById(id);
 function fill(title, left, right) {
@@ -66,7 +66,7 @@ definePage('powers', {
   render() {
     const known = G.profile.abilities.map(power), unknown = Object.keys(ABILITIES).filter(a => !G.profile.abilities.includes(a)).map(power);
     fill('Powers',
-      wellHTML() + (known.map(p => powerHTML(p, `${p.key ? `Press ${p.key}` : p.mana ? 'Put it on Q or R in the bag' : 'Always active'}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">No powers yet. Buy skill scrolls from a market, or earn the trust of the elders.</p>'),
+      wellHTML() + (known.map(p => powerHTML(p, `${p.key ? `Press ${p.key}` : p.mana ? `Put it on ${spellKey(0)} or ${spellKey(1)} in the bag` : 'Always active'}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">No powers yet. Buy skill scrolls from a market, or earn the trust of the elders.</p>'),
       `<h3>Still to learn</h3>${unknown.map(p => powerHTML(p, `Scroll: ${p.scroll} ${G.world.currency}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">You have learned every power.</p>'}`);
   },
 });
@@ -95,16 +95,9 @@ $('pageleft').addEventListener('click', e => {
 });
 
 // ---------- the controls, here and on the pause screen ----------
-const MOVING = [['WASD', 'Move'], ['Space', 'Jump or swim'], ['Shift', 'Sprint'], ['F', 'Fly, once learned'], ['Left click', 'Attack, or hold to mine'], ['Right click', 'Use what is in your hand: place a block, eat, drink, draw a bow, raise a shield, open a station'], ['W or S on a rope', 'Climb'], ['1 to 9', 'Pick a hotbar slot']];
-const DOING = [['E', 'Talk or trade'], ['T', 'Pray to the god'], ['Q R', 'Cast the two spells you have chosen in the bag'], ['G', 'Drink a health potion'], ['V', 'Drink a mana potion']];
-const MENUS = [['I', 'Bag'], ['J', 'Journal'], ['L', 'Laws'], ['M', 'Map'], ['Esc', 'Close a menu, or pause'], ['F3', 'Position and frame rate']];
+const moving = () => [[['forward', 'left', 'back', 'right'].map(keyOf).join(' '), 'Move'], [keyOf('jump'), 'Jump or swim'], [keyOf('sprint'), 'Sprint'], [keyOf('fly'), 'Fly, once learned'], ['Left click', 'Attack, or hold to mine'], ['Right click', 'Use what is in your hand: place a block, eat, drink, draw a bow, raise a shield, open a station'], [`${keyOf('forward')} or ${keyOf('back')} on a rope`, 'Climb'], ['1 to 9', 'Pick a hotbar slot']];
+const doing = () => [[keyOf('talk'), 'Talk or trade'], [keyOf('pray'), 'Pray to the god'], [`${keyOf('spell1')} ${keyOf('spell2')}`, 'Cast the two spells you have chosen in the bag'], [keyOf('health'), 'Drink a health potion'], [keyOf('mana'), 'Drink a mana potion']];
+const menus = () => [[keyOf('bag'), 'Bag'], [keyOf('journal'), 'Journal'], [keyOf('laws'), 'Laws'], [keyOf('map'), 'Map'], [keyOf('settings'), 'Settings'], ['Esc', 'Close a menu, or pause'], [keyOf('debug'), 'Position and frame rate']];
 const keyList = rows => `<dl class="keylist">${rows.map(([k, what]) => `<dt><kbd>${k}</kbd></dt><dd>${what}</dd>`).join('')}</dl>`;
-export const movesHTML = () => `<h3>Moving</h3>${keyList(MOVING)}`;
-export const actionsHTML = () => `<h3>Doing</h3>${keyList(DOING)}<h3>Menus</h3>${keyList(MENUS)}`;
-$('pageleft').addEventListener('input', e => { if (e.target.id === 'mousespeed') setMouseSpeed(Number(e.target.value)); });
-definePage('keys', {
-  tab: 'keys',
-  render() {
-    fill('Controls', `${movesHTML()}<label class="speed"><h3>Mouse speed</h3><input id="mousespeed" type="range" min="0.4" max="2.2" step="0.1" value="${mouse.speed}"></label>`, actionsHTML());
-  },
-});
+export const movesHTML = () => `<h3>Moving</h3>${keyList(moving())}`;
+export const actionsHTML = () => `<h3>Doing</h3>${keyList(doing())}<h3>Menus</h3>${keyList(menus())}`;

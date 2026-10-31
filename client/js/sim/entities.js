@@ -7,7 +7,7 @@ import { Vec3 } from '../core/vec3.js';
 import { ents, isMonsterKind, isNight, killerName } from './beings.js';
 import { alarmKin, callForHelp, shoot, think } from './brains.js';
 import { getBlock, chunkReady } from './chunks.js';
-import { WATER, solid } from './blocks.js';
+import { solid, wet } from './blocks.js';
 import { IDLE_FROM, despawns, offDuty } from './lifetime.js';
 import { skyLight } from './light.js';
 import { updatePaths } from './paths.js';
@@ -103,7 +103,7 @@ function updateEntity(e, dt) {
   if (e.frozenT > 0) { e.frozenT -= dt; return; } // locked in ice: it neither thinks nor moves, and its grudges wait for it
   e.fleeT -= dt; e.angryT -= dt;
   if (D.regen && e.hurtT > 6 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + D.regen * dt);
-  const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.3), Math.floor(p.z)) === WATER;
+  const inWater = wet(getBlock(Math.floor(p.x), Math.floor(p.y + 0.3), Math.floor(p.z)));
   const free = player.ready && (G.locked || G.focused) && !G.uiOpen && !creative(); // to a brain, a creative hero is as absent as a paused one
   think(e, dt, { dist, dx, dz, dy, free, canHit: free && Math.abs(dy) < 16, crowned: !!G.profile?.crowned });
 
@@ -115,7 +115,7 @@ function updateEntity(e, dt) {
   e.vel.x = mx * speed + e.kb.x; e.vel.z = mz * speed + e.kb.z;
   if (D.fly) flyEnt(e, tp, dt);
   else {
-    if (D.swim && inWater) e.vel.y = getBlock(Math.floor(p.x), Math.floor(p.y + 1.6), Math.floor(p.z)) === WATER ? Math.sin(performance.now() / 900 + e.yaw) * 0.6 : -0.8;
+    if (D.swim && inWater) e.vel.y = wet(getBlock(Math.floor(p.x), Math.floor(p.y + 1.6), Math.floor(p.z))) ? Math.sin(performance.now() / 900 + e.yaw) * 0.6 : -0.8;
     else if (inWater) e.vel.y = Math.min(e.vel.y + 18 * dt, 2.5);
     else e.vel.y = Math.max(e.vel.y - 28 * dt, -40);
     const bx = moveEnt(e, 'x', e.vel.x * dt), bz = moveEnt(e, 'z', e.vel.z * dt);

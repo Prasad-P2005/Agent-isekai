@@ -1,4 +1,7 @@
 // Keyboard and mouse buttons. Who holds the mouse is decided in pointer.js.
+import { actionOf } from '../core/bindings.js';
+import { toast } from '../core/events.js';
+import { setSetting, settings } from '../core/settings.js';
 import { G, controlsActive } from '../core/state.js';
 import { castSlot, doubleJump, toggleFlight } from '../sim/abilities.js';
 import { meleeHit, pickEntity, reachOfHand } from '../sim/entities.js';
@@ -6,14 +9,15 @@ import { drinkBest, pressUse, releaseUse } from '../sim/hands.js';
 import { cycleSlot, selectSlot } from '../sim/inventory.js';
 import { aim } from '../sim/mining.js';
 import { talkToNearest } from '../sim/people.js';
-import { toggleDebug } from './hud.js';
+import { toggleDebug, toggleHud } from './hud.js';
 import './inventory.js';
 import './journal.js';
 import './map.js';
+import './settings.js';
 import { closePanel, menuOpen, openPrayer, togglePage } from './panels.js';
 import { capture, isPauseShown, pause, resetPointer, usingFreeMouse } from './pointer.js';
 
-const PAGE_KEYS = { KeyI: 'bag', KeyJ: 'journal', KeyL: 'laws', KeyM: 'map' };
+const PAGES = { bag: 'bag', journal: 'journal', laws: 'laws', map: 'map', settings: 'graphics' };
 
 export function resetInput() {
   resetPointer();
@@ -25,10 +29,14 @@ addEventListener('keydown', e => {
   G.keys[e.code] = true;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
   if (e.code === 'Escape' && e.repeat) return; // Esc held after closing a menu must not go on to pause
-  if (e.code === 'F3') { e.preventDefault(); toggleDebug(); return; }
-  if (PAGE_KEYS[e.code]) { e.preventDefault(); togglePage(PAGE_KEYS[e.code]); return; }
+  const act = actionOf(e.code);
+  if (/^F\d/.test(e.code) && act) e.preventDefault();
+  if (act === 'debug') { toggleDebug(); return; }
+  if (act === 'hideHud') { toggleHud(); return; }
+  if (act === 'shaders' && !e.repeat) { setSetting('shaders', settings.shaders ? 0 : 1); toast(`Shaders ${settings.shaders ? 'on' : 'off'}`, 2); return; }
+  if (PAGES[act]) { e.preventDefault(); togglePage(PAGES[act]); return; }
   if (G.uiOpen) {
-    if (e.code === 'Escape' || (e.code === 'KeyE' && !menuOpen())) closePanel();
+    if (e.code === 'Escape' || (act === 'talk' && !menuOpen())) closePanel();
     return;
   }
   if (isPauseShown()) {
@@ -38,14 +46,14 @@ addEventListener('keydown', e => {
   }
   if (e.code === 'Escape' && G.focused && !G.locked) { pause(); return; }
   if (!controlsActive()) return;
-  if (e.code === 'KeyF') toggleFlight();
-  if (e.code === 'Space') doubleJump();
-  if (!e.repeat && e.code === 'KeyQ') castSlot(0); // a held key must not pour a whole well away
-  if (!e.repeat && e.code === 'KeyR') castSlot(1);
-  if (e.code === 'KeyG') drinkBest(['potion', 'greater_health']);
-  if (e.code === 'KeyV') drinkBest(['mana', 'greater_mana']);
-  if (e.code === 'KeyE') talkToNearest();
-  if (e.code === 'KeyT') { e.preventDefault(); openPrayer(); }
+  if (act === 'fly') toggleFlight();
+  if (act === 'jump') doubleJump();
+  if (!e.repeat && act === 'spell1') castSlot(0); // a held key must not pour a whole well away
+  if (!e.repeat && act === 'spell2') castSlot(1);
+  if (act === 'health') drinkBest(['potion', 'greater_health']);
+  if (act === 'mana') drinkBest(['mana', 'greater_mana']);
+  if (act === 'talk') talkToNearest();
+  if (act === 'pray') { e.preventDefault(); openPrayer(); }
   if (/^Digit[1-9]$/.test(e.code)) selectSlot(Number(e.code[5]) - 1);
 });
 addEventListener('keyup', e => { G.keys[e.code] = false; });

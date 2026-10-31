@@ -2,7 +2,7 @@
 const NAMES = ['world', 'realms', 'blocks', 'creatures', 'abilities', 'services', 'jobs', 'laws', 'guild', 'events', 'spawns', 'bestiary', 'items', 'recipes'];
 
 async function read(name) {
-  if (typeof window === 'undefined') { // tests run the simulation in Node, without a server
+  if (typeof window === 'undefined' && typeof WorkerGlobalScope === 'undefined') { // tests run the simulation in Node, without a server
     const { readFile } = await import('node:fs/promises');
     return JSON.parse(await readFile(new URL(`../../../content/${name}.json`, import.meta.url), 'utf8'));
   }

@@ -1,12 +1,15 @@
 // Chunk storage, block access and streaming around the player. Drawing them is view/chunkmesh.js.
-import { emit } from '../core/events.js';
+import { emit, on } from '../core/events.js';
+import { settings } from '../core/settings.js';
 import { AIR, BEDROCK, EMIT } from './blocks.js';
 import { edits, recordEdit } from './edits.js';
 import { CS, H, genChunk, idx, chunkKey as key, topOf } from './terrain.js';
 
-export const RD = 10; // render distance in chunks
+export let RD = settings.renderDistance; // render distance in chunks
+const SIM_REACH = 8; // however little is drawn, creatures come and go this far from the hero
 export const LIGHT_REACH = 12; // how many blocks a lamp's light crosses, so how far a change to one must spread
 export const chunks = new Map();
+on('settings:changed', moved => { if (moved.includes('renderDistance')) RD = settings.renderDistance; });
 
 export function getBlock(wx, y, wz) {
   if (y < 0) return BEDROCK; if (y >= H) return AIR;
@@ -40,22 +43,39 @@ export function setBlock(wx, y, wz, id) {
   if (reach > 1) { if (west && north) mark(cx - 1, cz - 1); if (east && north) mark(cx + 1, cz - 1); if (west && south) mark(cx - 1, cz + 1); if (east && south) mark(cx + 1, cz + 1); }
 }
 
-// Generates what is missing, nearest first, until the deadline. The nearest chunk is always done, so a slow machine still loads.
-export function streamChunks(px, pz, deadline) {
-  const pcx = Math.floor(px / CS), pcz = Math.floor(pz / CS), toGen = [];
-  for (let dx = -RD - 1; dx <= RD + 1; dx++) for (let dz = -RD - 1; dz <= RD + 1; dz++) {
-    const cx = pcx + dx, cz = pcz + dz;
-    if (!chunks.has(key(cx, cz))) toGen.push([dx * dx + dz * dz, cx, cz]);
+// A farm makes chunks on other threads (view/workers.js) and hands them to landChunk. Without one they are made here, which is what the tests do.
+let farm = null, wanted = [], scanX = null, scanZ = null, scanReach = 0, scanSize = -1;
+export function useFarm(f) { farm = f; scanSize = -1; }
+export function landChunk(cx, cz, d) {
+  const k = key(cx, cz), mine = edits.get(k);
+  if (chunks.has(k) || Math.abs(cx - scanX) > scanReach + 4 || Math.abs(cz - scanZ) > scanReach + 4) return;
+  if (mine) for (const [i, id] of mine) d[i] = id;
+  chunks.set(k, { cx, cz, d, top: topOf(d), lamps: null, dirty: false });
+}
+// The list of what is missing only changes when the hero crosses a chunk or something arrives, so most frames have nothing to look at.
+function scan(pcx, pcz, reach) {
+  const far = (reach + 2.5) ** 2, list = []; // a chunk at the rim is only drawn once all eight around it exist
+  for (let dx = -reach - 3; dx <= reach + 3; dx++) for (let dz = -reach - 3; dz <= reach + 3; dz++) {
+    const d = dx * dx + dz * dz;
+    if (d <= far && !chunks.has(key(pcx + dx, pcz + dz))) list.push([d, pcx + dx, pcz + dz]);
   }
-  toGen.sort((a, b) => a[0] - b[0]);
-  for (let i = 0; i < toGen.length && (!i || performance.now() < deadline); i++) {
-    const [, cx, cz] = toGen[i], k = key(cx, cz), d = genChunk(cx, cz, edits.get(k));
-    chunks.set(k, { cx, cz, d, top: topOf(d), lamps: null, dirty: false });
-  }
+  wanted = list.sort((a, b) => b[0] - a[0]); // nearest last, to be taken off the end
   for (const [k, ch] of chunks) {
-    if (Math.abs(ch.cx - pcx) > RD + 3 || Math.abs(ch.cz - pcz) > RD + 3) {
+    if (Math.abs(ch.cx - pcx) > reach + 4 || Math.abs(ch.cz - pcz) > reach + 4) {
       chunks.delete(k);
       emit('chunk:unloaded', k);
     }
   }
+}
+// Generates what is missing, nearest first, until the deadline. The nearest chunk is always done, so a slow machine still loads.
+export function streamChunks(px, pz, deadline) {
+  const pcx = Math.floor(px / CS), pcz = Math.floor(pz / CS), reach = Math.max(RD, SIM_REACH);
+  if (pcx !== scanX || pcz !== scanZ || reach !== scanReach || chunks.size !== scanSize) { scanX = pcx; scanZ = pcz; scanReach = reach; scan(pcx, pcz, reach); }
+  for (let first = true; wanted.length && (first || performance.now() < deadline); first = false) {
+    const [, cx, cz] = wanted[wanted.length - 1];
+    if (farm && !farm.ask(cx, cz)) break; // the farm is full: the rest wait their turn
+    wanted.pop();
+    if (!farm) landChunk(cx, cz, genChunk(cx, cz));
+  }
+  scanSize = chunks.size;
 }

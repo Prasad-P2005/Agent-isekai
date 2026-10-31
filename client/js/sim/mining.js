@@ -2,7 +2,7 @@
 import { ITEMS } from '../core/content.js';
 import { G, creative } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
-import { AIR, BL, ID, WATER, dropOf, hardness, pickable } from './blocks.js';
+import { AIR, BL, ID, WATER, dropOf, hardness, pickable, wet } from './blocks.js';
 import { getBlock, setBlock } from './chunks.js';
 import { addBlock, addItem, heldBlock, heldDef, spendHeld, wearHeld } from './inventory.js';
 import { onBreakBlock } from './people.js';
@@ -35,7 +35,7 @@ function giveDrops(id, tool) {
   if (full) toast('Your bag is full.', 2);
 }
 function breakOne(x, y, z, id) {
-  const nearWater = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, -1]].some(([a, b, c]) => getBlock(x + a, y + b, z + c) === WATER);
+  const nearWater = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, -1]].some(([a, b, c]) => wet(getBlock(x + a, y + b, z + c)));
   setBlock(x, y, z, nearWater && y <= SEA ? WATER : AIR);
   if (BL[getBlock(x, y + 1, z)].rooted) setBlock(x, y + 1, z, AIR); // whatever grew on it goes with it
   emit('block:broken', { x, y, z, id });

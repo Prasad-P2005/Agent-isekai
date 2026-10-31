@@ -64,7 +64,10 @@ export function closePanel() {
 $('panelclose').addEventListener('click', closePanel);
 for (const nav of ['tabs', 'ribbons']) $(nav).addEventListener('click', e => { const b = e.target.closest('[data-page]'); if (b) openPage(b.dataset.page); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) togglePage(b.dataset.open); });
-scrim.addEventListener('click', e => { if (e.target === scrim) closePanel(); }); // a click beside the book closes it
+// A click beside the book closes it. A drag let go there does not, though the browser calls that a click on the scrim too.
+let pressedBeside = false;
+scrim.addEventListener('mousedown', e => { pressedBeside = e.target === scrim; });
+scrim.addEventListener('click', e => { if (e.target === scrim && pressedBeside) closePanel(); });
 
 // ---------- services ----------
 const parts = name => /^(.*?) \((.*)\)$/.exec(name)?.slice(1) ?? [name, ''];

@@ -77,7 +77,7 @@ Run these from a Python install. The first is the same on macOS and Linux with `
 node --test "tests/client/*.test.mjs"
 ```
 
-`pytest` covers the server. `node --test` covers the game simulation, terrain and shared data. Neither needs the network.
+`pytest` covers the server. `node --test` covers the game simulation, terrain, culling and shared data. Neither needs the network.
 
 ## Settings
 
@@ -172,6 +172,8 @@ of its own. The Old Ways run through all of it: lit corridors, bridges and rope 
 
 ## Controls
 
+These are the defaults. Every key but Esc and the number row can be changed in Settings, under Keys.
+
 | Action | Key |
 |---|---|
 | Move | WASD or the arrow keys |
@@ -181,14 +183,26 @@ of its own. The Old Ways run through all of it: lit corridors, bridges and rope 
 | Choose a dock slot | 1–0 or the mouse wheel |
 | Talk to whoever is under the crosshair | E, then pick what to say with a click or 1–9. Shops and services open alongside |
 | Pray to the god | T |
-| Bag, journal, laws, map | I, J, L, M |
+| Bag, journal, laws, map, settings | I, J, L, M, O |
 | Your two chosen spells (pick them in the bag) | Q, R |
 | Health and mana potions | G, V |
 | Flight | F |
 | Pause and resume | Esc to pause. Click, Enter or Space to resume |
-| Position and frame rate | F3 |
+| Position, frame rate and draw calls | F3 |
+| Shaders on or off | F4 |
+| Hide the screen display | F1 |
 
 You start with no spells. Scrolls at a market teach them, along with double jump, swift, giant strength and flight. Your maximum mana starts at 100 and grows three ways: attune to a Mana Crystal at a temple, keep casting, and swear the Oath of the Elves. A meteor costs 120, so it has to wait until you have grown it.
+
+## Graphics
+
+Open Settings with O, or from the pause card. Everything is saved in your browser, and each page has presets.
+
+- **Graphics** sets render distance (4 to 20 chunks), resolution, a frame rate limit, field of view, leaves, clouds, particles and more. Auto resolution lowers the picture by itself when the frame rate drops.
+- **Shaders** turns on sun shadows, soft light, bloom, god rays, colour grading and deep water with reflections. They need a good graphics card, and are off by default. If they will not run, the game goes back to the normal look and says so.
+- **Keys** rebinds the controls.
+
+Coloured light is part of the game with or without shaders: a torch is orange, a mana crystal blue, and the colours mix where they meet.
 
 ## Debugging
 

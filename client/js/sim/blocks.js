@@ -23,6 +23,9 @@ export const EMIT = table(b => b.emit ?? 0);
 export const WARDS = table(b => (b.emit && !b.ground ? 1 : 0));
 
 export const solid = id => SOLID[id] === 1;
+// Water, and the plants that grow in it: their cells are full of water too, so swimming and drawing treat them alike.
+export const WET = table((b, id) => (id === WATER || b.wet ? 1 : 0));
+export const wet = id => WET[id] === 1;
 export const pickable = id => id !== AIR && id !== WATER;
 // seconds to break by hand (a pickaxe divides this); Infinity = unbreakable
 export const hardness = id => (BL[id].unbreakable ? Infinity : BL[id].hardness ?? 1);

@@ -85,13 +85,17 @@ A compact slate panel in the middle of the screen, after the reference: about 28
 ```
 
 - The 2 by 2 grid is always there. A station swaps it for its own panel, as in the second reference, while the slots below stay put.
-- Controls follow Minecraft's:
+- Controls follow Minecraft's with the Mouse Tweaks mod, and every one acts on the press rather than the release:
   - Click picks up or puts down a stack, and swaps with what is there.
   - Right click splits a stack, or puts down one.
   - Shift-click moves a stack between the hotbar and the bag, or into a station.
   - Double click gathers matching items onto the cursor.
   - Keys 1 to 9 over a slot swap it with that hotbar slot.
-  - Dragging a held stack spreads it evenly.
+  - A left drag begun on an empty slot shares the held stack evenly, live, with the remainder left in the hand.
+  - A left drag begun on a stack collects more of that item into the hand. With shift held it sends those stacks across instead.
+  - Shift and a left drag sends across every stack it crosses.
+  - A right drag drops one on every slot it enters, including stacks of the same item and slots it has already crossed.
+  - The wheel moves one item at a time: down out of the stack under the mouse, up into it. The other side is the station when one is open, and otherwise the hotbar and the bag face each other. Down on a crafting result makes one.
 - A **Sort** button merges stacks and orders the bag by group, leaving the hotbar alone.
 - A tooltip at the cursor replaces the line above the slots: name, group, stats, durability, what it sells for.
 - Durability shows as a thin bar along the bottom of the slot.
@@ -118,7 +122,7 @@ Minecraft's shaped recipes on a grid, which also means the recipe book can fill 
   - Click a recipe to lay it into the grid.
   - Shift-click to craft as many as the bag allows.
   - A recipe you cannot make shows what is missing in red.
-  - Recipes unlock when you first hold one of their ingredients, as Minecraft's do, so the book grows with the game. A toast says so.
+  - Recipes unlock when you have held their result, or everything that goes into them apart from sticks, so the book grows with the game and one stick does not open every tool. A toast says so.
 - `content/recipes.json` is written by the same tool. Each recipe gives `out`, `n`, `at`, and `shape` with `keys`, or `of` for shapeless, or `in`, `time` for smelting. Patterns can shift around the grid and mirror left to right, as in Minecraft. Hand recipes also work on larger grids.
 
 ## 6. Tools and weapons

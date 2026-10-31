@@ -31,7 +31,7 @@
       <button type="button" data-open="bag"><i class="ic ic-bag"></i>Bag</button>
       <button type="button" data-open="journal"><i class="ic ic-journal"></i>Journal</button>
       <button type="button" data-open="map"><i class="ic ic-map"></i>Map</button>
-      <button type="button" data-open="keys"><i class="ic ic-gear"></i>Controls</button>
+      <button type="button" data-open="graphics"><i class="ic ic-gear"></i>Settings</button>
       <button type="button" id="creative">Creative mode: off</button>
     </div>
     <p class="note">Click anywhere to resume</p>
@@ -61,13 +61,13 @@
   <div id="prompt"></div>
   <div id="minebar"><div class="track"><div id="minefill"></div></div><span id="minetext"></span></div>
   <button id="maptoggle" type="button" aria-label="Open world map">
-    <span class="minimap-face"><canvas id="minimap"></canvas><span class="minimap-north">N</span><kbd>M</kbd></span>
+    <span class="minimap-face"><canvas id="minimap"></canvas><span class="minimap-north">N</span><kbd id="keymap">M</kbd></span>
     <span id="mapplace"></span><small id="maprealm"></small>
   </button>
   <nav id="shortcuts" aria-label="Menus">
     <i id="dayicon" class="ic ic-sun" title="Time of day"></i>
-    <button type="button" data-open="bag" aria-label="Bag"><i class="ic ic-bag"></i><kbd>I</kbd></button>
-    <button type="button" data-open="journal" aria-label="Journal"><i class="ic ic-journal"></i><kbd>J</kbd></button>
+    <button type="button" data-open="bag" aria-label="Bag"><i class="ic ic-bag"></i><kbd id="keybag">I</kbd></button>
+    <button type="button" data-open="journal" aria-label="Journal"><i class="ic ic-journal"></i><kbd id="keyjournal">J</kbd></button>
   </nav>
   <aside id="story">
     <h3 id="wname">…</h3>
@@ -101,7 +101,7 @@
       <button type="button" data-page="bag" title="Bag (I)" aria-label="Bag"><i class="ic ic-bag"></i></button>
       <button type="button" data-page="journal" title="Journal (J)" aria-label="Journal"><i class="ic ic-journal"></i></button>
       <button type="button" data-page="map" title="Map (M)" aria-label="Map"><i class="ic ic-map"></i></button>
-      <button type="button" data-page="keys" title="Controls" aria-label="Controls"><i class="ic ic-gear"></i></button>
+      <button type="button" data-page="graphics" title="Settings (O)" aria-label="Settings"><i class="ic ic-gear"></i></button>
     </nav>
     <div class="spread">
       <section class="page left">

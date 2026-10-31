@@ -1,6 +1,10 @@
 // The hotbar and the bag: one compact slate panel in the middle of the screen, with the recipe book and the spells against its right edge.
-// The mouse works as Minecraft's does: click picks up and puts down, right click splits or drops one, shift-click sends a stack across, a double click
-// gathers, dragging a held stack spreads it, and keys 1 to 9 swap the slot under the mouse with the hotbar. A station swaps the crafting corner for its own panel.
+// The mouse works as Minecraft's does with the Mouse Tweaks mod, and everything happens on the press, not the release. A left press takes or lays down, a right
+// press splits or drops one, shift sends a stack across, a double click gathers, and keys 1 to 9 swap the slot under the mouse with the hotbar. A drag carries on
+// from the press: left from an empty slot shares the stack out as it goes, left from a stack collects more of that item, or sends it across with shift held,
+// shift alone sends across whatever it crosses, and right drops one on every slot it enters, as often as it enters. The wheel moves one item at a time: down out
+// of the stack under the mouse, up into it, and down on a crafting result makes one. A station swaps the crafting corner for its own panel.
+import { spellKey } from '../core/bindings.js';
 import { G, creative } from '../core/state.js';
 import { ITEMS } from '../core/content.js';
 import { emit, on, toast } from '../core/events.js';
@@ -16,9 +20,10 @@ import { definePage, openPage } from './panels.js';
 const $ = id => document.getElementById(id);
 const GROUPS = [['all', 'All', 'star'], ['tools', 'Tools', 'pick'], ['weapons', 'Arms', 'sword'], ['armor', 'Armour', 'plate'], ['blocks', 'Blocks', 'house'], ['materials', 'Goods', 'loot'], ['food', 'Food', 'heal'], ['potions', 'Potions', 'potion']];
 const STATION_NAMES = { hand: 'by hand', table: 'at a Crafting Table', anvil: 'at an Anvil', alchemy: 'at an Alchemy Table', furnace: 'in a Furnace', forge: 'at a Forge' };
-const SLOT_NAMES = { head: 'Head', body: 'Body', legs: 'Legs', feet: 'Feet', off: 'Off hand' };
-const NAME_SECONDS = 2000, DOUBLE_CLICK = 280;
-let open = false, station = null, gridKind = 'hand', grid = Array(4).fill(null), cursor = null, side = 'recipes', group = 'all', search = '', onlyReady = false, picked = null, spread = null, lastDown = null, hover = null, nameTimer = 0;
+const NAME_SECONDS = 2000, DOUBLE_CLICK = 280, WHEEL_NOTCH = 40;
+const POP = [{ transform: 'scale(1.2222)' }, { transform: 'scale(1)' }], POP_TIME = { duration: 100, easing: 'steps(2)' }; // 22 art pixels, then 20, then the 18 it rests at
+const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let open = false, station = null, gridKind = 'hand', grid = Array(4).fill(null), cursor = null, side = 'recipes', group = 'all', search = '', onlyReady = false, picked = null, drag = null, lastDown = null, hover = null, under = null, nameTimer = 0, wheelRest = 0, popping = false;
 
 // The switch on the pause card. The mode is saved with the hero, so it changes when the server answers.
 function showMode() { $('creative').textContent = `Creative mode: ${creative() ? 'on' : 'off'}`; }
@@ -27,20 +32,29 @@ $('creative').addEventListener('click', () => emit('creative:asked', !creative()
 export function showCreativeMode() { showMode(); }
 
 // ---------- a stack, drawn ----------
-function durBar(s) {
-  const most = ITEMS[s.id]?.dur;
-  if (!most || !s.dur || s.dur >= most) return '';
-  const share = s.dur / most;
-  return `<i class="dur"><i class="${share < 0.25 ? 'low' : ''}" style="width:${Math.round(share * 100)}%"></i></i>`;
+// The parts inside a slot stay put and only what differs is written, so a click decodes no image and lays nothing out again.
+const bit = (tag, cls = '', ...kids) => { const e = document.createElement(tag); e.className = cls; e.append(...kids); return e; };
+function holder(el, before = '') {
+  el.innerHTML = `${before}<img alt="" hidden><b></b><i class="dur" hidden><i></i></i>`;
+  return { el, img: el.querySelector('img'), num: el.querySelector('b'), dur: el.querySelector('.dur'), bar: el.querySelector('.dur i'), id: null, shown: '' };
 }
-const stackHTML = s => (s ? `<img src="${itemIcon(s.id)}" alt="">${s.n > 1 ? `<b>${s.n}</b>` : ''}${durBar(s)}` : '');
-const slotHTML = (c, i, s, cls = '', extra = '') => `<button type="button" class="slot ${cls}" data-c="${c}" data-i="${i}"${extra}>${stackHTML(s)}</button>`;
+function paint(h, s) {
+  const shown = s ? `${s.id} ${s.n} ${s.dur ?? ''}` : '';
+  if (shown === h.shown) return;
+  h.shown = shown;
+  if (h.id !== (s?.id ?? null)) { h.id = s?.id ?? null; h.img.hidden = !s; if (s) h.img.src = itemIcon(s.id); }
+  h.num.textContent = s?.n > 1 ? s.n : '';
+  const most = s && ITEMS[s.id].dur, share = most && s.dur && s.dur < most ? s.dur / most : 0;
+  h.dur.hidden = !share;
+  if (share) { h.bar.style.width = `${Math.round(share * 100)}%`; h.bar.classList.toggle('low', share < 0.25); }
+  if (s && popping && !STILL) h.img.animate(POP, POP_TIME);
+}
+const write = (el, html) => { if (el.written !== html) { el.written = html; el.innerHTML = html; } };
 
 // ---------- the hotbar ----------
 function hotbarStack(i) { return creative() ? (hotbar.creative[i] ? { id: hotbar.creative[i], n: 1 } : null) : bag()[i]; }
-function drawHotbar() {
-  $('hotbar').innerHTML = Array.from({ length: HOTBAR }, (_, i) => { const s = hotbarStack(i); return `<div class="slot${i === hotbar.slot ? ' sel' : ''}"><i class="num">${i + 1}</i>${stackHTML(s)}</div>`; }).join('');
-}
+const hud = Array.from({ length: HOTBAR }, (_, i) => { const h = holder(bit('div', 'slot'), `<i class="num">${i + 1}</i>`); $('hotbar').append(h.el); return h; });
+function drawHotbar() { hud.forEach((h, i) => { paint(h, hotbarStack(i)); h.el.classList.toggle('sel', i === hotbar.slot); }); }
 let lastHeld = null;
 function showHeldName() {
   const s = heldStack(), id = s?.id ?? null;
@@ -51,8 +65,8 @@ function showHeldName() {
   clearTimeout(nameTimer);
   nameTimer = setTimeout(() => $('blockname').classList.remove('on'), NAME_SECONDS);
 }
-on('hotbar:changed', () => { drawHotbar(); showHeldName(); if (open && !spread) drawBag(); });
-on('blocks:changed', () => { if (open && !spread) drawWork(); });
+on('hotbar:changed', () => { drawHotbar(); showHeldName(); if (open) refresh(); });
+on('blocks:changed', () => { if (open) refresh(); });
 
 // ---------- where things can sit ----------
 const fitsWorn = (slot, s) => { const it = ITEMS[s.id]; return slot === 'off' ? it.slot === 'off' || s.id === 'torch' || s.id === 'lantern' : it.slot === slot; };
@@ -63,16 +77,26 @@ const BOXES = {
   grid: { get: i => grid[i], set: (i, s) => { grid[i] = s; } },
   store: { get: i => station.data.slots[i], set: (i, s) => { station.data.slots[i] = s; }, takes: fitsStore },
 };
+const takes = (box, i, s) => !box.takes || box.takes(i, s);
 const stackable = s => !ITEMS[s.id].dur;
+const hasSpace = s => stackable(s) && s.n < ITEMS[s.id].stack;
 function merge(into, from) { const room = Math.min(from.n, ITEMS[into.id].stack - into.n); into.n += room; from.n -= room; return from.n; }
 
+// One of what is in the hand onto a slot, if it can go there.
+function dropOne(c, i) {
+  const box = BOXES[c], s = box.get(i);
+  if (!cursor || !takes(box, i, cursor) || (s && (s.id !== cursor.id || !hasSpace(s)))) return false;
+  if (s) s.n++; else box.set(i, { ...cursor, n: 1 });
+  if (--cursor.n <= 0) cursor = null;
+  return true;
+}
 // One press of a button on a slot.
 function press(c, i, right) {
   const box = BOXES[c], s = box.get(i);
-  if (cursor && box.takes && !box.takes(i, cursor)) return;
+  if (cursor && !takes(box, i, cursor)) return;
   if (right) {
-    if (!cursor && s) { const half = Math.ceil(s.n / 2); cursor = { ...s, n: half }; s.n -= half; if (!s.n) box.set(i, null); }
-    else if (cursor && (!s || (s.id === cursor.id && stackable(s) && s.n < ITEMS[s.id].stack))) { if (s) s.n++; else box.set(i, { ...cursor, n: 1 }); if (--cursor.n <= 0) cursor = null; }
+    if (cursor) dropOne(c, i);
+    else if (s) { const half = Math.ceil(s.n / 2); cursor = { ...s, n: half }; s.n -= half; if (!s.n) box.set(i, null); }
     return;
   }
   if (!cursor) { if (s) { cursor = s; box.set(i, null); } return; }
@@ -106,22 +130,58 @@ function quick(c, i) {
   const left = fillRange(copy, from, to);
   if (left) box.set(i, { ...copy, n: left });
 }
-function gather(id) {
-  if (!cursor || !stackable(cursor)) return;
-  for (let i = 0; i < BAG_SIZE; i++) { const s = bag()[i]; if (s?.id === id && !merge(cursor, s)) continue; if (s?.id === id && !s.n) bag()[i] = null; }
-  for (let i = 0; i < BAG_SIZE; i++) if (bag()[i] && !bag()[i].n) bag()[i] = null;
+// A slot's stack into the hand, as far as the hand has room.
+function collect(box, i) {
+  const s = box.get(i);
+  if (!cursor) { cursor = s; box.set(i, null); return; }
+  if (stackable(s)) { merge(cursor, s); if (!s.n) box.set(i, null); }
+}
+function gather() {
+  if (!stackable(cursor)) return false;
+  const before = cursor.n;
+  for (let i = 0; i < BAG_SIZE; i++) if (bag()[i]?.id === cursor.id) collect(BOXES.bag, i);
+  return cursor.n > before;
+}
+
+// ---------- what the wheel does ----------
+const places = (c, from, to) => Array.from({ length: to - from }, (_, k) => [c, from + k]);
+// The other inventory: the bag for a station's slots, a station for the bag, and with nothing open the hotbar and the rest of the bag face each other.
+function otherSide(c, i) {
+  if (c !== 'bag') return places('bag', 0, BAG_SIZE);
+  if (station?.data) return places('store', 0, station.data.slots.length);
+  if (station) return places('grid', 0, grid.length);
+  return i < HOTBAR ? places('bag', HOTBAR, BAG_SIZE) : places('bag', 0, HOTBAR);
+}
+function pushOne(c, i) {
+  const box = BOXES[c], s = box.get(i), there = otherSide(c, i).filter(([d, k]) => takes(BOXES[d], k, s));
+  const spot = there.find(([d, k]) => { const t = BOXES[d].get(k); return t?.id === s.id && hasSpace(t); }) ?? there.find(([d, k]) => !BOXES[d].get(k));
+  if (!spot) return;
+  const [d, k] = spot, t = BOXES[d].get(k);
+  if (t) t.n++; else BOXES[d].set(k, { ...s, n: 1 });
+  if (--s.n <= 0) box.set(i, null);
+}
+function pullOne(c, i) {
+  const box = BOXES[c], s = box.get(i);
+  if (!hasSpace(s) || !takes(box, i, s)) return;
+  const from = otherSide(c, i).reverse().find(([d, k]) => BOXES[d].get(k)?.id === s.id);
+  if (!from) return;
+  const [d, k] = from, t = BOXES[d].get(k);
+  s.n++;
+  if (--t.n <= 0) BOXES[d].set(k, null);
 }
 
 // ---------- what the grid makes ----------
 const result = () => (gridKind ? matchGrid(grid, gridKind) : null);
-function takeResult(shift) {
+const made = () => { const r = result(); return r ? { id: r.out, n: r.n, dur: r.dur } : null; };
+// Into the hand, or straight into the bag, once or for as long as the grid goes on making it.
+function takeResult(intoBag, many) {
   for (let r = result(); r; r = result()) {
     const out = { id: r.out, n: r.n, ...(ITEMS[r.out].dur ? { dur: r.dur ?? ITEMS[r.out].dur } : {}) };
-    if (shift) { if (!hasRoom(out.id, out.n)) return; addItem(out.id, out.n, out.dur); } else if (!cursor) cursor = out;
+    if (intoBag) { if (!hasRoom(out.id, out.n)) return; addItem(out.id, out.n, out.dur); } else if (!cursor) cursor = out;
     else if (cursor.id === out.id && stackable(out) && cursor.n + out.n <= ITEMS[out.id].stack) cursor.n += out.n;
     else return;
     useGrid(grid);
-    if (!shift) return;
+    if (!many) return;
   }
 }
 function clearWorkbench() {
@@ -130,40 +190,65 @@ function clearWorkbench() {
 }
 
 // ---------- the panel ----------
-const gridHTML = (size) => `<div class="craftgrid" style="--cols:${size}">${grid.map((s, i) => slotHTML('grid', i, s)).join('')}</div>`;
-const resultHTML = () => { const r = result(); return slotHTML('out', 0, r ? { id: r.out, n: r.n, dur: r.dur } : null, 'result'); };
-const ARROW = '<i class="craftarrow"></i>';
-function furnaceHTML() {
-  const parts = stationParts(station.kind), { slots, burn, burnt, cook } = station.data;
-  return `<div class="furnace"><div class="furnace-in"><div class="dockset">${parts.inputs.map(i => slotHTML('store', i, slots[i])).join('')}</div><i class="flame"><i id="burnbar" style="height:${burnt ? Math.round(100 * burn / burnt) : 0}%"></i></i>${slotHTML('store', parts.fuel, slots[parts.fuel])}</div>`
-    + `<i class="craftarrow"><i id="cookbar" style="width:${Math.min(100, Math.round(cook * 10))}%"></i></i>${slotHTML('store', parts.out, slots[parts.out], 'result')}</div>`;
+// Every slot is one element for as long as the page lives, and a change is a look at each of them. `work` is the corner a station changes, made anew when the bag opens.
+const fixed = [], work = [];
+function cell(list, c, i, read, cls = '') {
+  const el = bit('button', `slot ${cls}`);
+  el.type = 'button'; el.dataset.c = c; el.dataset.i = i;
+  list.push({ ...holder(el), read });
+  return el;
 }
-function workHTML() {
-  if (station?.kind === 'chest') return `<div class="chestgrid">${station.data.slots.map((s, i) => slotHTML('store', i, s)).join('')}</div>`;
-  if (station?.data) return furnaceHTML();
-  return `<div class="crafting">${gridHTML(GRIDS[gridKind].size)}${ARROW}${resultHTML()}</div>`;
+$('gear').append(...['head', 'body', 'legs', 'feet'].map(slot => cell(fixed, 'worn', slot, () => worn()[slot])));
+$('bagoff').append(cell(fixed, 'worn', 'off', () => worn().off));
+$('bagitems').append(...Array.from({ length: BAG_SIZE - HOTBAR }, (_, k) => cell(fixed, 'bag', k + HOTBAR, () => bag()[k + HOTBAR])));
+const dock = Array.from({ length: HOTBAR }, (_, i) => cell(fixed, 'bag', i, () => hotbarStack(i)));
+$('baghot').append(...dock);
+const carried = holder($('cursorstack').appendChild(bit('span', 'slotlike')));
+
+const storeCell = (i, cls) => cell(work, 'store', i, () => station.data.slots[i], cls);
+let burnBar = null, cookBar = null;
+function craftPanel() {
+  const slots = bit('div', 'craftgrid', ...grid.map((_, i) => cell(work, 'grid', i, () => grid[i])));
+  slots.style.cssText = `--cols:${GRIDS[gridKind].size}`;
+  return bit('div', 'crafting', slots, bit('i', 'craftarrow'), cell(work, 'out', 0, made, 'result'));
 }
-const SPELL_KEYS = ['Q', 'R'];
+function furnacePanel() {
+  const { inputs, fuel, out } = stationParts(station.kind), flame = bit('i', 'flame'), arrow = bit('i', 'craftarrow');
+  burnBar = flame.appendChild(bit('i'));
+  cookBar = arrow.appendChild(bit('i'));
+  return bit('div', 'furnace', bit('div', 'furnace-in', bit('div', 'dockset', ...inputs.map(i => storeCell(i))), flame, storeCell(fuel)), arrow, storeCell(out, 'result'));
+}
+function buildWork() {
+  const chest = station?.kind === 'chest', at = $('bagwork');
+  work.length = 0;
+  burnBar = cookBar = null;
+  at.innerHTML = '';
+  at.classList.toggle('chest', chest);
+  at.append(chest ? bit('div', 'chestgrid', ...station.data.slots.map((_, i) => storeCell(i))) : station?.data ? furnacePanel() : craftPanel());
+}
+function drawFlames() {
+  if (!burnBar) return;
+  const { burn, burnt, cook } = station.data;
+  burnBar.style.height = `${burnt ? Math.round(100 * burn / burnt) : 0}%`;
+  cookBar.style.width = `${Math.min(100, Math.round(cook * 10))}%`;
+}
 function spellsHTML() {
-  return `<div class="spellpair">${[0, 1].map(i => { const id = G.profile.spells?.[i], p = id ? power(id) : null; return `<div class="slot" data-spelled="${i}"><i class="num">${SPELL_KEYS[i]}</i>${p ? icon(p.icon) : ''}</div>`; }).join('')}</div>`;
+  return `<div class="spellpair">${[0, 1].map(i => { const id = G.profile.spells?.[i], p = id ? power(id) : null; return `<div class="slot" data-spelled="${i}"><i class="num">${spellKey(i)}</i>${p ? icon(p.icon) : ''}</div>`; }).join('')}</div>`;
 }
-function drawWork() {
-  $('bagwork').innerHTML = workHTML();
-  $('bagwork').classList.toggle('chest', station?.kind === 'chest');
-  $('bagspells').innerHTML = spellsHTML();
-  $('bagline').innerHTML = `${icon('coin')}${G.profile.gold} ${icon('heart')}${Math.ceil(player.hp)}/${maxHp()} ${icon('shield')}${armourPoints()}`;
+function drawStatus() {
+  write($('bagspells'), spellsHTML());
+  write($('bagline'), `${icon('coin')}${G.profile.gold} ${icon('heart')}${Math.ceil(player.hp)}/${maxHp()} ${icon('shield')}${armourPoints()}`);
 }
-function drawGrid() {
-  $('gear').innerHTML = ['head', 'body', 'legs', 'feet'].map(slot => slotHTML('worn', slot, worn()[slot], 'gearslot', ` data-slotname="${SLOT_NAMES[slot]}"`)).join('');
-  $('bagoff').innerHTML = slotHTML('worn', 'off', worn().off, 'gearslot', ` data-slotname="${SLOT_NAMES.off}"`);
-  $('bagitems').innerHTML = bag().slice(HOTBAR).map((s, i) => slotHTML('bag', i + HOTBAR, s)).join('');
-  $('baghot').innerHTML = Array.from({ length: HOTBAR }, (_, i) => slotHTML(creative() ? 'cbar' : 'bag', i, hotbarStack(i), i === hotbar.slot ? 'sel' : '')).join('');
+function paintSlots() {
+  for (const h of fixed) paint(h, h.read());
+  for (const h of work) paint(h, h.read());
+  dock.forEach((b, i) => { b.dataset.c = creative() ? 'cbar' : 'bag'; b.classList.toggle('sel', i === hotbar.slot); });
 }
-function drawCursor() {
-  const c = $('cursorstack');
-  c.innerHTML = cursor ? `<span class="slotlike">${stackHTML(cursor)}</span>` : '';
-}
-function drawBag() { drawGrid(); drawWork(); drawCursor(); drawSide(); }
+function drawCursor() { $('cursorstack').style.display = cursor ? 'block' : 'none'; paint(carried, cursor); }
+function refresh() { paintSlots(); drawCursor(); drawStatus(); pointAt(under); bookSoon(); }
+function drawBag() { buildWork(); paintSlots(); drawCursor(); drawStatus(); drawFlames(); drawSide(); }
+// The end of anything the hero's hand did: what changed gives a small jump, so the hand feels it land.
+function done() { popping = true; changed(); popping = false; }
 
 // ---------- the recipe book, and the spells ----------
 const usableHere = r => gridKind && GRIDS[gridKind].at.includes(r.at);
@@ -178,28 +263,46 @@ function detailHTML(r) {
   return `<div class="detail"><div class="what">${esc(ITEMS[r.out].name)}${r.n > 1 ? ` ×${r.n}` : ''}<small>Made ${STATION_NAMES[r.at]}</small></div><div class="needs">${parts}</div>${r.in ? '' : `<button type="button" class="gold" data-make ${can ? '' : 'disabled'}>Make</button>`}</div>`;
 }
 function bookHTML() {
-  const list = listed();
-  if (creative()) return '';
   return `<div class="booktools"><input id="booksearch" type="search" placeholder="Search" value="${esc(search)}" aria-label="Search recipes"><button type="button" class="slatebutton${onlyReady ? ' on' : ''}" data-only title="Only what I can make">${icon('quest')}</button></div>`
     + `<div class="booktabs">${GROUPS.map(([id, name, art]) => `<button type="button" class="${group === id ? 'on' : ''}" data-group="${id}" title="${name}">${icon(art)}</button>`).join('')}</div>`
-    + `<div class="booklist">${list.map(r => `<button type="button" class="slot${r === picked ? ' sel' : ''}${timesCanMake(r) > 0 ? '' : ' short'}" data-recipe="${esc(r.id)}"><img src="${itemIcon(r.out)}" alt="">${r.n > 1 ? `<b>${r.n}</b>` : ''}</button>`).join('') || '<p class="note">Nothing yet. Pick things up, and what they can make appears here.</p>'}</div>`
-    + `<div class="bookdetail">${detailHTML(picked)}</div>`;
+    + '<div class="booklist"></div><div class="bookdetail"></div>';
 }
 function paletteHTML() {
-  const q = search.trim().toLowerCase(), all = Object.entries(ITEMS).filter(([, it]) => !q || it.name.toLowerCase().includes(q));
-  return `<div class="booktools"><input id="booksearch" type="search" placeholder="Search every item" value="${esc(search)}" aria-label="Search items"></div><div class="booklist tall">${all.map(([id]) => `<button type="button" class="slot" data-give="${id}"><img src="${itemIcon(id)}" alt=""></button>`).join('')}</div>`;
+  return `<div class="booktools"><input id="booksearch" type="search" placeholder="Search every item" value="${esc(search)}" aria-label="Search items"></div><div class="booklist"></div>`;
 }
 function spellListHTML() {
   const list = castable().map(power);
-  return `<div class="spellrows">${list.map(p => `<div class="row"><span class="thumb">${icon(p.icon)}</span><span class="what">${esc(p.name)}<small>${p.mana} mana</small></span><span class="acts">${[0, 1].map(i => `<button type="button" class="slatebutton${G.profile.spells?.[i] === p.id ? ' on' : ''}" data-spell="${p.id}" data-to="${i}">${SPELL_KEYS[i]}</button>`).join('')}</span></div>`).join('') || '<p class="note">No spells yet. Buy a scroll from a merchant.</p>'}</div><p class="note">Two spells at a time, on Q and R.</p>`;
+  return `<div class="spellrows">${list.map(p => `<div class="row"><span class="thumb">${icon(p.icon)}</span><span class="what">${esc(p.name)}<small>${p.mana} mana</small></span><span class="acts">${[0, 1].map(i => `<button type="button" class="slatebutton${G.profile.spells?.[i] === p.id ? ' on' : ''}" data-spell="${p.id}" data-to="${i}">${spellKey(i)}</button>`).join('')}</span></div>`).join('') || '<p class="note">No spells yet. Buy a scroll from a merchant.</p>'}</div><p class="note">Two spells at a time, on Q and R.</p>`;
 }
+// The list is written again only when what it lists changes. Otherwise a click just shades what can no longer be made.
+let listBox = null, detailBox = null, listShown = null, bookDue = 0;
+function drawList() {
+  if (creative()) {
+    const q = search.trim().toLowerCase();
+    listBox.innerHTML = Object.entries(ITEMS).filter(([, it]) => !q || it.name.toLowerCase().includes(q)).map(([id]) => `<button type="button" class="slot" data-give="${id}"><img src="${itemIcon(id)}" alt=""></button>`).join('');
+    return;
+  }
+  const list = listed(), shown = list.map(r => r.id).join();
+  if (shown !== listShown) {
+    listShown = shown;
+    listBox.innerHTML = list.map(r => `<button type="button" class="slot" data-recipe="${esc(r.id)}"><img src="${itemIcon(r.out)}" alt="">${r.n > 1 ? `<b>${r.n}</b>` : ''}</button>`).join('') || '<p class="note">Nothing yet. Pick things up, and what they can make appears here.</p>';
+  }
+  list.forEach((r, k) => { const b = listBox.children[k]; b?.classList.toggle('short', timesCanMake(r) <= 0); b?.classList.toggle('sel', r === picked); });
+}
+function drawDetail() { if (detailBox) write(detailBox, detailHTML(picked)); }
 function drawSide() {
-  $('sidetabs').innerHTML = `<button type="button" class="${side === 'recipes' ? 'on' : ''}" data-side="recipes">${creative() ? 'Items' : 'Recipes'}</button><button type="button" class="${side === 'spells' ? 'on' : ''}" data-side="spells">Spells</button>`;
-  const body = $('sidebody'), keep = document.activeElement?.id === 'booksearch', scroll = body.querySelector('.booklist')?.scrollTop ?? 0;
-  body.innerHTML = side === 'spells' ? spellListHTML() : creative() ? paletteHTML() : bookHTML();
-  const list = body.querySelector('.booklist');
-  if (list) list.scrollTop = scroll;
-  if (keep) { const f = $('booksearch'); f?.focus(); f?.setSelectionRange(search.length, search.length); }
+  const body = $('sidebody'), book = side === 'recipes';
+  $('sidetabs').innerHTML = `<button type="button" class="${book ? 'on' : ''}" data-side="recipes">${creative() ? 'Items' : 'Recipes'}</button><button type="button" class="${book ? '' : 'on'}" data-side="spells">Spells</button>`;
+  body.innerHTML = !book ? spellListHTML() : creative() ? paletteHTML() : bookHTML();
+  listBox = book ? body.querySelector('.booklist') : null;
+  detailBox = book && !creative() ? body.querySelector('.bookdetail') : null;
+  listShown = null;
+  if (listBox) drawList();
+  drawDetail();
+}
+function bookSoon() {
+  if (bookDue || !detailBox) return;
+  bookDue = requestAnimationFrame(() => { bookDue = 0; if (open && detailBox) { drawList(); drawDetail(); } });
 }
 
 // ---------- the tooltip ----------
@@ -218,12 +321,13 @@ function tipLines(it, s) {
   if (it.value) out.push(`Sells for ${it.value}`);
   return out;
 }
+let tipShown = '';
 function showTip(s) {
-  const t = $('bagtip');
-  if (!s) { t.style.display = 'none'; return; }
-  const it = ITEMS[s.id];
-  t.innerHTML = `<b>${esc(it.name)}</b>${tipLines(it, s).map(l => `<small>${esc(l)}</small>`).join('')}`;
-  t.style.display = 'block';
+  const t = $('bagtip'), shown = s ? `${s.id} ${s.dur ?? ''}` : '';
+  if (shown === tipShown) return;
+  tipShown = shown;
+  t.style.display = s ? 'block' : 'none';
+  if (s) { const it = ITEMS[s.id]; t.innerHTML = `<b>${esc(it.name)}</b>${tipLines(it, s).map(l => `<small>${esc(l)}</small>`).join('')}`; }
 }
 function moveFloaters(e) {
   $('cursorstack').style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
@@ -233,44 +337,81 @@ function moveFloaters(e) {
 // ---------- the mouse ----------
 const slotOf = e => e.target.closest?.('#bag [data-c]');
 const indexOf = b => (b.dataset.c === 'worn' ? b.dataset.i : Number(b.dataset.i));
+// A stack shared out over the slots a left drag has crossed, worked out again each time it reaches another. Everything is always somewhere, so letting go has
+// nothing left to do. A cell's `put` is this drag's share of it, which keeps whatever else landed there meanwhile.
+function shareOut() {
+  const { stack, cells } = drag, each = Math.max(1, Math.floor(stack.n / cells.length));
+  let left = stack.n;
+  for (const cell of cells) {
+    const box = BOXES[cell.c], now = box.get(cell.i);
+    if (now && now.id !== stack.id) continue;
+    const had = Math.max(0, (now?.n ?? 0) - cell.put), part = Math.min(each, left, ITEMS[stack.id].stack - had);
+    box.set(cell.i, had + part ? { ...stack, n: had + part } : null);
+    cell.put = part;
+    left -= part;
+  }
+  cursor = left ? { ...stack, n: left } : null;
+}
+function canShare(c, i) {
+  const box = BOXES[c], s = box.get(i), { stack, cells } = drag;
+  return cells.length < stack.n && takes(box, i, stack) && (!s || (s.id === stack.id && hasSpace(s))) && !cells.some(x => x.c === c && x.i === i);
+}
 function downOnSlot(e, b) {
   const c = b.dataset.c, i = indexOf(b), right = e.button === 2;
-  if (c === 'out') { takeResult(e.shiftKey); changed(); drawBag(); return; }
+  drag = null;
+  if (document.activeElement?.id === 'booksearch') document.activeElement.blur();
+  if (c === 'out') { takeResult(e.shiftKey, e.shiftKey); done(); return; }
   if (c === 'cbar') { selectSlot(i); return; }
-  const box = BOXES[c], s = box.get(i), now = performance.now(), again = lastDown && lastDown.c === c && lastDown.i === i && now - lastDown.at < DOUBLE_CLICK;
-  lastDown = { c, i, at: now };
-  if (e.shiftKey) { quick(c, i); changed(); drawBag(); return; }
-  if (again && cursor && !right) { gather(cursor.id); changed(); drawBag(); return; }
-  // A held stack is laid down when the button lifts, because the mouse may be about to drag it across several slots.
-  if (cursor && (!s || s.id === cursor.id)) { spread = { right, cells: [[c, i]] }; return; }
-  press(c, i, right);
-  changed(); drawBag();
-}
-function overSlot(b) {
-  if (!spread || !cursor) return;
-  const c = b.dataset.c, i = indexOf(b), box = BOXES[c];
-  if (!box || (box.takes && !box.takes(i, cursor)) || spread.cells.some(([a, n]) => a === c && n === i)) return;
-  const s = box.get(i);
-  if (!s || (s.id === cursor.id && stackable(s))) spread.cells.push([c, i]);
-}
-function finishSpread() {
-  const { right, cells } = spread;
-  spread = null;
-  if (cells.length === 1) { press(cells[0][0], cells[0][1], right); }
-  else if (cursor) {
-    const each = right ? 1 : Math.max(1, Math.floor(cursor.n / cells.length));
-    for (const [c, i] of cells) {
-      if (!cursor) break;
-      const box = BOXES[c], s = box.get(i), part = Math.min(each, cursor.n);
-      if (s) { const room = Math.min(part, ITEMS[s.id].stack - s.n); s.n += room; cursor.n -= room; } else { box.set(i, { ...cursor, n: part }); cursor.n -= part; }
-      if (cursor.n <= 0) cursor = null;
+  const box = BOXES[c], s = box.get(i), now = performance.now(), again = !right && lastDown?.c === c && lastDown.i === i && now - lastDown.at < DOUBLE_CLICK, id = cursor?.id;
+  lastDown = again ? null : { c, i, at: now };
+  if (e.shiftKey) {
+    if (s && (!id || s.id === id)) quick(c, i);
+    drag = { mode: 'send', id, last: b, crossed: new Set([b]) };
+  } else if (right) {
+    press(c, i, true);
+    if (cursor) drag = { mode: 'one', last: b };
+  } else if (!(again && cursor && gather())) {
+    if (cursor && !s && takes(box, i, cursor)) {
+      drag = { mode: 'share', stack: cursor, cells: [{ c, i, put: 0 }], last: b };
+      shareOut();
+    } else {
+      press(c, i, false);
+      if (cursor || id) drag = { mode: 'collect', id: cursor?.id ?? id, last: b, crossed: new Set([b]) };
     }
   }
-  changed(); drawBag();
+  done();
+}
+function overSlot(b, e) {
+  if (b === drag.last) return;
+  drag.last = b;
+  const c = b.dataset.c, i = indexOf(b), box = BOXES[c], s = box?.get(i);
+  if (!box) return;
+  if (drag.mode === 'share') { if (canShare(c, i)) { drag.cells.push({ c, i, put: 0 }); shareOut(); done(); } return; }
+  if (drag.mode === 'one') { if (dropOne(c, i)) done(); return; }
+  if (!s || drag.crossed.has(b) || (drag.id && s.id !== drag.id)) return;
+  drag.crossed.add(b);
+  if (e.shiftKey) quick(c, i);
+  else if (drag.mode === 'collect') collect(box, i);
+  done();
+}
+function turnWheel(e) {
+  const b = slotOf(e);
+  if (!b || cursor) return;
+  const c = b.dataset.c, i = indexOf(b);
+  if (c === 'out' ? !result() : !BOXES[c]?.get(i)) return;
+  e.preventDefault();
+  wheelRest += e.deltaMode ? e.deltaY * WHEEL_NOTCH : e.deltaY; // a trackpad sends many small turns
+  if (Math.abs(wheelRest) < WHEEL_NOTCH) return;
+  const down = wheelRest > 0;
+  wheelRest = 0;
+  if (c === 'out') { if (down) takeResult(true, false); } else if (down) pushOne(c, i); else pullOne(c, i);
+  done();
 }
 function pointAt(b) {
-  hover = b && b.dataset.c !== 'out' && b.dataset.c !== 'cbar' ? { c: b.dataset.c, i: indexOf(b) } : null;
-  const stack = !b ? null : b.dataset.c === 'out' ? (() => { const r = result(); return r ? { id: r.out, n: r.n, dur: r.dur } : null; })() : b.dataset.c === 'cbar' ? hotbarStack(Number(b.dataset.i)) : BOXES[b.dataset.c].get(indexOf(b));
+  under = b;
+  const c = b?.dataset.c;
+  hover = BOXES[c] ? { c, i: indexOf(b) } : null;
+  const stack = !b ? null : c === 'out' ? made() : c === 'cbar' ? hotbarStack(Number(b.dataset.i)) : BOXES[c].get(indexOf(b));
   showTip(cursor ? null : stack);
 }
 const recipeById = id => recipesAt('all').find(r => r.id === id);
@@ -286,37 +427,33 @@ function clickSide(e) {
     if (slots[1 - to] === id) slots[1 - to] = slots[to];
     slots[to] = id;
     emit('blocks:changed'); emit('spells:changed');
-    drawBag();
+    drawSide();
   }
   if (rec) {
     picked = recipeById(rec.dataset.recipe);
-    if (e.shiftKey && usableHere(picked)) { const made = craftFromBag(picked, timesCanMake(picked)); if (made) changed(); }
-    else if (usableHere(picked)) { clearWorkbench(); layOnGrid(picked, grid, gridKind); changed(); }
-    drawBag();
+    if (e.shiftKey && usableHere(picked)) { if (craftFromBag(picked, timesCanMake(picked))) done(); }
+    else if (usableHere(picked)) { clearWorkbench(); layOnGrid(picked, grid, gridKind); done(); }
+    drawList(); drawDetail();
   }
-  if (make && picked) { if (craftFromBag(picked, 1)) changed(); drawBag(); }
+  if (make && picked && craftFromBag(picked, 1)) done();
 }
-$('bag').addEventListener('mousedown', e => { const b = slotOf(e); if (b) { e.preventDefault(); downOnSlot(e, b); } });
-$('bag').addEventListener('mouseover', e => { const b = slotOf(e); if (b) overSlot(b); pointAt(b); });
-$('bag').addEventListener('mouseleave', () => pointAt(null));
-$('bagsort').addEventListener('click', () => { sortBag(); drawBag(); });
+$('bag').addEventListener('mousedown', e => { const b = slotOf(e); if (b) { e.preventDefault(); moveFloaters(e); downOnSlot(e, b); } });
+$('bag').addEventListener('mouseover', e => { const b = slotOf(e); if (drag) { if (b) overSlot(b, e); else drag.last = null; } pointAt(b); });
+$('bag').addEventListener('mouseleave', () => { if (drag) drag.last = null; pointAt(null); });
+$('bag').addEventListener('wheel', turnWheel, { passive: false });
+$('bagsort').addEventListener('click', () => sortBag());
 $('bagside').addEventListener('click', clickSide);
-$('bagside').addEventListener('input', e => { if (e.target.id === 'booksearch') { search = e.target.value; drawSide(); } });
-addEventListener('mouseup', () => { if (spread) finishSpread(); });
+$('bagside').addEventListener('input', e => { if (e.target.id === 'booksearch') { search = e.target.value; drawList(); } });
+addEventListener('mouseup', () => { drag = null; });
 addEventListener('mousemove', e => { if (open) moveFloaters(e); });
 addEventListener('keydown', e => {
   if (!open || !hover || !/^Digit[1-9]$/.test(e.code) || e.target.tagName === 'INPUT') return;
   const n = Number(e.code[5]) - 1, box = BOXES[hover.c], s = box.get(hover.i), there = bag()[n];
-  if (box.takes && there && !box.takes(hover.i, there)) return;
+  if (there && !takes(box, hover.i, there)) return;
   bag()[n] = s; box.set(hover.i, there);
-  changed(); drawBag();
+  done();
 });
-on('station:changed', () => {
-  if (!open || !station?.data || station.kind === 'chest') return;
-  const { burn, burnt, cook } = station.data, a = $('burnbar'), b = $('cookbar');
-  if (a) a.style.height = `${burnt ? Math.round(100 * burn / burnt) : 0}%`;
-  if (b) b.style.width = `${Math.min(100, Math.round(cook * 10))}%`;
-});
+on('station:changed', () => { if (open) drawFlames(); });
 on('station:opened', ({ kind, x, y, z }) => { station = { kind, data: kind in GRIDS ? null : stationAt(x, y, z, kind) }; openPage('bag'); });
 let newRecipes = 0;
 on('item:seen', () => { if (!G.world || newRecipes) return; newRecipes = setTimeout(() => { newRecipes = 0; toast('📜 Your recipe book has grown.', 3); }, 1200); });
@@ -334,12 +471,13 @@ definePage('bag', {
   },
   leave() {
     open = false;
+    drag = null;
     clearWorkbench();
     station = null;
     gridKind = 'hand';
     grid = [];
     drawCursor();
-    showTip(null);
+    pointAt(null);
     hidePortrait();
     changed();
   },

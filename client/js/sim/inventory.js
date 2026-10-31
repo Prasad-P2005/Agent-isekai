@@ -19,8 +19,9 @@ export const worn = () => (G.profile.worn ??= Object.fromEntries(WORN_SLOTS.map(
 const seen = () => (G.profile.seen ??= []);
 const makeStack = (id, n, dur) => ({ id, n, ...(ITEMS[id]?.dur ? { dur: dur ?? ITEMS[id].dur } : {}) });
 
-export function changed() { emit('hotbar:changed'); emit('blocks:changed'); }
 function notice(id) { if (!seen().includes(id)) { seen().push(id); emit('item:seen', id); } }
+// Everything that reaches the bag passes here, whether it was picked up, made, or carried out of a chest in the hand.
+export function changed() { for (const s of bag()) if (s) notice(s.id); emit('hotbar:changed'); emit('blocks:changed'); }
 
 // ---------- how much ----------
 export const countItem = id => bag().reduce((sum, s) => sum + (s?.id === id ? s.n : 0), 0);

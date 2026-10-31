@@ -1,5 +1,6 @@
 // The world map: a page of the book that fills the window. The terrain is surveyed once, a chunk at a time, with the
 // towns drawn onto it from their layouts. The canvas holds that sheet; names and sprites sit over it as elements.
+import { held } from '../core/bindings.js';
 import { WORLD } from '../core/content.js';
 import { G } from '../core/state.js';
 import { questMarks } from '../sim/marks.js';
@@ -203,7 +204,7 @@ $('mapquests').addEventListener('click', e => { const b = e.target.closest('butt
 $('maptoggle').addEventListener('click', () => togglePage('map'));
 
 function panWithKeys(dt) {
-  const k = G.keys, dx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0), dz = (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0);
+  const dx = (held('right') ? 1 : 0) - (held('left') ? 1 : 0), dz = (held('back') ? 1 : 0) - (held('forward') ? 1 : 0);
   if (dx || dz) moveTo(view.x + dx * PAN_SPEED * dt / view.zoom, view.z + dz * PAN_SPEED * dt / view.zoom);
 }
 export function updateWorldMap(dt) {

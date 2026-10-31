@@ -9,8 +9,8 @@ import { deckFor, lampsIn, layRoads, roadAt, roadsIn } from './roads.js';
 import { crystals, demonCastle, hoard, magmaSpike, palace, raiseSight, reef, ruins, spire, hint } from './structures.js';
 import { clearOfBuildings, townChunk } from './towns.js';
 
-export { B, CS, H, LAND, REALM, SEA, TOWNS, biomeAt, chunkKey, climateAt, columnsOf, heightAt, inCity, inTown, lairAt, landName, landOf, nearLair, onCrown, settlement, settlements } from './land.js';
-export { hintQueue } from './structures.js';
+export { B, CS, H, LAND, REALM, SEA, TOWNS, biomeAt, chunkKey, climateAt, columnsOf, heightAt, inCity, inTown, keepColumns, lairAt, landName, landOf, nearLair, onCrown, settlement, settlements } from './land.js';
+export { hint, hintQueue } from './structures.js';
 
 const {
   Air, Bedrock, Stone, Dirt, Sand, Sandstone, Gravel, Grass, FaeGrass, SavannaGrass, Moss, Snow, SnowLayer, Water, Magma, Blackstone, Basalt, AshenGround, RedClay, Terracotta, DarkTerracotta, Obsidian, BoneBlock,

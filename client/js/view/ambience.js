@@ -1,11 +1,12 @@
 // The air of each realm: fireflies in the elven dusk, embers and ash over the Wastes, snow on the Peaks, dust on the savanna, bubbles
 // underwater. One draw call of at most 72 points, which is few on purpose: the player sees this all the time. Indoors it fades away.
 import * as THREE from 'three';
+import { settings } from '../core/settings.js';
 import { solid } from '../sim/blocks.js';
 import { getBlock } from '../sim/chunks.js';
 import { player } from '../sim/player.js';
 import { B, climateAt } from '../sim/terrain.js';
-import { camera, scene, stillCamera } from './scene.js';
+import { camera, late, scene, stillCamera } from './scene.js';
 import { sunHeight } from './sky.js';
 
 const COUNT = 72, BOX = 15, ROOF_CHECK = 8, ROOF_EVERY = 0.4, FADE = 2.5;
@@ -35,7 +36,7 @@ const position = new Float32Array(COUNT * 3), colour = new Float32Array(COUNT * 
 const geometry = new THREE.BufferGeometry();
 geometry.setAttribute('position', new THREE.BufferAttribute(position, 3).setUsage(THREE.DynamicDrawUsage));
 geometry.setAttribute('color', new THREE.BufferAttribute(colour, 4).setUsage(THREE.DynamicDrawUsage));
-const points = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, depthWrite: false, fog: false, toneMapped: false }));
+const points = late(new THREE.Points(geometry, new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, depthWrite: false, fog: false, toneMapped: false })));
 points.frustumCulled = false;
 scene.add(points);
 const tint = new THREE.Color();
@@ -43,7 +44,7 @@ for (let i = 0; i < COUNT; i++) motes.push({ x: 0, y: 0, z: 0, seed: Math.random
 
 function settle(m, at, style, anywhere) { // a mote joins at the edge of the box it left, or anywhere when the air changes
   m.style = style;
-  m.on = !!style && Math.random() < style.share;
+  m.on = !!style && Math.random() < style.share * (settings.particles > 1 ? 1 : 0.4);
   m.x = at.x + (Math.random() - 0.5) * 2 * BOX; m.z = at.z + (Math.random() - 0.5) * 2 * BOX;
   m.y = at.y + (anywhere || !style?.fall ? (Math.random() - 0.5) * 2 * BOX : style.fall > 0 ? BOX : -BOX);
   if (m.on) tint.set(style.colours[Math.floor(Math.random() * style.colours.length)]);
@@ -55,7 +56,8 @@ function underRoof(at) {
   return false;
 }
 export function updateAmbience(dt, under) {
-  if (stillCamera.matches) { points.visible = false; return; }
+  points.visible = !stillCamera.matches && settings.particles > 0;
+  if (!points.visible) return;
   const at = camera.position;
   clock += dt;
   roofT -= dt; restyle -= dt;

@@ -1,4 +1,5 @@
 // The heads-up display: the dock, toasts, the quest note and the land banner.
+import { keyOf, spellKey } from '../core/bindings.js';
 import { G, creative, isPaused } from '../core/state.js';
 import { ABILITIES, SERVICES } from '../core/content.js';
 import { on } from '../core/events.js';
@@ -7,6 +8,9 @@ import { miningBar } from '../sim/mining.js';
 import { nearestTalker } from '../sim/people.js';
 import { maxHp, maxMana, player } from '../sim/player.js';
 import { REALM, landName } from '../sim/terrain.js';
+import { drawn } from '../view/chunkmesh.js';
+import { shadersActive } from '../view/pipeline.js';
+import { renderer, scaleNow } from '../view/scene.js';
 import { isUnderwater, sunHeight } from '../view/world.js';
 import { esc, icon, power, rich } from './art.js';
 
@@ -53,21 +57,22 @@ function write(id, prop, value) {
 }
 let debugOn = false, frames = 0, fps = 0, fpsT = 0, debugT = 0;
 export function toggleDebug() { debugOn = !debugOn; $('hud').style.display = debugOn ? 'block' : 'none'; }
+export function toggleHud() { $('hudroot').classList.toggle('hidden'); }
 function updateDebug(dt) {
   frames++; fpsT += dt; if (fpsT >= 1) { fps = frames; frames = 0; fpsT = 0; }
   debugT -= dt;
   if (debugT > 0 || !debugOn) return;
   debugT = 0.25;
   const p = player.pos;
-  $('hud').textContent = `XYZ ${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)}\n${fps} fps, ${ents.length} beings`;
+  const { calls, triangles } = renderer.info.render;
+  $('hud').textContent = `XYZ ${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)}\n${fps} fps, ${ents.length} beings\n${drawn.chunks} of ${drawn.loaded} chunks drawn, ${calls} calls, ${Math.round(triangles / 1000)}k triangles\nShaders ${shadersActive() ? 'on' : 'off'}, resolution ${Math.round(scaleNow() * 100)}%`;
 }
 const spellOn = p => p.id === 'mana_ward' && player.wardT > 0;
-const SPELL_KEYS = ['Q', 'R'];
 function spellSlots(P) {
   const free = creative();
   return (P.spells ?? ['', '']).map((id, i) => {
     const p = id ? power(id) : null;
-    return `<div class="slot${p && spellOn(p) ? ' sel' : ''}${p && !free && player.mana < p.mana ? ' empty' : ''}" title="${esc(p?.name ?? 'No spell')}"><i class="num">${SPELL_KEYS[i]}</i>${p ? icon(p.icon) : ''}</div>`;
+    return `<div class="slot${p && spellOn(p) ? ' sel' : ''}${p && !free && player.mana < p.mana ? ' empty' : ''}" title="${esc(p?.name ?? 'No spell')}"><i class="num">${spellKey(i)}</i>${p ? icon(p.icon) : ''}</div>`;
   }).join('');
 }
 // The E prompt: what you can do with whoever is in reach, shown before you have to guess.
@@ -79,7 +84,7 @@ function updatePrompt(dt) {
   const npc = isPaused() ? null : nearestTalker(), service = npc?.res?.service ?? npc?.service;
   const free = npc && !npc.talking && !(npc.angryT > 0);
   const verb = npc?.def.stone ? 'Read' : service && !SERVICES[service]?.talk_only ? 'Trade with' : 'Talk to';
-  write('prompt', 'innerHTML', free ? `<kbd>E</kbd> ${verb} ${esc(npc.name)}` : '');
+  write('prompt', 'innerHTML', free ? `<kbd>${keyOf('talk')}</kbd> ${verb} ${esc(npc.name)}` : '');
 }
 let shown = false;
 export function updateHUD(dt) {
@@ -89,7 +94,7 @@ export function updateHUD(dt) {
   if (realmT > 0) { realmT -= dt; if (realmT <= 0) $('realm').style.opacity = 0; }
   updateDebug(dt);
   updatePrompt(dt);
-  write('water', 'display', isUnderwater() ? 'block' : 'none');
+  write('water', 'display', isUnderwater() && !shadersActive() ? 'block' : 'none');
   write('minebar', 'display', miningBar.shown && !isPaused() ? 'block' : 'none');
   if (miningBar.shown) { $('minefill').style.width = miningBar.progress * 100 + '%'; write('minetext', 'textContent', miningBar.text); }
   write('dayicon', 'className', `ic ic-${sunHeight() < NIGHT_SUN ? 'moon' : 'sun'}`);
@@ -103,6 +108,15 @@ export function updateHUD(dt) {
   write('guildq', 'innerHTML', (q ? `${icon('quest')}${esc(q.title)}: ${q.progress}/${q.count}` : '') + (f ? `${q ? '<br>' : ''}${icon('scroll')}${esc(f.summary)}${f.kind === 'hunt' ? `: ${f.progress}/${f.count}` : ''}` : ''));
   write('status', 'innerHTML', (creative() ? `<span>${icon('sparkle')}Creative</span>` : '') + (player.wardT > 0 ? `<span>${icon('ward')}Ward ${Math.ceil(player.wardT)}s</span>` : '') + (player.wanted > 0 ? `<span>${icon('warn')}Wanted ${Math.ceil(player.wanted)}s</span>` : '') + (P.bounty > 0 ? `<span>${icon('coin')}Bounty ${P.bounty}</span>` : ''));
 }
+
+// ---------- the keys shown on the screen ----------
+function showKeys() {
+  $('keymap').textContent = keyOf('map');
+  $('keybag').textContent = keyOf('bag');
+  $('keyjournal').textContent = keyOf('journal');
+}
+showKeys();
+on('bindings:changed', showKeys);
 
 // ---------- the title card that opens an act ----------
 on('act:opened', ({ title, subtitle }) => {
@@ -123,6 +137,6 @@ export function renderStory(feed) {
   G.objective = f.objective; showObjective(f.objective);
   if (f.oaths) G.oaths = f.oaths;
   if (f.marks) G.marks = f.marks;
-  write('lawline', 'innerHTML', `${icon('scales')}${f.law_texts.length} laws in force <kbd>L</kbd>`);
+  write('lawline', 'innerHTML', `${icon('scales')}${f.law_texts.length} laws in force <kbd>${keyOf('laws')}</kbd>`);
 }
 export const storyFeed = () => lastFeed;

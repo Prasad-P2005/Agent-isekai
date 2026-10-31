@@ -79,7 +79,16 @@ input::placeholder { color: #8f5f47; opacity: 1; }
 input[type="range"] { width: 100%; height: calc(var(--u) * 12); padding: 0; appearance: none; -webkit-appearance: none; border: calc(var(--u) * 3) solid transparent; border-image: url(../img/ui/bar.png) 3 fill; cursor: pointer; }
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: calc(var(--u) * 6); height: calc(var(--u) * 10); margin-top: calc(var(--u) * -2); background: var(--gold); border: var(--u) solid var(--stone-ink); }
 input[type="range"]::-moz-range-thumb { width: calc(var(--u) * 4); height: calc(var(--u) * 8); background: var(--gold); border: var(--u) solid var(--stone-ink); border-radius: 0; }
-.speed { display: block; }
+.subtabs { display: flex; gap: var(--gap); }
+.subtabs button { flex: 1; }
+.choices { display: flex; flex-wrap: wrap; gap: var(--gap); grid-column: 1 / -1; }
+.choices button { flex: 1 1 auto; min-width: calc(var(--u) * 24); }
+.option { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--u) var(--gap); padding: var(--gap) 0; border-bottom: var(--u) solid var(--paper-lo); }
+.option small { display: block; color: var(--ink-soft); }
+.option input { grid-column: 1 / -1; }
+.optvalue { color: var(--accent); }
+.keyrow { display: flex; align-items: center; justify-content: space-between; gap: var(--gap); width: 100%; margin-bottom: var(--u); text-align: left; }
+.keyrow.waiting kbd { background: var(--gold); }
 
 /* Scrollbars are part of the page: a track cut into the paper and a leather thumb. */
 .pagebody, #hlog, #chatlog { scrollbar-gutter: stable; }
@@ -190,7 +199,8 @@ button.slot:hover:not(:disabled), .slot[data-name]:hover { filter: brightness(1.
 /* ---------- the HUD ---------- */
 #hudroot { display: none; }
 #hudroot.on { display: block; }
-#water { position: fixed; inset: 0; z-index: 4; display: none; background: rgba(20, 70, 160, .35); pointer-events: none; }
+#water { position: fixed; inset: 0; z-index: 4; display: none; background: rgba(24, 96, 150, .14); pointer-events: none; }
+#hudroot.hidden { visibility: hidden; }
 #hurt { position: fixed; inset: 0; z-index: 4; background: url(../img/ui/hurt.png) 0 0 / 100% 100%; image-rendering: pixelated; opacity: 0; pointer-events: none; transition: opacity .3s; }
 #cross { position: fixed; left: 50%; top: 50%; z-index: 5; width: calc(var(--u) * 9); height: calc(var(--u) * 9); margin: calc(var(--u) * -4.5) 0 0 calc(var(--u) * -4.5); pointer-events: none; opacity: .8; }
 #cross::before, #cross::after { content: ""; position: absolute; background: #fff; mix-blend-mode: difference; }
@@ -391,7 +401,10 @@ button.slatebutton.on { color: var(--white); filter: brightness(.82); }
 .slot .dur i.low { background: #d8344a; }
 .slot.result { filter: brightness(1.08); }
 .slot.short img { opacity: .4; }
-#bagside { min-height: 0; color: var(--stone-ink); }
+#bag .slot[data-c] > * { pointer-events: none; } /* a drag should see slots, not what is in them */
+#bag .slot[data-c]:hover { filter: none; }
+#bag .slot[data-c]:hover::after { content: ""; position: absolute; inset: calc(var(--u) * 3); background: rgba(255, 255, 255, .28); }
+#bagside { contain: size; min-height: 0; color: var(--stone-ink); } /* its height is the panel's, however long the list inside it */
 #sidetabs { display: flex; gap: var(--u); }
 #sidetabs button { flex: 1; min-height: 0; padding: 0; color: var(--stone-ink); border-width: var(--gap); border-image: url(../img/ui/btn-slate.png) 5 fill; }
 #sidetabs button.on { color: var(--white); filter: brightness(.82); }
@@ -402,12 +415,11 @@ button.slatebutton.on { color: var(--white); filter: brightness(.82); }
 .booktabs button { min-height: 0; padding: 0; border: 0; border-image: none; opacity: .6; }
 .booktabs button.on { opacity: 1; background: var(--stone-dark); }
 .booktabs .ic { margin: 0; }
-.booklist { flex: 1; min-height: calc(var(--slot) * 3); overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, calc(var(--u) * 20)); grid-auto-rows: calc(var(--u) * 20); gap: var(--u); align-content: start; scrollbar-gutter: stable; }
+.booklist { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, calc(var(--u) * 20)); grid-auto-rows: calc(var(--u) * 20); gap: var(--u); align-content: start; scrollbar-gutter: stable; }
 .booklist .slot { width: 100%; height: 100%; }
 .booklist .slot img { width: calc(var(--u) * 16); height: calc(var(--u) * 16); }
-.booklist.tall { min-height: calc(var(--slot) * 7); }
 .booklist .note { grid-column: 1 / -1; }
-.bookdetail { min-height: calc(var(--u) * 44); }
+.bookdetail { flex: none; min-height: calc(var(--u) * 44); }
 .detail { display: flex; flex-direction: column; gap: var(--u); }
 .detail small { display: block; color: var(--stone-dark); }
 .needs { display: flex; flex-wrap: wrap; gap: var(--gap); }
@@ -416,11 +428,11 @@ button.slatebutton.on { color: var(--white); filter: brightness(.82); }
 .need b { font-weight: 400; }
 .need.short b { color: #a8203a; }
 #bagside .note { color: var(--stone-dark); }
-.spellrows { flex: 1; overflow-y: auto; }
+.spellrows { flex: 1; min-height: 0; overflow-y: auto; }
 .spellrows .row { border-bottom-color: var(--stone-dark); }
 .spellrows small { color: var(--stone-dark); }
 .spellrows .thumb { background-image: url(../img/ui/slot.png); }
-#cursorstack { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; }
+#cursorstack { position: fixed; left: 0; top: 0; z-index: 60; display: none; pointer-events: none; will-change: transform; }
 #cursorstack .slotlike { position: absolute; left: calc(var(--u) * -9); top: calc(var(--u) * -9); display: grid; place-items: center; width: calc(var(--u) * 18); height: calc(var(--u) * 18); color: var(--white); }
 #cursorstack img { width: calc(var(--u) * 18); height: calc(var(--u) * 18); image-rendering: pixelated; }
 #cursorstack b { position: absolute; right: 0; bottom: calc(var(--u) * -2); font-weight: 400; text-shadow: var(--outline); }
@@ -483,6 +495,8 @@ button.slatebutton.on { color: var(--white); filter: brightness(.82); }
   #book[data-view="bag"] { width: 100%; height: 100%; }
   #bag { grid-template-columns: 1fr; height: 100%; overflow-y: auto; }
   .bag-panel { width: auto; }
+  #bagside { contain: none; }
+  .booklist { flex: none; height: calc(var(--slot) * 4); }
   #titlebook { height: auto; max-height: 100%; overflow-y: auto; }
   #titlebook .spread { grid-template-columns: 1fr; height: auto; }
   #titlebook .page { min-height: calc(var(--u) * 120); }

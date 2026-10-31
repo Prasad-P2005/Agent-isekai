@@ -1,8 +1,9 @@
 // The player: movement physics, health/mana and block raycasting.
+import { held } from '../core/bindings.js';
 import { G, creative } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
-import { BEDROCK, BL, MAGMA, WATER, solid } from './blocks.js';
+import { BEDROCK, BL, MAGMA, solid, wet } from './blocks.js';
 import { getBlock } from './chunks.js';
 import { armourCut, manaRegenBonus, offDef, wearArmour, wearShield } from './inventory.js';
 import { H, LAND, heightAt, landOf } from './terrain.js';
@@ -85,13 +86,13 @@ function moveAxis(a, d) {
   }
 }
 export function updatePlayer(dt) {
-  const p = player.pos, keys = G.keys;
+  const p = player.pos;
   player.lastEye.copy(eye());
-  const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.4), Math.floor(p.z)) === WATER;
+  const inWater = wet(getBlock(Math.floor(p.x), Math.floor(p.y + 0.4), Math.floor(p.z)));
   if (inWater && !player.wet && player.vel.y < -3) emit('player:splashed', { x: p.x, y: p.y, z: p.z, speed: -player.vel.y });
   player.wet = inWater;
   player.climbing = !player.fly && (BL[getBlock(Math.floor(p.x), Math.floor(p.y + 0.2), Math.floor(p.z))]?.climbable || BL[getBlock(Math.floor(p.x), Math.floor(p.y + 1.2), Math.floor(p.z))]?.climbable) === true;
-  const sprint = keys.ShiftLeft || keys.ShiftRight;
+  const sprint = held('sprint'), jump = held('jump');
   player.sprinting = !!sprint && !player.fly && Math.hypot(player.vel.x, player.vel.z) > 5;
   let speed = player.fly ? (sprint ? 30 : 14) : (sprint ? 6.5 : 4.3);
   if (has('swift')) speed *= 1.5;
@@ -101,20 +102,20 @@ export function updatePlayer(dt) {
   if (player.fly && !creative()) { player.mana -= (sprint ? FLIGHT_SPRINT_COST : FLIGHT_COST) * dt; if (player.mana <= 0) { player.mana = 0; player.fly = false; toast('Your mana ran dry; flight fades.'); } }
   const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
   let mx = 0, mz = 0;
-  if (keys.KeyW || keys.ArrowUp) { mx += fx; mz += fz; }
-  if (keys.KeyS || keys.ArrowDown) { mx -= fx; mz -= fz; }
-  if (keys.KeyA || keys.ArrowLeft) { mx += fz; mz -= fx; }
-  if (keys.KeyD || keys.ArrowRight) { mx -= fz; mz += fx; }
+  if (held('forward')) { mx += fx; mz += fz; }
+  if (held('back')) { mx -= fx; mz -= fz; }
+  if (held('left')) { mx += fz; mz -= fx; }
+  if (held('right')) { mx -= fz; mz += fx; }
   const l = Math.hypot(mx, mz) || 1;
   player.kb.multiplyScalar(Math.max(0, 1 - 6 * dt));
   const rate = player.fly ? GRIP.fly : inWater ? GRIP.water : !player.onGround ? GRIP.air : mx || mz ? GRIP.walk : GRIP.stop;
   const grip = 1 - Math.exp(-rate * dt);
   player.vel.x += (mx / l * speed - player.vel.x) * grip;
   player.vel.z += (mz / l * speed - player.vel.z) * grip;
-  if (player.fly) player.vel.y += (((keys.Space ? 1 : 0) - (sprint ? 1 : 0)) * 12 - player.vel.y) * grip;
-  else if (player.climbing) player.vel.y = keys.Space || keys.KeyW ? CLIMB : keys.KeyS ? -CLIMB : 0; // a rope, a ladder or a vine holds you, even with your hands doing nothing
-  else if (inWater) player.vel.y = keys.Space ? 4 : Math.max(player.vel.y - 12 * dt, -2.5);
-  else { player.vel.y = Math.max(player.vel.y - 28 * dt, -50); if (keys.Space && player.onGround) player.vel.y = 9; }
+  if (player.fly) player.vel.y += (((jump ? 1 : 0) - (sprint ? 1 : 0)) * 12 - player.vel.y) * grip;
+  else if (player.climbing) player.vel.y = jump || held('forward') ? CLIMB : held('back') ? -CLIMB : 0; // a rope, a ladder or a vine holds you, even with your hands doing nothing
+  else if (inWater) player.vel.y = jump ? 4 : Math.max(player.vel.y - 12 * dt, -2.5);
+  else { player.vel.y = Math.max(player.vel.y - 28 * dt, -50); if (jump && player.onGround) player.vel.y = 9; }
   moveAxis('x', (player.vel.x + player.kb.x) * dt);
   moveAxis('z', (player.vel.z + player.kb.z) * dt);
   player.onGround = false;

@@ -1,6 +1,7 @@
 // A few small fish in the water near the hero, and slight on purpose: three schools of six in one draw call. They live only in the view, so
 // nothing can hit them, nothing depends on them and they cost the simulation nothing. They scatter from whoever swims too close.
 import * as THREE from 'three';
+import { settings } from '../core/settings.js';
 import { WATER } from '../sim/blocks.js';
 import { spotted } from '../sim/bestiary.js';
 import { getBlock } from '../sim/chunks.js';
@@ -55,6 +56,8 @@ function place(s, first) {
   }
 }
 export function updateFish(dt) {
+  mesh.visible = !!settings.fish;
+  if (!mesh.visible) return;
   const brightness = DIM_NIGHT + (1 - DIM_NIGHT) * Math.min(1, Math.max(0, sunHeight() + 0.2));
   mesh.material.color.setScalar(brightness);
   lookT -= dt;

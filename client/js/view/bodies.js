@@ -11,7 +11,7 @@ import { buildAvatar, lookFor } from './avatar.js';
 import { buildCreature } from './creatures.js';
 import { spray } from './fireball.js';
 import { newMotion } from './pose.js';
-import { scene } from './scene.js';
+import { BODY_LAYER, late, scene } from './scene.js';
 
 const STRIKE_TIME = 0.42, TURN_EASE = 12, PACE_EASE = 10, AIR_EASE = 14, HEAD_EASE = 8, SCARED_EASE = 8;
 const STRIDE_WALK = 5.2, STRIDE_RUN = 4.2, TALL = 1.8, RUN_FROM = 2, RUN_AT = 3.4, FAST = 9;
@@ -47,7 +47,7 @@ on('entity:spawned', e => {
   const { g, extra, pose } = D.avatar ? buildAvatar(lookFor(e.kind, e.res?.job, seed, D), D.h, mats) : buildCreature(e.kind, D, mats);
   const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 80;
   const tex = new THREE.CanvasTexture(canvas), sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, sizeAttenuation: false }));
-  sprite.scale.set(0.24, 0.075, 1); sprite.position.y = D.h + 0.35; g.add(sprite); // constant on-screen size
+  sprite.scale.set(0.24, 0.075, 1); sprite.position.y = D.h + 0.35; g.traverse(o => { if (o.isMesh) o.layers.enable(BODY_LAYER); }); g.add(late(sprite)); // constant on-screen size
   e.view = { g, mats, extra, pose, canvas, tex, sprite, motion: newMotion(Math.abs(seed)), yaw: e.yaw, pace: 0, strikeAge: STRIKE_TIME, label: labelState(e), tint: 0, gaze: 0, gazeT: between(GAZE_GAP), workT: between(WORK_GAP) };
   drawLabel(e);
   g.position.set(e.pos.x, e.pos.y, e.pos.z);

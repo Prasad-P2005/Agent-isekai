@@ -6,7 +6,8 @@ import { solid } from '../sim/blocks.js';
 import { getBlock } from '../sim/chunks.js';
 import { ss } from '../sim/noise.js';
 import { PALM, throwFire } from './hand.js';
-import { camera, renderer, scene, stillCamera } from './scene.js';
+import { shared } from './materials.js';
+import { camera, late, renderer, scene, stillCamera } from './scene.js';
 
 // The colours of the fire icon, hottest first. Stepped through rather than blended, so that it stays pixel art.
 const FIRE = [0xfff4e6, 0xffd24a, 0xf59e1b, 0xd9701a, 0xd8344a, 0x8f1d38].map(c => new THREE.Color(c));
@@ -93,7 +94,7 @@ function pixelTexture(alpha) {
 export const HALO = pixelTexture(d => Math.max(0, 1 - d) ** 2 * 1.3), RING = pixelTexture(d => (d > 0.72 && d < 1 ? 1.2 - Math.abs(d - 0.86) * 8 : 0));
 const sprites = Array.from({ length: 20 }, () => {
   // Drawn over the world: a flash cut in half by the wall it hit looks wrong, and a ball only blasts what it can see.
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO, transparent: true, depthTest: false, depthWrite: false, fog: false, toneMapped: false }));
+  const s = late(new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO, transparent: true, depthTest: false, depthWrite: false, fog: false, toneMapped: false })));
   s.visible = false; scene.add(s);
   return s;
 });
@@ -171,7 +172,8 @@ const FIREBALL_BLAST = { bloom: 24, ember: 8, spark: 6, smoke: 4, size: 1, shake
 const BOLT_BLAST = { bloom: 10, ember: 3, spark: 2, smoke: 1, size: 0.7, shake: 0 }; // enemy fire: the camera stays the player's
 const METEOR_BLAST = { bloom: 40, ember: 14, spark: 10, smoke: 8, size: 2, shake: 1 };
 const flash = { at: new THREE.Vector3(), power: 0 };
-const light = new THREE.PointLight(0xff9a3c, 0, 18, 2);
+const light = new THREE.PointLight(0xff9a3c, 0, 18, 2), LIGHT_REACH = 18, BLOCK_GLOW = [1, 0.58, 0.22], GLOW_SCALE = 0.12;
+light.layers.enableAll();
 scene.add(light); // always here at zero: adding a light later would recompile every lit material mid-fight
 let trauma = 0;
 export function shake(amount) { trauma = Math.min(1, trauma + amount); }
@@ -210,6 +212,10 @@ function lightFire(dt) {
     light.position.copy(flash.at);
     light.intensity = flash.power;
   }
+  // The same light falls on the blocks, which keep their own shaders.
+  const glow = Math.min(1.6, light.intensity * GLOW_SCALE);
+  shared.uSpark.value.set(light.position.x, light.position.y, light.position.z, LIGHT_REACH);
+  shared.uSparkColour.value.setRGB(BLOCK_GLOW[0] * glow, BLOCK_GLOW[1] * glow, BLOCK_GLOW[2] * glow);
 }
 
 // ---------------- leaving the hand ----------------

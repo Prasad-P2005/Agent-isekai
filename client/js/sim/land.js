@@ -149,6 +149,8 @@ export function columnsOf(cx, cz) {
   if (!c) columns.set(k, c = surveyColumns(cx, cz));
   return c;
 }
+// A worker that made a chunk has already surveyed it, so the main thread keeps that rather than doing the sums again.
+export function keepColumns(cx, cz, c) { columns.set(chunkKey(cx, cz), c); }
 const column = (x, z) => (x & 15) + (z & 15) * CS;
 export const heightAt = (x, z) => columnsOf(x >> 4, z >> 4).h[column(x, z)]; // whole block coordinates
 export const inTown = (x, z) => columnsOf(x >> 4, z >> 4).town[column(x, z)] === 1; // on a town's ground, or its banks

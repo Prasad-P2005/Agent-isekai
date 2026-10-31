@@ -1,9 +1,10 @@
 // Keyboard and mouse buttons. Who holds the mouse is decided in pointer.js.
 import { G, controlsActive } from '../core/state.js';
-import { castBlink, castChainLightning, castFireball, castFrostNova, castHeal, castManaWard, castMeteor, doubleJump, drink, toggleFlight } from '../sim/abilities.js';
-import { meleeHit, pickEntity } from '../sim/entities.js';
+import { castSlot, doubleJump, toggleFlight } from '../sim/abilities.js';
+import { meleeHit, pickEntity, reachOfHand } from '../sim/entities.js';
+import { drinkBest, pressUse, releaseUse } from '../sim/hands.js';
 import { cycleSlot, selectSlot } from '../sim/inventory.js';
-import { aim, placeBlock } from '../sim/mining.js';
+import { aim } from '../sim/mining.js';
 import { talkToNearest } from '../sim/people.js';
 import { toggleDebug } from './hud.js';
 import './inventory.js';
@@ -13,7 +14,6 @@ import { closePanel, menuOpen, openPrayer, togglePage } from './panels.js';
 import { capture, isPauseShown, pause, resetPointer, usingFreeMouse } from './pointer.js';
 
 const PAGE_KEYS = { KeyI: 'bag', KeyJ: 'journal', KeyL: 'laws', KeyM: 'map' };
-const SPELL_KEYS = { KeyZ: castFrostNova, KeyX: castChainLightning, KeyC: castBlink, KeyB: castManaWard, KeyH: castMeteor };
 
 export function resetInput() {
   resetPointer();
@@ -40,25 +40,24 @@ addEventListener('keydown', e => {
   if (!controlsActive()) return;
   if (e.code === 'KeyF') toggleFlight();
   if (e.code === 'Space') doubleJump();
-  if (e.code === 'KeyQ') castFireball();
-  if (e.code === 'KeyR') castHeal();
-  if (SPELL_KEYS[e.code] && !e.repeat) SPELL_KEYS[e.code](); // a held key must not pour a whole well away
-  if (e.code === 'KeyG') drink('potion');
-  if (e.code === 'KeyV') drink('mana');
+  if (!e.repeat && e.code === 'KeyQ') castSlot(0); // a held key must not pour a whole well away
+  if (!e.repeat && e.code === 'KeyR') castSlot(1);
+  if (e.code === 'KeyG') drinkBest(['potion', 'greater_health']);
+  if (e.code === 'KeyV') drinkBest(['mana', 'greater_mana']);
   if (e.code === 'KeyE') talkToNearest();
   if (e.code === 'KeyT') { e.preventDefault(); openPrayer(); }
-  if (/^Digit\d$/.test(e.code)) selectSlot((Number(e.code[5]) + 9) % 10);
+  if (/^Digit[1-9]$/.test(e.code)) selectSlot(Number(e.code[5]) - 1);
 });
 addEventListener('keyup', e => { G.keys[e.code] = false; });
 
 addEventListener('wheel', e => { if (controlsActive() && !G.uiOpen) cycleSlot(e.deltaY > 0 ? 1 : -1); });
 addEventListener('contextmenu', e => e.preventDefault());
-addEventListener('mouseup', e => { if (e.button === 0) G.mouseDown = false; });
+addEventListener('mouseup', e => { if (e.button === 0) G.mouseDown = false; if (e.button === 2) { G.mouseRight = false; releaseUse(); } });
 addEventListener('mousedown', e => {
   if (!controlsActive() || G.uiOpen) return;
   if (e.button === 0) {
     G.mouseDown = true;
-    const hit = pickEntity(4.5);
+    const hit = pickEntity(reachOfHand());
     if (hit && (!aim.block || hit.t < aim.block.t)) { G.mouseDown = false; meleeHit(hit.e); }
-  } else if (e.button === 2) placeBlock();
+  } else if (e.button === 2) { G.mouseRight = true; pressUse(); }
 });

@@ -11,7 +11,7 @@ export const projectiles = [];
 // With no `opts` it is the player's own fireball. { hostile: true, dmg, src, killer } makes it a bolt aimed at the player,
 // and { blast, dmg, size } a heavy shot that ignores everyone on the way down and bursts where it lands.
 export function spawnProjectile(pos, vel, opts = null) {
-  const pr = { pos, vel, life: 2.5, hit: false, hostile: !!opts?.hostile, dmg: opts?.dmg ?? FIREBALL_DMG, src: opts?.src, killer: opts?.killer ?? null, blast: opts?.blast ?? 0, size: opts?.size ?? 1 };
+  const pr = { pos, vel, life: opts?.life ?? 2.5, arrow: !!opts?.arrow, fall: opts?.fall ?? 0, hit: false, hostile: !!opts?.hostile, dmg: opts?.dmg ?? FIREBALL_DMG, src: opts?.src, killer: opts?.killer ?? null, blast: opts?.blast ?? 0, size: opts?.size ?? 1 };
   projectiles.push(pr);
   emit('projectile:spawned', pr);
   return pr;
@@ -44,6 +44,7 @@ function burst(pr) {
 export function updateProjectiles(dt) {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const pr = projectiles[i], p = pr.pos;
+    pr.vel.y -= pr.fall * dt;
     p.addScaledVector(pr.vel, dt); pr.life -= dt;
     pr.hit = solid(getBlock(Math.floor(p.x), Math.floor(p.y), Math.floor(p.z)));
     if (!pr.hit && !pr.blast) (pr.hostile ? strikePlayer : strikeBeings)(pr);

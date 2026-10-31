@@ -1,0 +1,3733 @@
+[
+ {
+  "id": "copper_ingot",
+  "out": "copper_ingot",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "raw_copper"
+  ],
+  "time": 10
+ },
+ {
+  "id": "iron_ingot",
+  "out": "iron_ingot",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "raw_iron"
+  ],
+  "time": 10
+ },
+ {
+  "id": "silver_ingot",
+  "out": "silver_ingot",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "raw_silver"
+  ],
+  "time": 12
+ },
+ {
+  "id": "gold_ingot",
+  "out": "gold_ingot",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "raw_gold"
+  ],
+  "time": 12
+ },
+ {
+  "id": "mithril_ingot",
+  "out": "mithril_ingot",
+  "n": 1,
+  "at": "forge",
+  "in": [
+   "raw_mithril"
+  ],
+  "time": 16
+ },
+ {
+  "id": "adamant_ingot",
+  "out": "adamant_ingot",
+  "n": 1,
+  "at": "forge",
+  "in": [
+   "raw_adamant"
+  ],
+  "time": 20
+ },
+ {
+  "id": "dragonsteel_ingot",
+  "out": "dragonsteel_ingot",
+  "n": 1,
+  "at": "forge",
+  "in": [
+   "adamant_ingot",
+   "dragon_scale"
+  ],
+  "time": 30
+ },
+ {
+  "id": "wood_pickaxe",
+  "out": "wood_pickaxe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_axe",
+  "out": "wood_axe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_shovel",
+  "out": "wood_shovel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_hoe",
+  "out": "wood_hoe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_hammer",
+  "out": "wood_hammer",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_sword",
+  "out": "wood_sword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_greatsword",
+  "out": "wood_greatsword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_dagger",
+  "out": "wood_dagger",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_spear",
+  "out": "wood_spear",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "wood_mace",
+  "out": "wood_mace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_pickaxe",
+  "out": "stone_pickaxe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_axe",
+  "out": "stone_axe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_shovel",
+  "out": "stone_shovel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_hoe",
+  "out": "stone_hoe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_hammer",
+  "out": "stone_hammer",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_sword",
+  "out": "stone_sword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_greatsword",
+  "out": "stone_greatsword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_dagger",
+  "out": "stone_dagger",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_spear",
+  "out": "stone_spear",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "stone_mace",
+  "out": "stone_mace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "cobblestone",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_pickaxe",
+  "out": "copper_pickaxe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_axe",
+  "out": "copper_axe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_shovel",
+  "out": "copper_shovel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_hoe",
+  "out": "copper_hoe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_hammer",
+  "out": "copper_hammer",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_sword",
+  "out": "copper_sword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_greatsword",
+  "out": "copper_greatsword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_dagger",
+  "out": "copper_dagger",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_spear",
+  "out": "copper_spear",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "copper_mace",
+  "out": "copper_mace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "copper_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_pickaxe",
+  "out": "gold_pickaxe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_axe",
+  "out": "gold_axe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_shovel",
+  "out": "gold_shovel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_hoe",
+  "out": "gold_hoe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_hammer",
+  "out": "gold_hammer",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_sword",
+  "out": "gold_sword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_greatsword",
+  "out": "gold_greatsword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_dagger",
+  "out": "gold_dagger",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_spear",
+  "out": "gold_spear",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "gold_mace",
+  "out": "gold_mace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "gold_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_pickaxe",
+  "out": "iron_pickaxe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_axe",
+  "out": "iron_axe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_shovel",
+  "out": "iron_shovel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_hoe",
+  "out": "iron_hoe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_hammer",
+  "out": "iron_hammer",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_sword",
+  "out": "iron_sword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_greatsword",
+  "out": "iron_greatsword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_dagger",
+  "out": "iron_dagger",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_spear",
+  "out": "iron_spear",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_mace",
+  "out": "iron_mace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_pickaxe",
+  "out": "silver_pickaxe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_axe",
+  "out": "silver_axe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_shovel",
+  "out": "silver_shovel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_hoe",
+  "out": "silver_hoe",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_hammer",
+  "out": "silver_hammer",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_sword",
+  "out": "silver_sword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_greatsword",
+  "out": "silver_greatsword",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_dagger",
+  "out": "silver_dagger",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_spear",
+  "out": "silver_spear",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "silver_mace",
+  "out": "silver_mace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "silver_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_pickaxe",
+  "out": "mithril_pickaxe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_axe",
+  "out": "mithril_axe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_shovel",
+  "out": "mithril_shovel",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_hoe",
+  "out": "mithril_hoe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_hammer",
+  "out": "mithril_hammer",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_sword",
+  "out": "mithril_sword",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_greatsword",
+  "out": "mithril_greatsword",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_dagger",
+  "out": "mithril_dagger",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_spear",
+  "out": "mithril_spear",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_mace",
+  "out": "mithril_mace",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_pickaxe",
+  "out": "adamant_pickaxe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_axe",
+  "out": "adamant_axe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_shovel",
+  "out": "adamant_shovel",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_hoe",
+  "out": "adamant_hoe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_hammer",
+  "out": "adamant_hammer",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_sword",
+  "out": "adamant_sword",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_greatsword",
+  "out": "adamant_greatsword",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_dagger",
+  "out": "adamant_dagger",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_spear",
+  "out": "adamant_spear",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "adamant_mace",
+  "out": "adamant_mace",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "adamant_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "dragon_pickaxe",
+  "out": "dragon_pickaxe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   ".s.",
+   ".s."
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_axe",
+  "out": "dragon_axe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mm.",
+   "ms.",
+   ".s."
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_shovel",
+  "out": "dragon_shovel",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "s",
+   "s"
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_hoe",
+  "out": "dragon_hoe",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mm",
+   ".s",
+   ".s"
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_hammer",
+  "out": "dragon_hammer",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "mmm",
+   ".s."
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_sword",
+  "out": "dragon_sword",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_greatsword",
+  "out": "dragon_greatsword",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".m.",
+   ".m.",
+   "msm"
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_dagger",
+  "out": "dragon_dagger",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m",
+   "s"
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_spear",
+  "out": "dragon_spear",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "..m",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "dragon_mace",
+  "out": "dragon_mace",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".mm",
+   ".mm",
+   "s.."
+  ],
+  "keys": {
+   "m": "dragonsteel_ingot",
+   "s": "old_bone"
+  }
+ },
+ {
+  "id": "hunting_bow",
+  "out": "hunting_bow",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".at",
+   "a.t",
+   ".at"
+  ],
+  "keys": {
+   "a": "stick",
+   "t": "spider_silk"
+  }
+ },
+ {
+  "id": "longbow",
+  "out": "longbow",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".at",
+   "a.t",
+   ".at"
+  ],
+  "keys": {
+   "a": "iron_ingot",
+   "t": "spider_silk"
+  }
+ },
+ {
+  "id": "elven_bow",
+  "out": "elven_bow",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".at",
+   "a.t",
+   ".at"
+  ],
+  "keys": {
+   "a": "elder_planks",
+   "t": "emerald"
+  }
+ },
+ {
+  "id": "dragon_bow",
+  "out": "dragon_bow",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   ".at",
+   "a.t",
+   ".at"
+  ],
+  "keys": {
+   "a": "old_bone",
+   "t": "dragon_scale"
+  }
+ },
+ {
+  "id": "arrow",
+  "out": "arrow",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "t",
+   "s"
+  ],
+  "keys": {
+   "t": "flint",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "iron_arrow",
+  "out": "iron_arrow",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "t",
+   "s"
+  ],
+  "keys": {
+   "t": "iron_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "mithril_arrow",
+  "out": "mithril_arrow",
+  "n": 6,
+  "at": "table",
+  "shape": [
+   "t",
+   "s"
+  ],
+  "keys": {
+   "t": "mithril_ingot",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "fire_arrow",
+  "out": "fire_arrow",
+  "n": 4,
+  "at": "table",
+  "of": [
+   "arrow",
+   "arrow",
+   "arrow",
+   "arrow",
+   "coal"
+  ]
+ },
+ {
+  "id": "wooden_shield",
+  "out": "wooden_shield",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "fbf",
+   "fff",
+   ".f."
+  ],
+  "keys": {
+   "f": "planks",
+   "b": "iron_ingot"
+  }
+ },
+ {
+  "id": "iron_shield",
+  "out": "iron_shield",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "fbf",
+   "fff",
+   ".f."
+  ],
+  "keys": {
+   "f": "iron_ingot",
+   "b": "planks"
+  }
+ },
+ {
+  "id": "knight_shield",
+  "out": "knight_shield",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "fbf",
+   "fff",
+   ".f."
+  ],
+  "keys": {
+   "f": "knight_steel",
+   "b": "gold_ingot"
+  }
+ },
+ {
+  "id": "mithril_shield",
+  "out": "mithril_shield",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "fbf",
+   "fff",
+   ".f."
+  ],
+  "keys": {
+   "f": "mithril_ingot",
+   "b": "gold_ingot"
+  }
+ },
+ {
+  "id": "dragon_shield",
+  "out": "dragon_shield",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "fbf",
+   "fff",
+   ".f."
+  ],
+  "keys": {
+   "f": "dragon_scale",
+   "b": "dragonsteel_ingot"
+  }
+ },
+ {
+  "id": "apprentice_staff",
+  "out": "apprentice_staff",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..g",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "g": "mana_crystal",
+   "s": "planks"
+  }
+ },
+ {
+  "id": "crystal_staff",
+  "out": "crystal_staff",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "..g",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "g": "amethyst",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "arcanist_staff",
+  "out": "arcanist_staff",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "..g",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "g": "sapphire",
+   "s": "gold_ingot"
+  }
+ },
+ {
+  "id": "archmage_staff",
+  "out": "archmage_staff",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "..g",
+   ".s.",
+   "s.."
+  ],
+  "keys": {
+   "g": "ruby",
+   "s": "adamant_ingot"
+  }
+ },
+ {
+  "id": "shears",
+  "out": "shears",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".i",
+   "i."
+  ],
+  "keys": {
+   "i": "iron_ingot"
+  }
+ },
+ {
+  "id": "leather_helm",
+  "out": "leather_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "leather"
+  }
+ },
+ {
+  "id": "leather_chest",
+  "out": "leather_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "leather"
+  }
+ },
+ {
+  "id": "leather_legs",
+  "out": "leather_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "leather"
+  }
+ },
+ {
+  "id": "leather_boots",
+  "out": "leather_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "leather"
+  }
+ },
+ {
+  "id": "trollhide_helm",
+  "out": "trollhide_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "troll_hide"
+  }
+ },
+ {
+  "id": "trollhide_chest",
+  "out": "trollhide_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "troll_hide"
+  }
+ },
+ {
+  "id": "trollhide_legs",
+  "out": "trollhide_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "troll_hide"
+  }
+ },
+ {
+  "id": "trollhide_boots",
+  "out": "trollhide_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "troll_hide"
+  }
+ },
+ {
+  "id": "chainmail_helm",
+  "out": "chainmail_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "chain_link"
+  }
+ },
+ {
+  "id": "chainmail_chest",
+  "out": "chainmail_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "chain_link"
+  }
+ },
+ {
+  "id": "chainmail_legs",
+  "out": "chainmail_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "chain_link"
+  }
+ },
+ {
+  "id": "chainmail_boots",
+  "out": "chainmail_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "chain_link"
+  }
+ },
+ {
+  "id": "copper_helm",
+  "out": "copper_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "copper_ingot"
+  }
+ },
+ {
+  "id": "copper_chest",
+  "out": "copper_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "copper_ingot"
+  }
+ },
+ {
+  "id": "copper_legs",
+  "out": "copper_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "copper_ingot"
+  }
+ },
+ {
+  "id": "copper_boots",
+  "out": "copper_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "copper_ingot"
+  }
+ },
+ {
+  "id": "iron_helm",
+  "out": "iron_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "iron_ingot"
+  }
+ },
+ {
+  "id": "iron_chest",
+  "out": "iron_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "iron_ingot"
+  }
+ },
+ {
+  "id": "iron_legs",
+  "out": "iron_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "iron_ingot"
+  }
+ },
+ {
+  "id": "iron_boots",
+  "out": "iron_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "iron_ingot"
+  }
+ },
+ {
+  "id": "gold_helm",
+  "out": "gold_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "gold_ingot"
+  }
+ },
+ {
+  "id": "gold_chest",
+  "out": "gold_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "gold_ingot"
+  }
+ },
+ {
+  "id": "gold_legs",
+  "out": "gold_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "gold_ingot"
+  }
+ },
+ {
+  "id": "gold_boots",
+  "out": "gold_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "gold_ingot"
+  }
+ },
+ {
+  "id": "silver_helm",
+  "out": "silver_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "silver_ingot"
+  }
+ },
+ {
+  "id": "silver_chest",
+  "out": "silver_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "silver_ingot"
+  }
+ },
+ {
+  "id": "silver_legs",
+  "out": "silver_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "silver_ingot"
+  }
+ },
+ {
+  "id": "silver_boots",
+  "out": "silver_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "silver_ingot"
+  }
+ },
+ {
+  "id": "knight_helm",
+  "out": "knight_helm",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "knight_steel"
+  }
+ },
+ {
+  "id": "knight_chest",
+  "out": "knight_chest",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "knight_steel"
+  }
+ },
+ {
+  "id": "knight_legs",
+  "out": "knight_legs",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "knight_steel"
+  }
+ },
+ {
+  "id": "knight_boots",
+  "out": "knight_boots",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "knight_steel"
+  }
+ },
+ {
+  "id": "mithril_helm",
+  "out": "mithril_helm",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "mithril_ingot"
+  }
+ },
+ {
+  "id": "mithril_chest",
+  "out": "mithril_chest",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "mithril_ingot"
+  }
+ },
+ {
+  "id": "mithril_legs",
+  "out": "mithril_legs",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "mithril_ingot"
+  }
+ },
+ {
+  "id": "mithril_boots",
+  "out": "mithril_boots",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "mithril_ingot"
+  }
+ },
+ {
+  "id": "adamant_helm",
+  "out": "adamant_helm",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "adamant_ingot"
+  }
+ },
+ {
+  "id": "adamant_chest",
+  "out": "adamant_chest",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "adamant_ingot"
+  }
+ },
+ {
+  "id": "adamant_legs",
+  "out": "adamant_legs",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "adamant_ingot"
+  }
+ },
+ {
+  "id": "adamant_boots",
+  "out": "adamant_boots",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "adamant_ingot"
+  }
+ },
+ {
+  "id": "dragonscale_helm",
+  "out": "dragonscale_helm",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "dragon_scale"
+  }
+ },
+ {
+  "id": "dragonscale_chest",
+  "out": "dragonscale_chest",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "dragon_scale"
+  }
+ },
+ {
+  "id": "dragonscale_legs",
+  "out": "dragonscale_legs",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "dragon_scale"
+  }
+ },
+ {
+  "id": "dragonscale_boots",
+  "out": "dragonscale_boots",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "dragon_scale"
+  }
+ },
+ {
+  "id": "demonplate_helm",
+  "out": "demonplate_helm",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "demon_plate"
+  }
+ },
+ {
+  "id": "demonplate_chest",
+  "out": "demonplate_chest",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "demon_plate"
+  }
+ },
+ {
+  "id": "demonplate_legs",
+  "out": "demonplate_legs",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "demon_plate"
+  }
+ },
+ {
+  "id": "demonplate_boots",
+  "out": "demonplate_boots",
+  "n": 1,
+  "at": "anvil",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "demon_plate"
+  }
+ },
+ {
+  "id": "elven_helm",
+  "out": "elven_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "elven_weave"
+  }
+ },
+ {
+  "id": "elven_chest",
+  "out": "elven_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "elven_weave"
+  }
+ },
+ {
+  "id": "elven_legs",
+  "out": "elven_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "elven_weave"
+  }
+ },
+ {
+  "id": "elven_boots",
+  "out": "elven_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "elven_weave"
+  }
+ },
+ {
+  "id": "arcane_helm",
+  "out": "arcane_helm",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m"
+  ],
+  "keys": {
+   "m": "arcane_cloth"
+  }
+ },
+ {
+  "id": "arcane_chest",
+  "out": "arcane_chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "mmm",
+   "mmm"
+  ],
+  "keys": {
+   "m": "arcane_cloth"
+  }
+ },
+ {
+  "id": "arcane_legs",
+  "out": "arcane_legs",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "mmm",
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "arcane_cloth"
+  }
+ },
+ {
+  "id": "arcane_boots",
+  "out": "arcane_boots",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "m.m",
+   "m.m"
+  ],
+  "keys": {
+   "m": "arcane_cloth"
+  }
+ },
+ {
+  "id": "bread",
+  "out": "bread",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "www"
+  ],
+  "keys": {
+   "w": "wheat"
+  }
+ },
+ {
+  "id": "apple_pie",
+  "out": "apple_pie",
+  "n": 1,
+  "at": "hand",
+  "of": [
+   "apple",
+   "apple",
+   "wheat",
+   "wheat"
+  ]
+ },
+ {
+  "id": "golden_apple",
+  "out": "golden_apple",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "ggg",
+   "gag",
+   "ggg"
+  ],
+  "keys": {
+   "g": "gold_ingot",
+   "a": "apple"
+  }
+ },
+ {
+  "id": "mushroom_stew",
+  "out": "mushroom_stew",
+  "n": 1,
+  "at": "hand",
+  "of": [
+   "bowl",
+   "red_mushroom",
+   "glowshroom"
+  ]
+ },
+ {
+  "id": "fae_nectar",
+  "out": "fae_nectar",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "fae_bloom",
+   "fae_bloom"
+  ]
+ },
+ {
+  "id": "roast_venison",
+  "out": "roast_venison",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "raw_venison"
+  ],
+  "time": 6
+ },
+ {
+  "id": "roast_boar",
+  "out": "roast_boar",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "raw_boar"
+  ],
+  "time": 6
+ },
+ {
+  "id": "grilled_crab",
+  "out": "grilled_crab",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "crab_claw"
+  ],
+  "time": 6
+ },
+ {
+  "id": "potion",
+  "out": "potion",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "red_mushroom",
+   "slime_gel"
+  ]
+ },
+ {
+  "id": "greater_health",
+  "out": "greater_health",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "potion",
+   "ruby"
+  ]
+ },
+ {
+  "id": "mana",
+  "out": "mana",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "mana_dust",
+   "glowshroom"
+  ]
+ },
+ {
+  "id": "greater_mana",
+  "out": "greater_mana",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "mana",
+   "sapphire"
+  ]
+ },
+ {
+  "id": "swiftness",
+  "out": "swiftness",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "imp_wing",
+   "dandelion"
+  ]
+ },
+ {
+  "id": "strength",
+  "out": "strength",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "orc_tusk",
+   "poppy"
+  ]
+ },
+ {
+  "id": "stoneskin",
+  "out": "stoneskin",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "boar_tusk",
+   "iron_ingot"
+  ]
+ },
+ {
+  "id": "night_sight",
+  "out": "night_sight",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "glowshroom",
+   "cornflower"
+  ]
+ },
+ {
+  "id": "fireproof",
+  "out": "fireproof",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "crab_claw",
+   "wraith_ash"
+  ]
+ },
+ {
+  "id": "water_breath",
+  "out": "water_breath",
+  "n": 1,
+  "at": "alchemy",
+  "of": [
+   "glass_bottle",
+   "kelp",
+   "pink_coral"
+  ]
+ },
+ {
+  "id": "planks",
+  "out": "planks",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "oak_log"
+  ]
+ },
+ {
+  "id": "charcoal_from_oak_log",
+  "out": "charcoal",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "oak_log"
+  ],
+  "time": 10
+ },
+ {
+  "id": "stick_from_planks",
+  "out": "stick",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "p",
+   "p"
+  ],
+  "keys": {
+   "p": "planks"
+  }
+ },
+ {
+  "id": "birch_planks",
+  "out": "birch_planks",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "birch_log"
+  ]
+ },
+ {
+  "id": "charcoal_from_birch_log",
+  "out": "charcoal",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "birch_log"
+  ],
+  "time": 10
+ },
+ {
+  "id": "stick_from_birch_planks",
+  "out": "stick",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "p",
+   "p"
+  ],
+  "keys": {
+   "p": "birch_planks"
+  }
+ },
+ {
+  "id": "spruce_planks",
+  "out": "spruce_planks",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "spruce_log"
+  ]
+ },
+ {
+  "id": "charcoal_from_spruce_log",
+  "out": "charcoal",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "spruce_log"
+  ],
+  "time": 10
+ },
+ {
+  "id": "stick_from_spruce_planks",
+  "out": "stick",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "p",
+   "p"
+  ],
+  "keys": {
+   "p": "spruce_planks"
+  }
+ },
+ {
+  "id": "palm_planks",
+  "out": "palm_planks",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "palm_log"
+  ]
+ },
+ {
+  "id": "charcoal_from_palm_log",
+  "out": "charcoal",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "palm_log"
+  ],
+  "time": 10
+ },
+ {
+  "id": "stick_from_palm_planks",
+  "out": "stick",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "p",
+   "p"
+  ],
+  "keys": {
+   "p": "palm_planks"
+  }
+ },
+ {
+  "id": "elder_planks",
+  "out": "elder_planks",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "elderwood"
+  ]
+ },
+ {
+  "id": "charcoal_from_elderwood",
+  "out": "charcoal",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "elderwood"
+  ],
+  "time": 10
+ },
+ {
+  "id": "stick_from_elder_planks",
+  "out": "stick",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "p",
+   "p"
+  ],
+  "keys": {
+   "p": "elder_planks"
+  }
+ },
+ {
+  "id": "block_of_coal",
+  "out": "block_of_coal",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "coal"
+  }
+ },
+ {
+  "id": "coal_from_block",
+  "out": "coal",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_coal"
+  ]
+ },
+ {
+  "id": "block_of_copper",
+  "out": "block_of_copper",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "copper_ingot"
+  }
+ },
+ {
+  "id": "copper_ingot_from_block",
+  "out": "copper_ingot",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_copper"
+  ]
+ },
+ {
+  "id": "block_of_iron",
+  "out": "block_of_iron",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "iron_ingot"
+  }
+ },
+ {
+  "id": "iron_ingot_from_block",
+  "out": "iron_ingot",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_iron"
+  ]
+ },
+ {
+  "id": "block_of_silver",
+  "out": "block_of_silver",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "silver_ingot"
+  }
+ },
+ {
+  "id": "silver_ingot_from_block",
+  "out": "silver_ingot",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_silver"
+  ]
+ },
+ {
+  "id": "block_of_gold",
+  "out": "block_of_gold",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "gold_ingot"
+  }
+ },
+ {
+  "id": "gold_ingot_from_block",
+  "out": "gold_ingot",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_gold"
+  ]
+ },
+ {
+  "id": "block_of_mithril",
+  "out": "block_of_mithril",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "mithril_ingot"
+  }
+ },
+ {
+  "id": "mithril_ingot_from_block",
+  "out": "mithril_ingot",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_mithril"
+  ]
+ },
+ {
+  "id": "block_of_adamant",
+  "out": "block_of_adamant",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "adamant_ingot"
+  }
+ },
+ {
+  "id": "adamant_ingot_from_block",
+  "out": "adamant_ingot",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_adamant"
+  ]
+ },
+ {
+  "id": "block_of_ruby",
+  "out": "block_of_ruby",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "ruby"
+  }
+ },
+ {
+  "id": "ruby_from_block",
+  "out": "ruby",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_ruby"
+  ]
+ },
+ {
+  "id": "block_of_sapphire",
+  "out": "block_of_sapphire",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "sapphire"
+  }
+ },
+ {
+  "id": "sapphire_from_block",
+  "out": "sapphire",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_sapphire"
+  ]
+ },
+ {
+  "id": "block_of_emerald",
+  "out": "block_of_emerald",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "uuu",
+   "uuu",
+   "uuu"
+  ],
+  "keys": {
+   "u": "emerald"
+  }
+ },
+ {
+  "id": "emerald_from_block",
+  "out": "emerald",
+  "n": 9,
+  "at": "hand",
+  "of": [
+   "block_of_emerald"
+  ]
+ },
+ {
+  "id": "leather_from_deer",
+  "out": "leather",
+  "n": 1,
+  "at": "table",
+  "of": [
+   "deer_hide"
+  ]
+ },
+ {
+  "id": "leather_from_wolf",
+  "out": "leather",
+  "n": 2,
+  "at": "table",
+  "of": [
+   "wolf_pelt"
+  ]
+ },
+ {
+  "id": "chain_link",
+  "out": "chain_link",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "iron_ingot"
+  ]
+ },
+ {
+  "id": "mana_dust",
+  "out": "mana_dust",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "mana_crystal"
+  ]
+ },
+ {
+  "id": "clay_ball",
+  "out": "clay_ball",
+  "n": 4,
+  "at": "hand",
+  "of": [
+   "red_clay"
+  ]
+ },
+ {
+  "id": "brick",
+  "out": "brick",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "clay_ball"
+  ],
+  "time": 6
+ },
+ {
+  "id": "glass_bottle",
+  "out": "glass_bottle",
+  "n": 3,
+  "at": "table",
+  "shape": [
+   "g.g",
+   ".g."
+  ],
+  "keys": {
+   "g": "glass"
+  }
+ },
+ {
+  "id": "bowl",
+  "out": "bowl",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "p.p",
+   ".p."
+  ],
+  "keys": {
+   "p": "planks"
+  }
+ },
+ {
+  "id": "knight_steel",
+  "out": "knight_steel",
+  "n": 8,
+  "at": "anvil",
+  "shape": [
+   "iii",
+   "ici",
+   "iii"
+  ],
+  "keys": {
+   "i": "iron_ingot",
+   "c": "golem_core"
+  }
+ },
+ {
+  "id": "demon_plate",
+  "out": "demon_plate",
+  "n": 2,
+  "at": "anvil",
+  "of": [
+   "demon_horn",
+   "wraith_ash",
+   "iron_ingot"
+  ]
+ },
+ {
+  "id": "elven_weave",
+  "out": "elven_weave",
+  "n": 4,
+  "at": "table",
+  "of": [
+   "elder_planks",
+   "emerald",
+   "spider_silk"
+  ]
+ },
+ {
+  "id": "arcane_cloth",
+  "out": "arcane_cloth",
+  "n": 4,
+  "at": "table",
+  "of": [
+   "white_wool",
+   "amethyst",
+   "mana_dust"
+  ]
+ },
+ {
+  "id": "crafting_table",
+  "out": "crafting_table",
+  "n": 1,
+  "at": "hand",
+  "shape": [
+   "pp",
+   "pp"
+  ],
+  "keys": {
+   "p": "planks"
+  }
+ },
+ {
+  "id": "furnace",
+  "out": "furnace",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "ccc",
+   "c.c",
+   "ccc"
+  ],
+  "keys": {
+   "c": "cobblestone"
+  }
+ },
+ {
+  "id": "chest",
+  "out": "chest",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "ppp",
+   "p.p",
+   "ppp"
+  ],
+  "keys": {
+   "p": "planks"
+  }
+ },
+ {
+  "id": "forge",
+  "out": "forge",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "bbb",
+   "bfb",
+   "iii"
+  ],
+  "keys": {
+   "b": "bricks",
+   "f": "furnace",
+   "i": "iron_ingot"
+  }
+ },
+ {
+  "id": "anvil",
+  "out": "anvil",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "BBB",
+   ".i.",
+   "iii"
+  ],
+  "keys": {
+   "B": "block_of_iron",
+   "i": "iron_ingot"
+  }
+ },
+ {
+  "id": "alchemy_table",
+  "out": "alchemy_table",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "dgd",
+   "ppp"
+  ],
+  "keys": {
+   "d": "mana_dust",
+   "g": "glass_bottle",
+   "p": "planks"
+  }
+ },
+ {
+  "id": "torch",
+  "out": "torch",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "c",
+   "s"
+  ],
+  "keys": {
+   "c": "coal",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "torch_from_charcoal",
+  "out": "torch",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "c",
+   "s"
+  ],
+  "keys": {
+   "c": "charcoal",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "lantern",
+  "out": "lantern",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   ".i.",
+   "iti",
+   ".i."
+  ],
+  "keys": {
+   "i": "iron_ingot",
+   "t": "torch"
+  }
+ },
+ {
+  "id": "fence",
+  "out": "fence",
+  "n": 3,
+  "at": "table",
+  "shape": [
+   "psp",
+   "psp"
+  ],
+  "keys": {
+   "p": "planks",
+   "s": "stick"
+  }
+ },
+ {
+  "id": "rope_ladder",
+  "out": "rope_ladder",
+  "n": 6,
+  "at": "table",
+  "shape": [
+   "s.s",
+   "ppp",
+   "s.s"
+  ],
+  "keys": {
+   "s": "spider_silk",
+   "p": "stick"
+  }
+ },
+ {
+  "id": "stone",
+  "out": "stone",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "cobblestone"
+  ],
+  "time": 10
+ },
+ {
+  "id": "deepstone",
+  "out": "deepstone",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "cobbled_deepstone"
+  ],
+  "time": 10
+ },
+ {
+  "id": "polished_stone",
+  "out": "polished_stone",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "stone"
+  ],
+  "time": 10
+ },
+ {
+  "id": "glass",
+  "out": "glass",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "sand"
+  ],
+  "time": 10
+ },
+ {
+  "id": "terracotta",
+  "out": "terracotta",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "red_clay"
+  ],
+  "time": 10
+ },
+ {
+  "id": "dark_terracotta",
+  "out": "dark_terracotta",
+  "n": 1,
+  "at": "furnace",
+  "in": [
+   "terracotta"
+  ],
+  "time": 10
+ },
+ {
+  "id": "stone_bricks",
+  "out": "stone_bricks",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "ss",
+   "ss"
+  ],
+  "keys": {
+   "s": "stone"
+  }
+ },
+ {
+  "id": "deepstone_bricks",
+  "out": "deepstone_bricks",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "ss",
+   "ss"
+  ],
+  "keys": {
+   "s": "deepstone"
+  }
+ },
+ {
+  "id": "polished_marble",
+  "out": "polished_marble",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "mm",
+   "mm"
+  ],
+  "keys": {
+   "m": "marble"
+  }
+ },
+ {
+  "id": "marble_pillar",
+  "out": "marble_pillar",
+  "n": 2,
+  "at": "table",
+  "shape": [
+   "m",
+   "m"
+  ],
+  "keys": {
+   "m": "marble"
+  }
+ },
+ {
+  "id": "gilded_marble",
+  "out": "gilded_marble",
+  "n": 1,
+  "at": "table",
+  "of": [
+   "polished_marble",
+   "gold_ingot"
+  ]
+ },
+ {
+  "id": "stone_slab",
+  "out": "stone_slab",
+  "n": 6,
+  "at": "table",
+  "shape": [
+   "sss"
+  ],
+  "keys": {
+   "s": "stone_bricks"
+  }
+ },
+ {
+  "id": "chiseled_stone_bricks",
+  "out": "chiseled_stone_bricks",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "s",
+   "s"
+  ],
+  "keys": {
+   "s": "stone_slab"
+  }
+ },
+ {
+  "id": "mossy_cobblestone",
+  "out": "mossy_cobblestone",
+  "n": 1,
+  "at": "hand",
+  "of": [
+   "cobblestone",
+   "moss"
+  ]
+ },
+ {
+  "id": "mossy_stone_bricks",
+  "out": "mossy_stone_bricks",
+  "n": 1,
+  "at": "hand",
+  "of": [
+   "stone_bricks",
+   "moss"
+  ]
+ },
+ {
+  "id": "sandstone",
+  "out": "sandstone",
+  "n": 1,
+  "at": "hand",
+  "shape": [
+   "ss",
+   "ss"
+  ],
+  "keys": {
+   "s": "sand"
+  }
+ },
+ {
+  "id": "bricks",
+  "out": "bricks",
+  "n": 1,
+  "at": "hand",
+  "shape": [
+   "bb",
+   "bb"
+  ],
+  "keys": {
+   "b": "brick"
+  }
+ },
+ {
+  "id": "amethyst_block",
+  "out": "amethyst_block",
+  "n": 1,
+  "at": "hand",
+  "shape": [
+   "aa",
+   "aa"
+  ],
+  "keys": {
+   "a": "amethyst"
+  }
+ },
+ {
+  "id": "bone_block",
+  "out": "bone_block",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "bbb",
+   "bbb",
+   "bbb"
+  ],
+  "keys": {
+   "b": "old_bone"
+  }
+ },
+ {
+  "id": "roof_tiles",
+  "out": "roof_tiles",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "b.b",
+   ".b."
+  ],
+  "keys": {
+   "b": "brick"
+  }
+ },
+ {
+  "id": "slate_tiles",
+  "out": "slate_tiles",
+  "n": 4,
+  "at": "hand",
+  "shape": [
+   "cc",
+   "cc"
+  ],
+  "keys": {
+   "c": "cobbled_deepstone"
+  }
+ },
+ {
+  "id": "thatch",
+  "out": "thatch",
+  "n": 2,
+  "at": "hand",
+  "shape": [
+   "ww",
+   "ww"
+  ],
+  "keys": {
+   "w": "wheat"
+  }
+ },
+ {
+  "id": "hay_bale",
+  "out": "hay_bale",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "www",
+   "www",
+   "www"
+  ],
+  "keys": {
+   "w": "wheat"
+  }
+ },
+ {
+  "id": "roof_tile_stairs",
+  "out": "roof_tile_stairs",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "u..",
+   "uu.",
+   "uuu"
+  ],
+  "keys": {
+   "u": "roof_tiles"
+  }
+ },
+ {
+  "id": "thatch_stairs",
+  "out": "thatch_stairs",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "u..",
+   "uu.",
+   "uuu"
+  ],
+  "keys": {
+   "u": "thatch"
+  }
+ },
+ {
+  "id": "slate_stairs",
+  "out": "slate_stairs",
+  "n": 4,
+  "at": "table",
+  "shape": [
+   "u..",
+   "uu.",
+   "uuu"
+  ],
+  "keys": {
+   "u": "slate_tiles"
+  }
+ },
+ {
+  "id": "plaster",
+  "out": "plaster",
+  "n": 2,
+  "at": "hand",
+  "of": [
+   "sand",
+   "clay_ball"
+  ]
+ },
+ {
+  "id": "timber_frame",
+  "out": "timber_frame",
+  "n": 1,
+  "at": "table",
+  "of": [
+   "plaster",
+   "stick"
+  ]
+ },
+ {
+  "id": "plank_slab",
+  "out": "plank_slab",
+  "n": 6,
+  "at": "table",
+  "shape": [
+   "ppp"
+  ],
+  "keys": {
+   "p": "planks"
+  }
+ },
+ {
+  "id": "bookshelf",
+  "out": "bookshelf",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "ppp",
+   "lll",
+   "ppp"
+  ],
+  "keys": {
+   "p": "planks",
+   "l": "leather"
+  }
+ },
+ {
+  "id": "barrel",
+  "out": "barrel",
+  "n": 1,
+  "at": "table",
+  "shape": [
+   "psp",
+   "p.p",
+   "psp"
+  ],
+  "keys": {
+   "p": "planks",
+   "s": "plank_slab"
+  }
+ },
+ {
+  "id": "white_wool",
+  "out": "white_wool",
+  "n": 1,
+  "at": "hand",
+  "shape": [
+   "ss",
+   "ss"
+  ],
+  "keys": {
+   "s": "spider_silk"
+  }
+ },
+ {
+  "id": "red_wool",
+  "out": "red_wool",
+  "n": 1,
+  "at": "hand",
+  "of": [
+   "white_wool",
+   "poppy"
+  ]
+ },
+ {
+  "id": "red_carpet",
+  "out": "red_carpet",
+  "n": 3,
+  "at": "table",
+  "shape": [
+   "rr"
+  ],
+  "keys": {
+   "r": "red_wool"
+  }
+ },
+ {
+  "id": "royal_banner",
+  "out": "royal_banner",
+  "n": 1,
+  "at": "table",
+  "of": [
+   "white_wool",
+   "cornflower",
+   "gold_ingot"
+  ]
+ }
+]

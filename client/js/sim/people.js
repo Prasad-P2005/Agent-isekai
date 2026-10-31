@@ -1,5 +1,5 @@
 // Residents (planned by the god on the server), crimes & witnesses, law enforcement and conversations.
-import { G } from '../core/state.js';
+import { G, creative } from '../core/state.js';
 import { BIOMES, SERVICES, WORLD } from '../core/content.js';
 import { emit, on, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
@@ -77,6 +77,7 @@ function witnesses(victim) {
   return { lawmen, civilians };
 }
 function commitCrime(type, victim) {
+  if (creative()) return;
   const { lawmen, civilians } = witnesses(victim);
   emit('crime:reported', {
     type, civilians,

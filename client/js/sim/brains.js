@@ -1,5 +1,6 @@
 // What each creature wants, depending on what it is. A brain never moves anything: it sets where the creature is heading (e.mx, e.mz), how
 // fast (e.pace) and who it means to hit (e.aim), and sim/entities.js does the walking and the fighting. Which brain is `brain` in creatures.json.
+import { creative } from '../core/state.js';
 import { emit } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
 import { MAGMA, WATER, solid } from './blocks.js';
@@ -216,6 +217,7 @@ function wyrm(e, dt, c) {
     if (trespass || e.hurtT < 0.2) wake(e, 'wakes');
     return;
   }
+  if (creative()) e.mood = 'home'; // awake with nobody to chase, or it would hang in the air as it does for a pause
   e.boltT -= dt;
   const away = e.mood === 'chases', gap = (away ? BREATH_GAP_CHASE : BREATH_GAP) * (h.grudge ? GRUDGE_GAP : 1), reach = away ? BREATH_FAR_CHASE : BREATH_FAR;
   if (e.mood === 'home') {

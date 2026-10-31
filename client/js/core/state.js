@@ -14,3 +14,4 @@ export const G = {
 };
 export const controlsActive = () => G.locked || G.focused;
 export const isPaused = () => !controlsActive() || G.uiOpen;
+export const creative = () => !!G.profile?.creative;

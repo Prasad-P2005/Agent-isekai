@@ -1,18 +1,20 @@
 """Trade: what merchants and blacksmiths sell, what loot is worth, and paid services (doctors, inns, priests, bounties)."""
 from __future__ import annotations
 
+import re
+
 from ..content import ABILITIES, CREATURES, ITEMS, SERVICES as SERVICE_DATA
 from ..core.state import World
-from . import magic
+from . import bag, magic
 from .chronicle import standing
 
 CATALOG = {
-    **ITEMS,
+    **{k: {**v, "name": f"{v['name']} ({v['note']})"} for k, v in ITEMS.items() if "sold_by" in v},
     **{f"scroll_{a}": {"name": f"Skill Scroll: {a.replace('_', ' ')} ({spec['about']})", "base": spec["scroll"], "ability": a, "sold_by": ["trade"]}
        for a, spec in ABILITIES.items()},
 }
-LOOT = {kind: (c["loot"]["name"], c["loot"]["value"]) for kind, c in CREATURES.items() if "loot" in c}
-LOOT_VALUE = dict(LOOT.values())
+slug = lambda name: re.sub(r"\W+", "_", name.lower()).strip("_")
+LOOT = {kind: slug(c["loot"]["name"]) for kind, c in CREATURES.items() if "loot" in c}
 PROSPERITY = {"poor": 0.75, "normal": 1.0, "rich": 1.4}
 WAR_CAP = 0.3  # however bad the war gets, prices never rise more than this
 STANDING_PRICE = {"famous": 0.95, "legend": 0.9, "infamous": 1.15, "feared": 1.3}  # traders charge what they think of you
@@ -29,13 +31,13 @@ def price(world: World, item_id: str) -> int:
 
 
 def owned(world: World, item_id: str) -> bool:
-    it, p = CATALOG[item_id], world.player
-    return ("tool" in it and p.tool >= it["tool"]) or ("weapon" in it and p.weapon >= it["weapon"]) or ("armor" in it and p.armor >= it["armor"]) or ("ability" in it and it["ability"] in p.abilities)
+    it = CATALOG[item_id]
+    return "ability" in it and it["ability"] in world.player.abilities  # anything else can be bought again: tools wear out
 
 
 def catalog_for(world: World, service: str) -> dict:
     items = [{"id": k, "name": v["name"], "price": price(world, k), "owned": owned(world, k)} for k, v in CATALOG.items() if service in v["sold_by"]]
-    sell = [{"name": n, "count": c, "price": sell_price(world, n)} for n, c in world.player.loot.items() if c > 0] if service == "trade" else []
+    sell = [{"id": k, "name": ITEMS[k]["name"], "count": n, "price": sell_price(world, k)} for k, n in bag.held(world.player).items() if ITEMS.get(k, {}).get("group") == "materials" and ITEMS[k].get("value")] if service == "trade" else []
     notes = []
     if world.clock < world.festival_until:
         notes.append("Festival prices: -20%")
@@ -44,17 +46,8 @@ def catalog_for(world: World, service: str) -> dict:
     return {"items": items, "sell": sell, "notes": notes}
 
 
-def sell_price(world: World, name: str) -> int:
-    return max(1, round(LOOT_VALUE.get(name, 1) * PROSPERITY.get(world.prosperity, 1.0)))
-
-
-def use_item(world: World, item: str) -> bool:
-    """Drink a potion. The client applies its effect; this says whether you had one."""
-    field = {"potion": "potions", "mana": "mana_potions"}.get(item)
-    if not field or getattr(world.player, field) <= 0:
-        return False
-    setattr(world.player, field, getattr(world.player, field) - 1)
-    return True
+def sell_price(world: World, item: str) -> int:
+    return max(1, round(ITEMS[item].get("value", 1) * PROSPERITY.get(world.prosperity, 1.0)))
 
 
 def buy(world: World, item_id: str) -> str:
@@ -66,29 +59,21 @@ def buy(world: World, item_id: str) -> str:
     if p.gold < cost:
         return "Not enough money."
     p.gold -= cost
-    if item_id == "potion":
-        p.potions += 1
-    elif item_id == "mana":
-        p.mana_potions += 1
-    elif "tool" in it:
-        p.tool, p.tool_name = it["tool"], it["name"].split(" (")[0]
-    elif "weapon" in it:
-        p.weapon, p.weapon_name = it["weapon"], it["name"].split(" (")[0]
-    elif "armor" in it:
-        p.armor, p.armor_name = it["armor"], it["name"].split(" (")[0]
-    elif "ability" in it:
+    if "ability" in it:
         p.abilities.append(it["ability"])
+    else:
+        bag.give(world, item_id)
     return f"Bought {it['name'].split(' (')[0]} for {cost} {world.currency}."
 
 
-def sell(world: World, name: str, all_: bool) -> str:
-    p = world.player
-    n = p.loot.get(name, 0) if all_ else min(1, p.loot.get(name, 0))
-    if n <= 0:
+def sell(world: World, item: str, all_: bool) -> str:
+    have = bag.count(world.player, item)
+    n = have if all_ else min(1, have)
+    if n <= 0 or item not in ITEMS:
         return "You have none of that."
-    p.loot[name] -= n
-    p.gold += n * sell_price(world, name)
-    return f"Sold {n} {name} for {n * sell_price(world, name)} {world.currency}."
+    bag.take(world, item, n)
+    world.player.gold += n * sell_price(world, item)
+    return f"Sold {n} {ITEMS[item]['name']} for {n * sell_price(world, item)} {world.currency}."
 
 
 SERVICES = {name: [(o["action"], o["label"], o["price"]) for o in spec["options"]] for name, spec in SERVICE_DATA.items() if "options" in spec}
@@ -112,7 +97,9 @@ def use_service(world: World, service: str, action: str, npc_id: int | None) -> 
         return "They don't offer that.", {}
     if action == "surrender":
         p.gold //= 2
-        p.loot.clear()
+        for item, n in bag.held(p).items():
+            if ITEMS.get(item, {}).get("loot"):
+                bag.take(world, item, n)
         p.bounty = 0
         return "You surrender. Your crimes are forgiven, at a price.", {"wanted": 0, "clear_wanted": True}
     if p.gold < opt["price"]:

@@ -1,9 +1,10 @@
 // Everything that crosses to the server: reports what happened in the simulation, and carries back what the server decided.
 import { G, isPaused } from '../core/state.js';
 import { emit, on, toast } from '../core/events.js';
-import { drank } from '../sim/abilities.js';
-import { applyEffects, applyState } from '../sim/effects.js';
+import { applyEffects, applyState, creativeChanged } from '../sim/effects.js';
 import { requeueEdits, takeUnsentEdits } from '../sim/edits.js';
+import { bagReport, blockSummary } from '../sim/inventory.js';
+import { stationReport } from '../sim/stations.js';
 import { ents, isNight } from '../sim/entities.js';
 import { crimeJudged, replaceSettlement } from '../sim/people.js';
 import { player } from '../sim/player.js';
@@ -23,9 +24,10 @@ on('boss:phase', phase => report(() => api.event({ type: 'boss_phase', phase }))
 on('dragon:mood', kind => report(() => api.event({ type: 'dragon', kind })));
 on('creature:spotted', kind => report(() => api.event({ type: 'spotted', kind })));
 on('entity:killed', ({ kind, byPlayer, resident, named }) => report(() => api.event({ type: 'kill', kind, by_player: byPlayer, resident, named }), withMessages));
-on('item:used', item => report(() => api.event({ type: 'use', item }), res => { applyState(res); drank(item, res.ok); }));
 on('crime:reported', ({ type, civilians, body }) => report(() => api.crime(body), res => { applyState(res); crimeJudged(type, civilians, res); }));
 on('law:reported', ({ law, by }) => report(() => api.report(law, by), res => { applyState(res); applyEffects(res.effects); }));
+// The player pressed something and is waiting, so a failure has to say so, and only a failed request counts as one.
+on('creative:asked', want => api.creative(want).then(res => { applyState(res); creativeChanged(); }, () => toast('The server did not answer, so creative mode stayed as it was.', 4)));
 // Practice deepens the well. Spent mana goes over in handfuls, because a request for every spell would be a lot in a fight.
 let castMana = 0;
 on('mana:spent', cost => {
@@ -42,7 +44,7 @@ function sendBlocks(keepalive = false) {
   clearTimeout(blocksTimer);
   blocksTimer = null;
   const edits = takeUnsentEdits();
-  api.blocks(G.profile.blocks, edits, keepalive).catch(() => requeueEdits(edits));
+  api.blocks(blockSummary(), edits, bagReport(stationReport()), keepalive).catch(() => requeueEdits(edits));
 }
 on('blocks:changed', () => { clearTimeout(blocksTimer); blocksTimer = setTimeout(sendBlocks, BLOCKS_DELAY); });
 

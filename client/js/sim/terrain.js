@@ -1,6 +1,7 @@
 // Terrain generation. The world layout (lands, settlements, buildings) comes from the server and the shape of the land from
 // sim/land.js; this turns them into blocks deterministically, chunk by chunk.
 import { ID } from './blocks.js';
+import { carveDeep, forgetCaves, openGroundAt } from './caves.js';
 import { acacia, baobab, birch, boulder, bush, cactus, deadTree, elfTree, fallenLog, giantMushroom, giantTree, greatOak, oak, palm, spruce } from './flora.js';
 import { B, CROWN_TOP, CS, GORGE_FROM, H, LAND, LAVA_LEVEL, ROCK_LINE, SEA, SNOW_LINE, biomeAt, columnsOf, gorgeX, heightAt, inTown, lairAt, landOf, nearLair, onCrown, rollBiome, setLandData, settlement, slopeAt } from './land.js';
 import { NZ, hash2, hash3, mulberry, noise3, ss } from './noise.js';
@@ -13,18 +14,23 @@ export { hintQueue } from './structures.js';
 
 const {
   Air, Bedrock, Stone, Dirt, Sand, Sandstone, Gravel, Grass, FaeGrass, SavannaGrass, Moss, Snow, SnowLayer, Water, Magma, Blackstone, Basalt, AshenGround, RedClay, Terracotta, DarkTerracotta, Obsidian, BoneBlock,
-  Planks, OakLog, Fence, Lantern, CoalOre, IronOre, ManaOre, OakLeaves, BirchLeaves, TallGrass, Fern, Poppy, Dandelion, Cornflower, FaeBloom, DryGrass, DeadBush, SeaGrass, LilyPad, Glowshroom, RedMushroom,
+  Planks, OakLog, Fence, Lantern, OakLeaves, BirchLeaves, TallGrass, Fern, Poppy, Dandelion, Cornflower, FaeBloom, DryGrass, DeadBush, SeaGrass, LilyPad, Glowshroom, RedMushroom,
 } = ID;
 const CHUNKS_WIDE = LAND / CS, HEART = CHUNKS_WIDE / 2 - 1;
 const STEEP = 3;         // a step this high shows bare rock, and nothing takes root on it
 const TRIES = 18;        // spots a chunk tries for its trees and rocks
 const STRATA = [Terracotta, RedClay, Sandstone, DarkTerracotta, RedClay, Terracotta, Sandstone]; // the bands in a mesa's side
-const VEINS = [{ id: CoalOre, count: 9, low: 8, high: 92, size: 8 }, { id: IronOre, count: 6, low: 6, high: 60, size: 6 }, { id: ManaOre, count: 2, low: 6, high: 30, size: 4 }];
-const CAVE_STEP = 4, CAVE_SIZE = 0.085, CAVE_TOP = 96, CAVE_ROOF = 6, LAVA_FLOOR = 9;
 // The hall under the Wyrmcrown: a dome big enough for what sleeps there, a shaft up to the summit that it flies through, and a tunnel you walk.
 const HALL_FLOOR = SEA + 34, HALL_MID = SEA + 44, HALL_R = 30, HALL_TALL = 16, SHAFT_R = 10, TUNNEL_R = 5, TUNNEL_TALL = 8, TEETH_AT = 60;
 
-export function setWorldData(w) { setLandData(w); layRoads(); }
+export function setWorldData(w) { setLandData(w); layRoads(); forgetCaves(); }
+// Which cave biome lies under a spot: a slow noise chooses among what suits the land above.
+const UNDER = { [B.PEAKS]: ['crystal', 'frozen'], [B.ELF]: ['crystal', 'verdant'], [B.KINGDOM]: ['verdant', 'marble', 'drip'], [B.BEAST]: ['drip', 'ember'], [B.DEMON]: ['ember'], [B.MIRE]: ['fungal', 'verdant'], [B.OCEAN]: ['drip', 'crystal'], [B.BEACH]: ['drip', 'verdant'] };
+export function caveBiomeAt(x, z) {
+  const list = UNDER[landOf(x, z).b] ?? ['drip'];
+  return list[Math.min(list.length - 1, Math.floor((NZ.BIOME(x / 190, z / 190) * 0.5 + 0.5) * list.length))];
+}
+const DEEP = { sea: SEA, height: H, biomeAt: caveBiomeAt, steepAt: (x, z) => slopeAt(x, z) >= STEEP, surfaceAt: (x, z) => heightAt(Math.round(x), Math.round(z)), keepOut: (x, z) => inTown(x, z) || nearLair(x, z, GORGE_FROM + 24) };
 const mod = (a, b) => ((a % b) + b) % b;
 export const idx = (x, y, z) => x + z * CS + y * CS * CS;
 
@@ -79,50 +85,6 @@ function carveLair(cx, cz, d, cols) {
   }
 }
 
-// Caves are the lines where two slow noises both cross zero, read on a coarse lattice because most of a chunk is nowhere near one.
-function carveCaves(cx, cz, d, cols) {
-  const n = Math.floor(CS / CAVE_STEP) + 1, layers = Math.floor(CAVE_TOP / CAVE_STEP) + 1, A = new Float32Array(n * n * layers), Z = new Float32Array(n * n * layers);
-  const at = (i, j, k) => i + j * n + k * n * n;
-  for (let k = 0; k < layers; k++) for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-    const x = cx * CS + i * CAVE_STEP, y = k * CAVE_STEP, z = cz * CS + j * CAVE_STEP;
-    A[at(i, j, k)] = noise3(NZ.CA, x / 30, y / 20, z / 30); Z[at(i, j, k)] = noise3(NZ.CB, x / 30, y / 20, z / 30);
-  }
-  for (let k = 1; k < layers - 1; k++) for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) {
-    let lowA = 9, highA = -9, lowZ = 9, highZ = -9;
-    for (let c = 0; c < 8; c++) {
-      const p = at(i + (c & 1), j + (c >> 1 & 1), k + (c >> 2 & 1)), a = A[p], z = Z[p];
-      if (a < lowA) lowA = a; if (a > highA) highA = a; if (z < lowZ) lowZ = z; if (z > highZ) highZ = z;
-    }
-    if (lowA > CAVE_SIZE || highA < -CAVE_SIZE || lowZ > CAVE_SIZE || highZ < -CAVE_SIZE) continue;
-    for (let dx = 0; dx < CAVE_STEP; dx++) for (let dz = 0; dz < CAVE_STEP; dz++) {
-      const x = i * CAVE_STEP + dx, z = j * CAVE_STEP + dz, col = x + z * CS, h = cols.h[col];
-      if (cols.town[col] || h <= SEA + 2) continue; // never under a town or a seabed
-      const open = slopeAt(cx * CS + x, cz * CS + z) >= STEEP ? h : h - CAVE_ROOF, tx = dx / CAVE_STEP, tz = dz / CAVE_STEP; // a cave only breaks the surface on a slope, where nothing grows to be left hanging
-      for (let dy = 0; dy < CAVE_STEP; dy++) {
-        const y = k * CAVE_STEP + dy;
-        if (y > open || y < 3) continue;
-        const ty = dy / CAVE_STEP;
-        if (Math.abs(trilinear(A, at, i, j, k, tx, ty, tz)) < CAVE_SIZE && Math.abs(trilinear(Z, at, i, j, k, tx, ty, tz)) < CAVE_SIZE) d[idx(x, y, z)] = y < LAVA_FLOOR ? Magma : Air;
-      }
-    }
-  }
-}
-function trilinear(f, at, i, j, k, tx, ty, tz) {
-  const c = (a, b, e) => f[at(i + a, j + b, k + e)], l = (a, b, t) => a + (b - a) * t;
-  return l(l(l(c(0, 0, 0), c(1, 0, 0), tx), l(c(0, 1, 0), c(1, 1, 0), tx), tz), l(l(c(0, 0, 1), c(1, 0, 1), tx), l(c(0, 1, 1), c(1, 1, 1), tx), tz), ty);
-}
-function layOres(cx, cz, d) {
-  const r = mulberry(hash2(cx * 7 + 3, cz * 13 + 1));
-  for (const { id, count, low, high, size } of VEINS) for (let n = 0; n < count; n++) {
-    let x = Math.floor(r() * CS), y = low + Math.floor(r() * (high - low)), z = Math.floor(r() * CS);
-    for (let i = 0; i < size; i++) {
-      if (x >= 0 && z >= 0 && x < CS && z < CS && d[idx(x, y, z)] === Stone) d[idx(x, y, z)] = id;
-      const m = Math.floor(r() * 3), s = r() < 0.5 ? 1 : -1;
-      if (m === 0) x += s; else if (m === 1) y += s; else z += s;
-    }
-  }
-}
-
 // ---------- roads ----------
 function layRoad(cx, cz, set) {
   const row = roadsIn(cx, cz);
@@ -160,7 +122,7 @@ function growth(cx, cz, L, skipX, skipZ, set, r) {
     let b = biomeAt(x, z, h);
     if (b === B.ELF || b === B.KINGDOM || b === B.BEAST) b = rollBiome(x, z, rr); // the two sides of a border mingle
     const clump = b === B.OCEAN || b === B.BEACH ? 1 : ss(-0.3, 0.35, NZ.F(x / 64, z / 64));
-    if (pass > (PLENTY[b] ?? 0) * density * clump || (h <= SEA && b !== B.OCEAN) || (h >= SEA && (b === B.OCEAN || slopeAt(x, z) >= STEEP)) || roadAt(x, z) || nearLair(x, z, HALL_R + 2)) continue;
+    if (pass > (PLENTY[b] ?? 0) * density * clump || (h <= SEA && b !== B.OCEAN) || (h >= SEA && (b === B.OCEAN || slopeAt(x, z) >= STEEP)) || roadAt(x, z) || nearLair(x, z, HALL_R + 2) || openGroundAt(x, z, h, DEEP)) continue; // nothing grows on air: a ravine or a cave mouth may have taken the ground
     if (inTown(x, z)) { if (!town || pass > 0.25 || !clearOfBuildings(town, x, z)) continue; } // a yard may keep one tree
     growTree(b, x, h, z, set, r);
   }
@@ -228,8 +190,7 @@ export function genChunk(cx, cz, edits) {
     for (let y = h + 1; y <= SEA; y++) d[idx(x, y, z)] = Water;
     if (b === B.DEMON) for (let y = h + 1; y <= LAVA_LEVEL; y++) d[idx(x, y, z)] = Magma; // the Wastes' rivers run with fire
   }
-  carveCaves(cx, cz, d, cols);
-  layOres(cx, cz, d);
+  carveDeep(cx, cz, d, cols, DEEP);
   carveLair(cx, cz, d, cols);
   const set = (wx, y, wz, id, soft) => {
     const x = wx - bx, z = wz - bz;

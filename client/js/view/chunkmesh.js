@@ -19,6 +19,9 @@ const SHAPES = { // boxes in sixteenths of a block: [x0, y0, z0, x1, y1, z1]
   layer: [[0, 0, 0, 16, 3, 16]],
   torch: [[7, 0, 7, 9, 11, 9]],
   lantern: [[5, 2, 5, 11, 11, 11], [6, 11, 6, 10, 12, 10], [7, 12, 7, 9, 16, 9]],
+  crystal_tip: [[3, 0, 3, 13, 5, 13], [5, 5, 5, 11, 10, 11], [7, 10, 7, 9, 16, 9]],
+  chest: [[1, 0, 1, 15, 14, 15]],
+  anvil: [[2, 0, 2, 14, 3, 14], [4, 3, 5, 12, 5, 11], [5, 5, 6, 11, 9, 10], [1, 9, 4, 15, 15, 12]],
   stairs_n: [[0, 0, 0, 16, 8, 16], [0, 8, 0, 16, 16, 8]],
   stairs_s: [[0, 0, 0, 16, 8, 16], [0, 8, 8, 16, 16, 16]],
   stairs_e: [[0, 0, 0, 16, 8, 16], [8, 8, 0, 16, 16, 16]],
@@ -285,7 +288,45 @@ function meshChunk(k, ch) {
     while (i < end && OPAQUE[d[i]]) i++;
     full[y] = i === end ? 1 : 0;
   }
-  for (let y = 0; y <= top; y++) for (let z = 0; z < CS; z++) for (let x = 0; x < CS; x++) {
+  const cut = deepLine(d, top);
+  layerRange(cut, top, ch, cols, full, bx, bz);
+  const m = { meshes: [], deep: [] };
+  hide(k);
+  publish(m.meshes, bx, bz, true);
+  for (const layer of layers) layer.quads = 0;
+  layerRange(0, cut - 1, ch, cols, full, bx, bz);
+  publish(m.deep, bx, bz, deepShown);
+  shown.set(k, m);
+  ch.dirty = false;
+}
+// Cave walls cost triangles whether or not anyone can see them, so what lies well below a chunk's lowest ground is a second mesh, drawn only with the camera underground.
+const DEEP_MARGIN = 6;
+function deepLine(d, top) {
+  let lowest = top;
+  for (let z = 0; z < CS; z++) for (let x = 0; x < CS; x++) { let y = lowest; while (y > 0 && !OPAQUE[d[x + z * CS + y * CS * CS]]) y--; if (y < lowest) lowest = y; }
+  return Math.max(1, lowest - DEEP_MARGIN);
+}
+let deepShown = false;
+export function setDeepShown(on) {
+  if (on === deepShown) return;
+  deepShown = on;
+  for (const m of shown.values()) for (const mesh of m.deep) mesh.visible = on;
+}
+function publish(list, bx, bz, visible) {
+  const mats = [solidMat, cutoutMat, glassMat, waterMat];
+  layers.forEach((layer, i) => {
+    const g = layer.geometry(i === WATER_LAYER);
+    if (!g) return;
+    const mesh = new THREE.Mesh(g, mats[i]);
+    mesh.position.set(bx, 0, bz);
+    mesh.renderOrder = i >= GLASS_LAYER ? 1 : 0;
+    mesh.visible = visible;
+    scene.add(mesh);
+    list.push(mesh);
+  });
+}
+function layerRange(from, to, ch, cols, full, bx, bz) {
+  for (let y = from; y <= to; y++) for (let z = 0; z < CS; z++) for (let x = 0; x < CS; x++) {
     if (full[y] && y > 0 && full[y - 1] && full[y + 1] && x > 0 && x < CS - 1 && z > 0 && z < CS - 1) continue;
     const v = cell(x, y, z), id = vol[v];
     if (id === AIR) continue;
@@ -317,24 +358,11 @@ function meshChunk(k, ch) {
       cubeFace(layer, f, x, y, z, front, look, look.tiles[up ? 0 : f.d[1] < 0 ? 2 : 1], hue, look.sway, drift);
     }
   }
-  hide(k);
-  const m = { meshes: [] }, mats = [solidMat, cutoutMat, glassMat, waterMat];
-  layers.forEach((layer, i) => {
-    const g = layer.geometry(i === WATER_LAYER);
-    if (!g) return;
-    const mesh = new THREE.Mesh(g, mats[i]);
-    mesh.position.set(bx, 0, bz);
-    mesh.renderOrder = i >= GLASS_LAYER ? 1 : 0;
-    scene.add(mesh);
-    m.meshes.push(mesh);
-  });
-  shown.set(k, m);
-  ch.dirty = false;
 }
 function hide(k) {
   const m = shown.get(k);
   if (!m) return;
-  for (const mesh of m.meshes) { scene.remove(mesh); mesh.geometry.dispose(); }
+  for (const mesh of [...m.meshes, ...m.deep]) { scene.remove(mesh); mesh.geometry.dispose(); }
   shown.delete(k);
 }
 on('chunk:unloaded', hide);

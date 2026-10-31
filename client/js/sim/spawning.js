@@ -12,7 +12,7 @@ import { fitsAt, spawnEntity } from './entities.js';
 import { lampLight, skyLight } from './light.js';
 import { floorBelow } from './paths.js';
 import { inView, player } from './player.js';
-import { H, SEA, biomeAt, heightAt, hintQueue, inCity, inTown, landOf, nearLair } from './terrain.js';
+import { H, SEA, biomeAt, heightAt, hintQueue, inCity, inTown, landOf, nearLair, caveBiomeAt } from './terrain.js';
 
 const APPEAR_RANGE = 48, HINT_GAP = 0.5, SPOT_TRIES = 28, PACK_SPREAD = 3, UNDERGROUND = 4, CAVE_LOOK = 12, CAVE_SPAN = 14, DARK_SKY = 7, BRIGHT = 9, COUNT_BEYOND = 16;
 const PATIENCE = 60, RETRY_EVERY = 1, RETURN_AFTER = 45, LAIR_HALL = 40;
@@ -31,7 +31,7 @@ function surfaceRules(x, z, y, cat) {
   const table = SPAWNS.biomes[keyOf(biomeAt(x, z, y))]?.[cat] ?? [], here = SPAWNS.structures[landOf(x, z).structure]?.[cat] ?? [];
   return here.length ? [...table, ...here] : table;
 }
-const caveRules = (x, z, y) => SPAWNS.caves[keyOf(biomeAt(x, z, y))] ?? SPAWNS.caves.default;
+const caveRules = (x, z, y) => SPAWNS.caves[caveBiomeAt(x, z)] ?? SPAWNS.caves[keyOf(biomeAt(x, z, y))] ?? SPAWNS.caves.default;
 export function localMonsters() { // for events that want whatever hunts around here
   const x = Math.floor(player.pos.x), z = Math.floor(player.pos.z);
   return surfaceRules(x, z, heightAt(x, z), 'monster').map(r => r.kind);

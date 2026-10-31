@@ -4,7 +4,9 @@ import { SERVICES } from '../core/content.js';
 import { on, toast } from '../core/events.js';
 import { api } from '../net/api.js';
 import { applyEffects, applyState } from '../sim/effects.js';
-import { esc, goodIcon, icon, rich } from './art.js';
+import { bagReport, blockSummary } from '../sim/inventory.js';
+import { stationReport } from '../sim/stations.js';
+import { esc, goodArt, icon, itemIcon, rich } from './art.js';
 import { capture, release } from './pointer.js';
 
 const $ = id => document.getElementById(id);
@@ -72,10 +74,10 @@ const coins = n => `${icon('coin')}${n}`;
 
 function buyRow(it, gold) {
   const [name, detail] = parts(it.name);
-  return row(icon(goodIcon(it.id)), name, detail, `<button data-a="buy" data-i="${esc(it.id)}" ${it.owned || gold < it.price ? 'disabled' : ''}>${it.owned ? 'Owned' : coins(it.price)}</button>`);
+  return row(goodArt(it.id), name, detail, `<button data-a="buy" data-i="${esc(it.id)}" ${it.owned || gold < it.price ? 'disabled' : ''}>${it.owned ? 'Owned' : coins(it.price)}</button>`);
 }
-const sellRow = it => row(icon('loot'), `${it.name} ×${it.count}`, '',
-  `<button data-a="sell" data-i="${esc(it.name)}">${coins(it.price)}</button><button data-a="sellall" data-i="${esc(it.name)}">All</button>`);
+const sellRow = it => row(`<img src="${itemIcon(it.id)}" alt="">`, `${it.name} ×${it.count}`, '',
+  `<button data-a="sell" data-i="${esc(it.id)}">${coins(it.price)}</button><button data-a="sellall" data-i="${esc(it.id)}">All</button>`);
 function optionRow(o, gold, currency) {
   const [name, detail] = parts(o.label);
   return row(icon('heal'), name, detail, `<button data-a="${esc(o.action)}" ${gold < o.price ? 'disabled' : ''}>${o.price} ${currency}</button>`);
@@ -123,7 +125,7 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('#pageright button[data-a]');
   if (!b || !current || acting) return;
   const a = b.dataset.a, i = b.dataset.i, { type, settlement, npc } = current;
-  const body = { type, settlement, npc: npc.res?.id ?? null };
+  const body = { type, settlement, npc: npc.res?.id ?? null, pack: bagReport(stationReport()) };
   if (a === 'buy') Object.assign(body, { action: 'buy', item: i });
   else if (a === 'sell' || a === 'sellall') Object.assign(body, { action: 'sell', item: i, all: a === 'sellall' });
   else if (a === 'accept') Object.assign(body, { action: 'accept', index: +i });
@@ -174,7 +176,7 @@ async function say(topic, label = '') {
   c.busy = npc.talking = true;
   try {
     const res = c.prayer ? await api.pray(topic) : await api.talk({
-      settlement: npc.res ? c.settlement : null, resident: npc.res?.id ?? null, creature: npc.role ? `traveller:${npc.role}` : npc.kind, name: npc.name, topic, blocks: G.profile.blocks,
+      settlement: npc.res ? c.settlement : null, resident: npc.res?.id ?? null, creature: npc.role ? `traveller:${npc.role}` : npc.kind, name: npc.name, topic, blocks: blockSummary(), pack: bagReport(stationReport()),
     });
     applyState(res); applyEffects(res.effects);
     if (res.gift) toast(`🎁 ${res.gift}`, 5);

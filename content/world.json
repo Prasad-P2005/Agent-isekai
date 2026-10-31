@@ -1,8 +1,8 @@
 {
   "land": 128,
   "chunk": 16,
-  "height": 160,
-  "sea": 48,
+  "height": 224,
+  "sea": 112,
   "resident_id_base": 1000,
   "towns": {
     "human": { "reach": 44 },

@@ -29,6 +29,7 @@ BLOCK_NAMES = {b["id"]: b["name"] for b in _load("blocks")}
 CREATURES = _load("creatures")
 ABILITIES = _load("abilities")
 ITEMS = _load("items")
+RECIPES = _load("recipes")
 SERVICES = _load("services")
 JOBS = _load("jobs")
 LAWS = _load("laws")

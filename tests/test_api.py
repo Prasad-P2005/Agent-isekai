@@ -39,7 +39,7 @@ def test_full_flow(tmp_path):
         c.post("/api/blocks", json={"blocks": {"3": 12, "2": 0}})
         assert c.get("/api/world").json()["player"]["blocks"] == {"3": 12}
         r = c.post("/api/event", json={"type": "kill", "kind": "orc"}).json()
-        assert "+1 Orc Tusk" in r["messages"] and r["player"]["loot"] == {"Orc Tusk": 1}
+        assert "+1 Orc Tusk" in r["messages"] and r["player"]["parcels"][-1]["id"] == "orc_tusk"
 
 
 def event(client, **body) -> dict:
@@ -51,17 +51,14 @@ def talk_to(client, settlement, job: str, topic: str = "hello") -> dict:
     return client.post("/api/talk", json={"settlement": settlement.id, "resident": who.id, "topic": topic}).json()
 
 
-def test_a_potion_can_only_be_drunk_once(client, world):
-    assert event(client, type="use", item="potion")["ok"] is True
-    assert world.player.potions == 0
-    assert event(client, type="use", item="potion")["ok"] is False
-    assert world.player.potions == 0
-
-
-def test_a_mana_potion_is_used_up(client, world):
-    world.player.mana_potions = 2
-    assert event(client, type="use", item="mana")["ok"] is True
-    assert world.player.mana_potions == 1
+def test_the_bag_is_saved_and_parcels_are_acknowledged(client, world):
+    event(client, type="kill", kind="orc")
+    seq = world.player.parcels[-1].seq
+    bag = [{"id": "orc_tusk", "n": 1}, {"id": "no_such_thing", "n": 1}, {"id": "iron_sword", "n": 5}]
+    client.post("/api/blocks", json={"blocks": {}, "pack": {"bag": bag, "taken": seq}})
+    assert world.player.bag[0] == {"id": "orc_tusk", "n": 1} and world.player.bag[1] is None
+    assert world.player.bag[2] == {"id": "iron_sword", "n": 1, "dur": 250} and len(world.player.bag) == 36
+    assert world.player.parcels == [] and world.player.parcels_taken == seq
 
 
 def test_an_item_that_does_not_exist_cannot_be_used(client):
@@ -78,7 +75,7 @@ def test_slaying_the_demon_lord_changes_the_world(client, world):
     world.story.stage = 5
     r = event(client, type="kill", kind="demon_lord")
     assert world.demon_lord_dead
-    assert r["player"]["has_crown"] and r["player"]["loot"] == {}
+    assert r["player"]["has_crown"] and r["player"]["parcels"] == []
     assert r["story"]["stage"] == 6
 
 
@@ -89,14 +86,14 @@ def test_your_kills_are_counted(client):
 
 def test_a_kill_by_another_creature_gives_you_nothing(client, world):
     r = event(client, type="kill", kind="orc", by_player=False)
-    assert r["player"]["kills"] == 0 and r["player"]["loot"] == {}
+    assert r["player"]["kills"] == 0 and r["player"]["parcels"] == []
 
 
 def test_killing_a_resident_gives_no_loot_or_kill_count(client, world):
     s = world.settlements_of("human")[0]
     victim = s.residents[0]
     r = event(client, type="kill", kind=victim.kind, resident={"settlement": s.id, "id": victim.id})
-    assert victim.dead and r["player"]["kills"] == 0 and r["player"]["loot"] == {}
+    assert victim.dead and r["player"]["kills"] == 0 and r["player"]["parcels"] == []
 
 
 def test_dying_is_counted(client, world):
@@ -159,6 +156,18 @@ def test_mined_blocks_and_the_inventory_are_saved_together(client, game):
     client.post("/api/blocks", json={"blocks": {"19": 1}, "edits": {"1081360": {"7": 0, "8": 18}}})
     saved = load(game.save_path)
     assert saved.player.blocks == {"19": 1} and saved.block_edits == {"1081360": {"7": 0, "8": 18}}
+
+
+def test_creative_mode_is_saved_with_the_hero(client, game):
+    assert client.post("/api/creative", json={"on": True}).json()["player"]["creative"] is True
+    assert load(game.save_path).player.creative is True
+    client.post("/api/creative", json={"on": False})
+    assert load(game.save_path).player.creative is False
+
+
+def test_a_browser_must_ask_before_reusing_the_client(client):
+    assert client.get("/").headers["cache-control"] == "no-cache"
+    assert client.get("/content/blocks.json").headers["cache-control"] == "no-cache"
 
 
 def test_later_edits_add_to_earlier_ones(client, world):

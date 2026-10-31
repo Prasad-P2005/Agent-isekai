@@ -1,5 +1,5 @@
 from isekai.core.state import GuildQuest, Law
-from isekai.systems import guild, laws, magic, shop
+from isekai.systems import bag, guild, laws, magic, shop
 from isekai.systems.story import advance, objective
 
 
@@ -36,11 +36,10 @@ def test_scope_limits_laws(world):
 
 def test_shop_and_loot(world):
     world.player.gold = 100
-    assert "Bought" in shop.buy(world, "iron_sword") and world.player.weapon == 3
-    assert "already" in shop.buy(world, "iron_sword")
-    world.player.loot["Orc Tusk"] = 2
-    shop.sell(world, "Orc Tusk", all_=True)
-    assert world.player.loot["Orc Tusk"] == 0 and world.player.gold == 100 - shop.price(world, "iron_sword") + 28
+    assert "Bought" in shop.buy(world, "iron_sword") and bag.count(world.player, "iron_sword") == 1
+    world.player.bag[1] = {"id": "orc_tusk", "n": 2}
+    shop.sell(world, "orc_tusk", all_=True)
+    assert bag.count(world.player, "orc_tusk") == 0 and world.player.gold == 100 - shop.price(world, "iron_sword") + 28
 
 
 def test_a_bounty_punishment_raises_the_bounty(world):
@@ -90,7 +89,7 @@ def test_guards_come_angry(world):
 def test_you_cannot_buy_without_enough_money(world):
     world.player.gold = 59
     shop.buy(world, "iron_sword")
-    assert (world.player.gold, world.player.weapon) == (59, 0)
+    assert (world.player.gold, bag.count(world.player, "iron_sword")) == (59, 0)
 
 
 def test_buying_an_unknown_item_changes_nothing(world):
@@ -101,9 +100,9 @@ def test_buying_an_unknown_item_changes_nothing(world):
 
 def test_selling_one_keeps_the_rest(world):
     world.player.gold = 0
-    world.player.loot["Orc Tusk"] = 3
-    shop.sell(world, "Orc Tusk", all_=False)
-    assert world.player.loot["Orc Tusk"] == 2 and world.player.gold == 14
+    world.player.bag[1] = {"id": "orc_tusk", "n": 3}
+    shop.sell(world, "orc_tusk", all_=False)
+    assert bag.count(world.player, "orc_tusk") == 2 and world.player.gold == 14
 
 
 def test_you_cannot_sell_what_you_do_not_have(world):
@@ -130,11 +129,6 @@ def test_traders_charge_what_they_think_of_you(world):
 def test_a_festival_lowers_prices(world):
     world.festival_until = world.clock + 60
     assert shop.price(world, "potion") == 12
-
-
-def test_a_potion_is_used_up_by_drinking(world):
-    assert shop.use_item(world, "potion") is True and world.player.potions == 0
-    assert shop.use_item(world, "potion") is False
 
 
 def test_services_cost_money(world):
@@ -223,9 +217,9 @@ def test_paying_your_bounty_clears_it_for_a_fee(world):
 
 def test_surrender_costs_half_your_money_and_all_your_loot(world):
     world.player.gold, world.player.bounty = 101, 100
-    world.player.loot["Orc Tusk"] = 3
+    world.player.bag[1] = {"id": "orc_tusk", "n": 3}
     _, effects = shop.use_service(world, "bounty", "surrender", None)
-    assert (world.player.gold, world.player.bounty, world.player.loot) == (50, 0, {}) and effects["clear_wanted"]
+    assert (world.player.gold, world.player.bounty, bag.count(world.player, "orc_tusk")) == (50, 0, 0) and effects["clear_wanted"]
 
 
 def test_guild_quest_flow(world):

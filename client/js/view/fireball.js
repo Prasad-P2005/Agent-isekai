@@ -126,6 +126,7 @@ const flying = new Map(); // projectile -> how it is drawn
 const point = new THREE.Vector3(), spot = new THREE.Vector3(), toEye = new THREE.Vector3(), drift = new THREE.Vector3(), turn = new THREE.Quaternion();
 
 on('projectile:spawned', pr => {
+  if (pr.arrow) return; // view/arrows.js
   const at = new THREE.Vector3().copy(pr.pos);
   flying.set(pr, { at, fromHand: new THREE.Vector3(), axis: new THREE.Vector3().randomDirection(), spin: new THREE.Quaternion(), age: 0, grown: 0, owed: 0, halo: takeSprite(HALO, 0xff8a2a) });
 });
@@ -190,6 +191,7 @@ function fizzle(at) {
 }
 on('projectile:removed', pr => {
   const b = flying.get(pr);
+  if (!b) return;
   if (b.halo) b.halo.visible = false;
   flying.delete(pr);
   if (!pr.hit) return fizzle(b.at);

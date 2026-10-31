@@ -15,8 +15,8 @@
   "cairn": {"label": "The Cairn", "friendly": true, "sacred": true, "stone": true, "hp": 1, "speed": 0, "w": 1.0, "h": 1.6, "body": "#77758b", "head": "#c79cff"},
   "law_stone": {"label": "Law Stone", "friendly": true, "sacred": true, "stone": true, "hp": 1, "speed": 0, "w": 1.2, "h": 2.6, "body": "#e8d6ec", "head": "#b07cff"},
 
-  "deer": {"label": "Deer", "wild": true, "brain": "prey", "hp": 14, "speed": 4.4, "w": 0.8, "h": 1.5, "body": "#a8794f", "head": "#c19a6b", "hair": "#e8dcc4", "quad": true, "loot": {"name": "Deer Hide", "value": 4}},
-  "boar": {"label": "Wild Boar", "wild": true, "brain": "neutral", "hp": 24, "dmg": 4, "speed": 3.6, "w": 0.9, "h": 1.0, "body": "#5b4636", "head": "#6e5644", "hair": "#2e2420", "quad": true, "loot": {"name": "Boar Tusk", "value": 6}},
+  "deer": {"label": "Deer", "wild": true, "brain": "prey", "hp": 14, "speed": 4.4, "w": 0.8, "h": 1.5, "body": "#a8794f", "head": "#c19a6b", "hair": "#e8dcc4", "quad": true, "meat": "raw_venison", "loot": {"name": "Deer Hide", "value": 4}},
+  "boar": {"label": "Wild Boar", "wild": true, "brain": "neutral", "hp": 24, "dmg": 4, "speed": 3.6, "w": 0.9, "h": 1.0, "body": "#5b4636", "head": "#6e5644", "hair": "#2e2420", "quad": true, "meat": "raw_boar", "loot": {"name": "Boar Tusk", "value": 6}},
   "crab": {"label": "Shore Crab", "wild": true, "brain": "neutral", "hp": 8, "dmg": 2, "speed": 2.2, "w": 0.8, "h": 0.5, "body": "#c8553d", "head": "#e07a5f", "hair": "#f2cc8f", "loot": {"name": "Crab Claw", "value": 3}},
   "bat": {"label": "Cave Bat", "wild": true, "brain": "flutter", "hp": 4, "speed": 3.5, "w": 0.4, "h": 0.4, "fly": true, "body": "#3f3547", "head": "#54485e", "hair": "#77758b"},
   "fish": {"label": "Silverfin", "wild": true, "ambient": true, "hp": 1, "speed": 2, "w": 0.3, "h": 0.2, "body": "#9fc4d8", "head": "#c8dfea", "hair": "#e8a24a"},

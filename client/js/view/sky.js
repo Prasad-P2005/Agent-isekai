@@ -6,10 +6,11 @@ import { RD } from '../sim/chunks.js';
 import { ss } from '../sim/noise.js';
 import { player } from '../sim/player.js';
 import { B, climateAt } from '../sim/terrain.js';
+import { WORLD } from '../core/content.js';
 import { CLOUD_CELL, CLOUD_CELLS, CLOUD_SPAN, cloudMap, cloudMat, shared, skyMat } from './materials.js';
 import { ambientLight, scene, sunLight } from './scene.js';
 
-const SUN_FAR = 400, SUN_TILT = 0.22, CLOUD_Y = 128, CLOUD_DEEP = 5, CLOUD_FILL = 0.56, WIND = [1.6, 0.5]; // blocks a second
+const SUN_FAR = 400, SUN_TILT = 0.22, CLOUD_Y = WORLD.sea + 80, CLOUD_DEEP = 5, CLOUD_FILL = 0.56, WIND = [1.6, 0.5]; // blocks a second
 const MOOD_EASE = 0.5, UNDER_EASE = 8;
 const rgb = c => [(c >> 16 & 255) / 255, (c >> 8 & 255) / 255, (c & 255) / 255];
 const blend = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);

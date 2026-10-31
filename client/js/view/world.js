@@ -5,6 +5,8 @@ import { getBlock } from '../sim/chunks.js';
 import { aim } from '../sim/mining.js';
 import { eye, player } from '../sim/player.js';
 import { updateAmbience } from './ambience.js';
+import { updateCaveAir } from './caveair.js';
+import { syncArrows } from './arrows.js';
 import { syncBodies } from './bodies.js';
 import { syncFireballs } from './fireball.js';
 import { updateFish } from './fish.js';
@@ -21,6 +23,7 @@ const BOB = 0.032, SWAY = 0.018, STRIDES_PER_BLOCK = 1.45, GAIT_EASE = 10, FULL_
 const SPRINT_FOV = 7, FLIGHT_FOV = 12, SWIM_FOV = -5, FOV_EASE = 7, LEAN = 0.0035, LEAN_EASE = 8, HURT_ROLL = 0.07, HURT_FADE = 9, SWIM_ROLL = 0.018;
 let stride = 0, gait = 0, dip = 0, dipRate = 0, fov = BASE_FOV, lean = 0, flinch = 0, clock = 0;
 on('player:landed', speed => { dipRate -= Math.min(speed, MAX_IMPACT) * DIP_KICK; });
+on('camera:kick', k => { dipRate -= k; });
 on('player:hurt', () => { flinch = Math.random() < 0.5 ? HURT_ROLL : -HURT_ROLL; });
 
 // Drawn between the last two steps of the simulation, which is what keeps the view gliding at any refresh rate.
@@ -56,6 +59,7 @@ export function isUnderwater() {
 }
 export function renderWorld(dt, blend) {
   placeCamera(blend);
+  updateCaveAir(dt, camera.position);
   const under = isUnderwater();
   walkCamera(dt, under);
   updateSky(camera.position, dt, under);
@@ -63,6 +67,7 @@ export function renderWorld(dt, blend) {
   updateFish(dt);
   syncBodies(dt, blend);
   syncFireballs(dt);
+  syncArrows();
   syncHand(dt, stride, gait);
   syncCracks();
   const t = aim.block;

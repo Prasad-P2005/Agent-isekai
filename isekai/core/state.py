@@ -117,21 +117,42 @@ class Deed(BaseModel):
     blanks: dict[str, str] = Field(default_factory=dict)
 
 
+class Parcel(BaseModel):
+    """Something the server gives or takes (n below zero). The client owns the bag, so this waits until the client has applied it."""
+    seq: int
+    id: str
+    n: int
+
+
+def _first_bag() -> list[dict | None]:
+    return [{"id": "potion", "n": 1}, *[None] * 35]
+
+
+def _bare_body() -> dict[str, dict | None]:
+    return {"head": None, "body": None, "legs": None, "feet": None, "off": None}
+
+
 class Player(BaseModel):
     gold: int = 30
     bounty: int = 0
     notoriety: int = 0
     renown: int = 0  # how the world sees the hero; crimes lower it
-    potions: int = 1
+    # the bag: 36 slots of {id, n, dur}, the first nine the hotbar. The client owns these, for the same reason it owns the world's blocks.
+    bag: list[dict | None] = Field(default_factory=_first_bag)
+    worn: dict[str, dict | None] = Field(default_factory=_bare_body)  # head, body, legs, feet and the off hand
+    blocks: dict[str, int] = Field(default_factory=dict)  # block id -> count: a summary of the bag, kept for the story, favors and attunement
+    parcels: list[Parcel] = Field(default_factory=list)  # what is on its way to the bag
+    parcel_next: int = 0
+    parcels_taken: int = 0
+    seen: list[str] = Field(default_factory=list)  # every item ever held, which is what unlocks recipes
+    spells: list[str] = Field(default_factory=lambda: ["", ""])  # what Q and R cast
+    # read only by save steps up to 10, which turn them into items
+    potions: int = 0
     mana_potions: int = 0
     loot: dict[str, int] = Field(default_factory=dict)
     weapon: int = 0
-    weapon_name: str = "Fists"
     armor: float = 0.0
-    armor_name: str = "Clothes"
-    tool: float = 1.0  # mining speed multiplier
-    tool_name: str = "Bare hands"
-    blocks: dict[str, int] = Field(default_factory=dict)  # block id -> count
+    tool: float = 1.0
     abilities: list[str] = Field(default_factory=list)
     max_hp: int = 20
     max_mana: int = 100
@@ -151,6 +172,7 @@ class Player(BaseModel):
     has_crown: bool = False
     crowned: bool = False
     descended: bool = False
+    creative: bool = False  # free building: the client reads this and bends its own rules
     # where the session stood; None until the client has reported, and the world spawn is used instead
     pos: Vec3 | None = None
     hp: float | None = None
@@ -222,6 +244,7 @@ class World(BaseModel):
     timers: list[Timer] = Field(default_factory=list)
     festival_until: float = 0
     block_edits: dict[str, dict[str, int]] = Field(default_factory=dict)  # chunk key -> block index -> block id
+    stations: dict[str, dict] = Field(default_factory=dict)  # 'x,y,z' -> what a furnace or a chest holds
     feed: list[FeedItem] = Field(default_factory=list)
     feed_next: int = 1
 

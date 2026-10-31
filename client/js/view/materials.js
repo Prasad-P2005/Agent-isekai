@@ -48,6 +48,7 @@ export const shared = {
   uTiles: { value: tileArray() }, uRipple: { value: rippleMap() }, uCloudMap: { value: null }, uCloudWind: { value: new THREE.Vector2() },
   uZenith: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() }, uGlow: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3(0, 1, 0) },
   uDaylight: { value: new THREE.Color() }, uLamp: { value: new THREE.Color(1, 0.8, 0.52) },
+  uCave: { value: 0 }, uCaveAir: { value: new THREE.Color() }, uCaveHaze: { value: new THREE.Color() }, uTorch: { value: 0 },
   uFogNear: { value: 90 }, uFogFar: { value: 150 }, uUnder: { value: 0 }, uUnderColour: { value: new THREE.Color() },
   uNight: { value: 0 }, uSunlit: { value: 1 }, uCloudColour: { value: new THREE.Color() }, uCloudShade: { value: 0 },
 };
@@ -65,12 +66,13 @@ vec3 skyColour(vec3 d) {
 }
 `;
 const FOG = /* glsl */`
-uniform float uFogNear, uFogFar;
+uniform float uFogNear, uFogFar, uCave;
+uniform vec3 uCaveHaze;
 vec3 fogged(vec3 colour, vec3 world) {
   vec3 ray = world - cameraPosition;
   float dist = length(ray);
-  float near = mix(uFogNear, 1.5, uUnder), far = mix(uFogFar, 34.0, uUnder);
-  return mix(colour, mix(skyColour(ray / dist), uUnderColour, uUnder), smoothstep(near, far, dist));
+  float near = mix(mix(uFogNear, 24.0, uCave), 1.5, uUnder), far = mix(uFogFar, 34.0, uUnder);
+  return mix(colour, mix(mix(skyColour(ray / dist), uCaveHaze, uCave), uUnderColour, uUnder), smoothstep(near, far, dist));
 }
 `;
 
@@ -98,7 +100,8 @@ const BLOCK_FRAGMENT = /* glsl */`
 uniform sampler2DArray uTiles;
 uniform sampler2D uCloudMap;
 uniform vec2 uCloudWind;
-uniform vec3 uDaylight, uLamp;
+uniform vec3 uDaylight, uLamp, uCaveAir;
+uniform float uTorch;
 uniform float uTime, uCloudShade, uSunlit;
 varying vec3 vUvl, vWorld;
 varying vec4 vLit, vTint;
@@ -126,13 +129,15 @@ void main() {
   float cover = texture2D(uCloudMap, (vWorld.xz - uCloudWind) / ${CLOUD_SPAN.toFixed(1)}).r;
   sky *= 1.0 - uCloudShade * cover * smoothstep(0.5, 1.0, vLit.r); // a cloud's shadow crosses the open ground and leaves the shade alone
   float lamp = vLit.g * vLit.g * (1.0 + 0.05 * sin(uTime * 7.0 + floor(vWorld.x * 0.2) * 3.1 + floor(vWorld.z * 0.2) * 1.7));
-  vec3 light = 1.0 - (1.0 - uDaylight * sky) * (1.0 - uLamp * clamp(lamp, 0.0, 1.0));
+  float held = uTorch * pow(max(0.0, 1.0 - length(vWorld - cameraPosition) / 18.0), 2.0); // a torch in the hand
+  lamp = max(lamp, held);
+  vec3 light = 1.0 - (1.0 - uDaylight * sky) * (1.0 - uLamp * clamp(lamp, 0.0, 1.0)) * (1.0 - uCaveAir * uCave);
   light = max(light, vec3(0.045, 0.05, 0.07));
   vec3 colour = albedo * light * vLit.b;
   if (vTint.a > 0.0) colour = mix(colour, albedo * (0.94 + 0.08 * sin(uTime * 1.6 + vWorld.x + vWorld.z)), vTint.a);
   if (vWorld.y < ${SEA.toFixed(1)}) {
     float depth = ${SEA.toFixed(1)} - vWorld.y;
-    colour *= mix(vec3(1.0), vec3(0.6, 0.82, 0.88), clamp(depth / 14.0, 0.0, 1.0));
+    colour *= mix(vec3(1.0), vec3(0.6, 0.82, 0.88), clamp(depth / 14.0, 0.0, 1.0) * step(0.02, vLit.r)); // the sea's colour, not a cave's: nothing that sees no sky is under water
     colour += albedo * caustic(vWorld.xz * 0.9 + vWorld.y * 0.3) * 0.5 * uSunlit * vLit.r * exp(-depth * 0.09);
   }
   gl_FragColor = vec4(fogged(colour, vWorld), alpha);

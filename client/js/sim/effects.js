@@ -1,18 +1,30 @@
 // Applying what the server decided: the new player state, and the effects only the client can carry out.
-import { G } from '../core/state.js';
+import { G, creative } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
 import { ents } from './entities.js';
-import { takeBlock } from './inventory.js';
-import { heal, maxMana, player } from './player.js';
+import { applyParcels, takeBlock } from './inventory.js';
+import { fillSpells } from './abilities.js';
+import { has, heal, maxMana, player } from './player.js';
 import { spawnNear } from './spawning.js';
 import { LAND, SEA, heightAt } from './terrain.js';
 
 export function applyState(res) {
   if (!res) return;
   // The client owns the block inventory: the server's copy can be a moment behind what was just mined.
-  if (res.player) G.profile = { ...res.player, blocks: G.profile?.blocks ?? res.player.blocks, bestiary: [...new Set([...res.player.bestiary ?? [], ...G.profile?.bestiary ?? []])] };
+  if (res.player) G.profile = { ...res.player, blocks: G.profile?.blocks ?? res.player.blocks, bag: G.profile?.bag ?? res.player.bag, worn: G.profile?.worn ?? res.player.worn, seen: G.profile?.seen ?? res.player.seen, spells: G.profile?.spells ?? res.player.spells, bestiary: [...new Set([...res.player.bestiary ?? [], ...G.profile?.bestiary ?? []])] };
+  if (res.player) { applyParcels(res.player.parcels); fillSpells(); }
   if (res.story) { G.objective = res.story.objective; G.oaths = res.story.oaths; G.marks = res.story.marks; emit('objective:changed', G.objective); }
   for (const o of res.reached || []) toast(`📜 New objective: ${o}`, 7);
+}
+// The moment the mode changes. Going back, the hero keeps only what they really have: real blocks, and flight if they learned it.
+export function creativeChanged() {
+  if (creative()) toast('✨ Creative mode: every block is in your bag, F flies, and nothing can touch you.', 5);
+  else {
+    if (!has('flight')) player.fly = false;
+    toast('Creative mode is off.', 2);
+  }
+  emit('hotbar:changed');
+  emit('creative:changed');
 }
 // A land far from here, on solid ground. Exile sets you down somewhere strange: it does not drop you out of the sky.
 function exileLand() {

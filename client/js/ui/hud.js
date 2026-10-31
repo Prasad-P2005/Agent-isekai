@@ -1,6 +1,6 @@
 // The heads-up display: the dock, toasts, the quest note and the land banner.
-import { G, isPaused } from '../core/state.js';
-import { SERVICES } from '../core/content.js';
+import { G, creative, isPaused } from '../core/state.js';
+import { ABILITIES, SERVICES } from '../core/content.js';
 import { on } from '../core/events.js';
 import { ents } from '../sim/entities.js';
 import { miningBar } from '../sim/mining.js';
@@ -61,10 +61,14 @@ function updateDebug(dt) {
   const p = player.pos;
   $('hud').textContent = `XYZ ${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)}\n${fps} fps, ${ents.length} beings`;
 }
-const spellOn = p => (p.id === 'flight' && player.fly) || (p.id === 'mana_ward' && player.wardT > 0);
+const spellOn = p => p.id === 'mana_ward' && player.wardT > 0;
+const SPELL_KEYS = ['Q', 'R'];
 function spellSlots(P) {
-  return P.abilities.map(power).filter(p => p.key)
-    .map(p => `<div class="slot${spellOn(p) ? ' sel' : ''}${player.mana < p.mana ? ' empty' : ''}" title="${esc(p.name)}"><i class="num">${p.key}</i>${icon(p.icon)}</div>`).join('');
+  const free = creative();
+  return (P.spells ?? ['', '']).map((id, i) => {
+    const p = id ? power(id) : null;
+    return `<div class="slot${p && spellOn(p) ? ' sel' : ''}${p && !free && player.mana < p.mana ? ' empty' : ''}" title="${esc(p?.name ?? 'No spell')}"><i class="num">${SPELL_KEYS[i]}</i>${p ? icon(p.icon) : ''}</div>`;
+  }).join('');
 }
 // The E prompt: what you can do with whoever is in reach, shown before you have to guess.
 let promptT = 0;
@@ -94,12 +98,10 @@ export function updateHUD(dt) {
   write('hpbar', 'className', player.hp / maxHp() < LOW_HP ? 'bar low' : 'bar');
   write('mpfill', 'width', (100 * player.mana / maxMana()).toFixed(1) + '%'); write('mptext', 'textContent', `${Math.floor(player.mana)}/${maxMana()}`);
   write('purse', 'innerHTML', `${icon('coin')}${P.gold}`);
-  write('potcount', 'textContent', P.potions); write('quickpot', 'className', P.potions ? 'slot' : 'slot empty');
-  write('manacount', 'textContent', P.mana_potions); write('quickmana', 'className', P.mana_potions ? 'slot' : 'slot empty');
   write('spells', 'innerHTML', spellSlots(P));
   const q = P.active_quest, f = P.favor;
   write('guildq', 'innerHTML', (q ? `${icon('quest')}${esc(q.title)}: ${q.progress}/${q.count}` : '') + (f ? `${q ? '<br>' : ''}${icon('scroll')}${esc(f.summary)}${f.kind === 'hunt' ? `: ${f.progress}/${f.count}` : ''}` : ''));
-  write('status', 'innerHTML', (player.wardT > 0 ? `<span>${icon('ward')}Ward ${Math.ceil(player.wardT)}s</span>` : '') + (player.wanted > 0 ? `<span>${icon('warn')}Wanted ${Math.ceil(player.wanted)}s</span>` : '') + (P.bounty > 0 ? `<span>${icon('coin')}Bounty ${P.bounty}</span>` : ''));
+  write('status', 'innerHTML', (creative() ? `<span>${icon('sparkle')}Creative</span>` : '') + (player.wardT > 0 ? `<span>${icon('ward')}Ward ${Math.ceil(player.wardT)}s</span>` : '') + (player.wanted > 0 ? `<span>${icon('warn')}Wanted ${Math.ceil(player.wanted)}s</span>` : '') + (P.bounty > 0 ? `<span>${icon('coin')}Bounty ${P.bounty}</span>` : ''));
 }
 
 // ---------- the title card that opens an act ----------

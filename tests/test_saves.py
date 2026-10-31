@@ -234,3 +234,16 @@ def test_old_saves_grow_with_the_map_and_keep_their_places(world):
     assert all(s.name and s.residents for s in old.settlements)
     assert len({s.name for s in old.settlements}) == 15
     assert any(land.structure == "dragon_peak" for row in old.lands for land in row)
+
+
+def test_upgrading_packs_the_old_stores_into_the_bag(world):
+    p = world.player
+    p.blocks, p.loot, p.potions, p.weapon, p.tool, p.armor = {"19": 5}, {"Orc Tusk": 2}, 3, 7, 2.5, 0.45
+    world.block_edits = {"7": {"10": 18}}
+    p.pos = Vec3(x=1, y=60, z=2)
+    world.save_version = 9
+    migrate(world)
+    held = {s["id"]: s["n"] for s in p.bag if s}
+    assert held == {"potion": 3, "mithril_sword": 1, "iron_pickaxe": 1, "cobblestone": 5, "orc_tusk": 2}
+    assert p.worn["body"]["id"] == "knight_chest" and len(p.bag) == 36 and (p.potions, p.weapon, p.loot) == (0, 0, {})
+    assert p.pos.y == 124 and world.block_edits == {"7": {str(10 + 64 * 256): 18}}

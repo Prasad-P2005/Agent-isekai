@@ -22,5 +22,6 @@ export const api = {
   talk: t => req('POST', '/talk', t),
   service: (type, settlement = -1) => req('GET', `/service?type=${type}&settlement=${settlement}`),
   act: a => req('POST', '/service', a),
-  blocks: (blocks, edits, keepalive) => req('POST', '/blocks', { blocks, edits }, keepalive),
+  blocks: (blocks, edits, pack, keepalive) => req('POST', '/blocks', { blocks, edits, pack }, keepalive),
+  creative: on => req('POST', '/creative', { on }),
 };

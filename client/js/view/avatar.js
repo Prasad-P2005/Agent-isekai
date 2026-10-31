@@ -260,8 +260,8 @@ function hairOf(rig, x, L) {
   return list;
 }
 const helmetOf = L => {
-  const a = L.armor, slit = [[1, 4, 7, 1, COAL], [4, 4, 1, 4, COAL]];
-  return [[9, 9.4, 9, 0, 4.4, 0, metal(a, { draw: { front: slit, all: [[0, -1, 0, 1, L.trim ?? darker(a, 0.3)]] } })], [1.4, 3, 7, 0, 10, 0, plain(RED)]];
+  const a = L.helmetColor ?? L.armor, slit = [[1, 4, 7, 1, COAL], [4, 4, 1, 4, COAL]];
+  return [[9, 9.4, 9, 0, 4.4, 0, metal(a, { draw: { front: slit, all: [[0, -1, 0, 1, L.trim ?? darker(a, 0.3)]] } })], ...(L.plume === false ? [] : [[1.4, 3, 7, 0, 10, 0, plain(L.plume ?? RED)]])];
 };
 const hoodOf = c => [[9.6, 9.6, 9.6, 0, 4.4, 0.2, cloth(c, { cut: (i, j, W, H, f) => f === 'bottom' || (f === 'front' && j >= 1 && j < H - 1 && i >= 1 && i < W - 1) })], [4, 3, 2, 0, 7, 5.6, cloth(darker(c, 0.1))]];
 function hatOf(L) {

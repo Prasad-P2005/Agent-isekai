@@ -1,6 +1,6 @@
 // Creatures and people: bodies moving through the world and hitting each other. What they want is brains.js, what arrives spawning.js,
 // and what leaves lifetime.js. Their bodies are drawn in view/bodies.js.
-import { G } from '../core/state.js';
+import { G, creative } from '../core/state.js';
 import { CREATURES, WORLD } from '../core/content.js';
 import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
@@ -12,6 +12,7 @@ import { IDLE_FROM, despawns, offDuty } from './lifetime.js';
 import { skyLight } from './light.js';
 import { updatePaths } from './paths.js';
 import { hintQueue, heightAt } from './terrain.js';
+import { heldDef, wearHeld } from './inventory.js';
 import { player, damagePlayer, has, eye, inView, lookDir } from './player.js';
 
 export { ents, isNight } from './beings.js';
@@ -103,7 +104,7 @@ function updateEntity(e, dt) {
   e.fleeT -= dt; e.angryT -= dt;
   if (D.regen && e.hurtT > 6 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + D.regen * dt);
   const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.3), Math.floor(p.z)) === WATER;
-  const free = player.ready && (G.locked || G.focused) && !G.uiOpen;
+  const free = player.ready && (G.locked || G.focused) && !G.uiOpen && !creative(); // to a brain, a creative hero is as absent as a paused one
   think(e, dt, { dist, dx, dz, dy, free, canHit: free && Math.abs(dy) < 16, crowned: !!G.profile?.crowned });
 
   const tgt = e.aim, tp = tgt === 'player' ? player.pos : tgt ? tgt.pos : null, { mx, mz } = e;
@@ -213,12 +214,27 @@ export function pickEntity(max) {
   }
   return best;
 }
+const FIST_CD = 0.35, FIST_REACH = 4.5, SWEEP_REACH = 2.6, SWEEP_SHARE = 0.4, CLEAVE_REACH = 3.8, CLEAVE_SHARE = 0.7, STRONG = 4;
+const blowOf = (it, e) => ((has('giant_strength') ? 9 : 4) + (it?.dmg ?? 0) + (player.buffs.strength > 0 ? STRONG : 0)) * (it?.bane && (e.def.demon || e.def.undead) ? it.bane : 1);
+export const reachOfHand = () => heldDef()?.reach ?? FIST_REACH;
+// A sword clips what stands beside the target and a greatsword cleaves it. Only foes: a swing must never commit a crime the player did not aim.
+function sweep(it, target, dmg) {
+  const [range, share] = it.motion === 'cleave' ? [CLEAVE_REACH, CLEAVE_SHARE] : it.motion === 'slash' ? [SWEEP_REACH, SWEEP_SHARE] : [0, 0];
+  if (!range) return;
+  for (const o of ents.filter(isFoe)) {
+    if (o === target || o.pos.distanceTo(target.pos) > range) continue;
+    const dx = o.pos.x - player.pos.x, dz = o.pos.z - player.pos.z, l = Math.hypot(dx, dz) || 1;
+    hurtEntity(o, Math.max(1, Math.round(dmg * share)), dx / l, dz / l);
+  }
+}
 export function meleeHit(e) {
   if (player.atkCd > 0) return;
-  player.atkCd = 0.35;
+  const it = heldDef(), dmg = Math.round(blowOf(it, e));
+  player.atkCd = it?.cd ?? FIST_CD;
   emit('player:struck');
   const dx = e.pos.x - player.pos.x, dz = e.pos.z - player.pos.z, l = Math.hypot(dx, dz) || 1;
-  hurtEntity(e, (has('giant_strength') ? 9 : 4) + (G.profile?.weapon || 0), dx / l, dz / l);
+  hurtEntity(e, dmg, dx / l, dz / l);
+  if (it) { sweep(it, e, dmg); wearHeld(it.tool ? 2 : 1); }
 }
 
 export function updateEntities(dt) {

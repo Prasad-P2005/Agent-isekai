@@ -11,7 +11,10 @@ import { rich } from './art.js';
 import { startHeaven } from './heaven.js';
 import { renderStory } from './hud.js';
 import { resetInput } from './input.js';
-import { loadHotbar } from './inventory.js';
+import { showCreativeMode } from './inventory.js';
+import { fillSpells } from '../sim/abilities.js';
+import { startBag } from '../sim/inventory.js';
+import { loadStations } from '../sim/stations.js';
 import { actionsHTML, movesHTML } from './journal.js';
 import { pause } from './pointer.js';
 
@@ -37,7 +40,7 @@ async function load() {
   resetInput();
   initNoise(w.seed); setWorldData(w); loadEdits(w.block_edits);
   placePlayer(w);
-  loadHotbar();
+  startBag(w.player); loadStations(w.stations); fillSpells(); showCreativeMode();
   renderStory({ beats: w.story.beats.slice(-3), objective: w.objective, law_texts: w.law_texts });
   startSync(renderStory);
   overlay.style.display = 'none';

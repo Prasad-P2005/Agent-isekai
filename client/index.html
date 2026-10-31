@@ -32,6 +32,7 @@
       <button type="button" data-open="journal"><i class="ic ic-journal"></i>Journal</button>
       <button type="button" data-open="map"><i class="ic ic-map"></i>Map</button>
       <button type="button" data-open="keys"><i class="ic ic-gear"></i>Controls</button>
+      <button type="button" id="creative">Creative mode: off</button>
     </div>
     <p class="note">Click anywhere to resume</p>
   </div>
@@ -84,16 +85,15 @@
         <div id="purse"></div>
       </div>
       <div class="dockrow">
-        <div class="dockset">
-          <div class="slot" id="quickpot" title="Health potion"><i class="num">G</i><i class="ic ic-potion"></i><b id="potcount"></b></div>
-          <div class="slot" id="quickmana" title="Mana potion"><i class="num">V</i><i class="ic ic-manapotion"></i><b id="manacount"></b></div>
-        </div>
         <div class="dockset" id="hotbar"></div>
         <div class="dockset" id="spells"></div>
       </div>
     </div>
   </div>
 </div>
+
+<div id="cursorstack"></div>
+<div id="bagtip"></div>
 
 <div id="scrim">
   <div id="book" class="book" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="paneltitle">
@@ -114,19 +114,18 @@
       <i class="clasp"></i>
     </div>
     <div id="bag">
-      <div class="bag-side">
-        <div class="bag-hero">
+      <div class="bag-panel">
+        <div class="bag-top">
           <div class="gear" id="gear"></div>
           <div class="hero-pane"><canvas id="herocanvas" width="96" height="120" aria-label="Your character"></canvas></div>
+          <div class="bag-mid"><div id="bagoff"></div><div id="bagspells"></div></div>
+          <div class="bag-right"><div id="bagwork"></div><div class="bag-foot"><div id="bagline"></div><button type="button" id="bagsort" class="slatebutton">Sort</button></div></div>
         </div>
-        <div id="bagstats"></div>
-      </div>
-      <div class="bag-main">
-        <div id="bagname"></div>
         <div id="bagitems"></div>
         <div class="groove"></div>
         <div id="baghot"></div>
       </div>
+      <aside id="bagside"><nav id="sidetabs"></nav><div id="sidebody"></div></aside>
     </div>
     <div id="mapview">
       <div id="mappane">

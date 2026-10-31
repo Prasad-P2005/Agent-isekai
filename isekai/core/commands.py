@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import time
 
-from ..content import BLOCK_IDS, CHUNK_VOLUME, CREATURES, WORLD
-from ..systems import chronicle, dialogue, favors, guild, laws, magic, shop, story, storyteller
+from ..content import BLOCK_IDS, CHUNK_VOLUME, CREATURES, ITEMS, WORLD
+from ..systems import bag, chronicle, dialogue, favors, guild, laws, magic, shop, story, storyteller
 from ..systems.people.succession import delay_for
 from .game import Game
 from .state import Vec3
@@ -68,15 +68,22 @@ def enter_land(game: Game, lx: int, lz: int) -> dict:
     return _finish(game, messages=messages)
 
 
-def sync_blocks(game: Game, blocks: dict[str, int], edits: dict[str, dict[str, int]]) -> None:
-    """The client mines and places blocks in real time; it reports the inventory and the changed blocks together."""
+def sync_blocks(game: Game, blocks: dict[str, int], edits: dict[str, dict[str, int]], pack: dict | None = None) -> None:
+    """The client mines, builds and crafts in real time, and reports the bag and the changed blocks together."""
     w = game.world
     w.player.blocks = {k: max(0, min(9999, int(v))) for k, v in blocks.items() if v > 0}
+    if pack:
+        bag.store(w, pack)
     for chunk, changes in edits.items():
         valid = {i: id_ for i, id_ in changes.items() if i.isdigit() and int(i) < CHUNK_VOLUME and id_ in BLOCK_IDS}
         if chunk.isdigit() and valid:
             w.block_edits.setdefault(chunk, {}).update(valid)
     game.save()
+
+
+def set_creative(game: Game, on: bool) -> dict:
+    game.world.player.creative = on
+    return _finish(game)
 
 
 # ---------- heaven and prayer ----------
@@ -105,9 +112,11 @@ def _claim_kill(game: Game, kind: str, named: str) -> list[str]:
     w, p, msgs = game.world, game.world.player, []
     p.kills += 1
     if kind in shop.LOOT:
-        name = shop.LOOT[kind][0]
-        p.loot[name] = p.loot.get(name, 0) + 1
-        msgs.append(f"+1 {name}")
+        item = shop.LOOT[kind]
+        bag.give(w, item)
+        msgs.append(f"+1 {ITEMS[item]['name']}")
+    if "meat" in CREATURES.get(kind, {}):
+        bag.give(w, CREATURES[kind]["meat"])
     for hook in (guild.on_kill, favors.on_kill, story.on_kill):
         if (m := hook(w, kind)):
             msgs.append(m)
@@ -183,10 +192,6 @@ def death(game: Game, by: str, kind: str = "") -> dict:
     return _finish(game)
 
 
-def use_item(game: Game, item: str) -> dict:
-    return _finish(game, ok=shop.use_item(game.world, item))
-
-
 def cast(game: Game, mana: float) -> dict:
     """The client reports spent mana a handful at a time, and spending it is how a well deepens by itself."""
     grown = magic.practice(game.world, mana)
@@ -233,10 +238,12 @@ def _exchange(out: dict) -> dict:
     return {"lines": out["lines"], "gift": out["gift"], "effects": out["fx"], "topics": out["topics"]}
 
 
-def talk(game: Game, settlement: int | None, resident: int | None, creature: str, name: str, topic: str, blocks: dict[str, int] | None) -> dict:
+def talk(game: Game, settlement: int | None, resident: int | None, creature: str, name: str, topic: str, blocks: dict[str, int] | None, pack: dict | None = None) -> dict:
     w = game.world
     if blocks is not None:  # the client owns the inventory, and may have mined something a moment ago
         w.player.blocks = {k: max(0, min(9999, int(v))) for k, v in blocks.items() if v > 0}
+    if pack:
+        bag.store(w, pack)
     s = w.settlements[settlement] if settlement is not None and 0 <= settlement < len(w.settlements) else None
     who = next((r for r in s.residents if r.id == resident), None) if s else None
     out = dialogue.talk(w, who, s, creature, name, topic or "hello")
@@ -256,8 +263,10 @@ def service_view(game: Game, type_: str, settlement: int) -> dict:
     return out
 
 
-def service_action(game: Game, type_: str, action: str, item: str, all_: bool, settlement: int, index: int, npc: int | None) -> dict:
+def service_action(game: Game, type_: str, action: str, item: str, all_: bool, settlement: int, index: int, npc: int | None, pack: dict | None = None) -> dict:
     w, effects = game.world, {}
+    if pack:
+        bag.store(w, pack)
     if action == "buy":
         msg = shop.buy(w, item)
     elif action == "sell":

@@ -10,7 +10,7 @@ import { CS, LAND, SEA, genChunk, heightAt, idx, landOf, setWorldData } from '..
 const world = JSON.parse(readFileSync(new URL('./world.json', import.meta.url)));
 const CHUNKS = world.lands.length * LAND / CS; // chunks along one side of the map
 // Changing this means every saved world changes shape under its player. Only update it on purpose.
-const WORLD_HASH = '406de22b70a5c19047f7c5f75493732fc9e49d5cf5045e05a7bf4703780cc5de';
+const WORLD_HASH = 'fd23e15ee58bd46d6128e647e57fb3caa4502bba2e45dbacf301f0d34e90f20e';
 
 function useSeed(seed) { initNoise(seed); setWorldData(world); }
 function* allChunks() { for (let cz = 0; cz < CHUNKS; cz++) for (let cx = 0; cx < CHUNKS; cx++) yield genChunk(cx, cz); }
@@ -58,7 +58,7 @@ test('the map is an ocean beyond its edges', () => {
 
 test("a player's edit replaces the generated block", () => {
   useSeed(world.seed);
-  const i = idx(5, 150, 5), plain = genChunk(3, 3), edited = genChunk(3, 3, new Map([[i, 18]]));
+  const i = idx(5, 215, 5), plain = genChunk(3, 3), edited = genChunk(3, 3, new Map([[i, 18]]));
   assert.equal(plain[i], 0);
   assert.equal(edited[i], 18);
   edited[i] = 0;

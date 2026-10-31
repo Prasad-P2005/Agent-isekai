@@ -155,18 +155,34 @@ Settlement populations use seeded occupation mixes, so each world has a consiste
 Blocks are not free: hold left click to mine (harder blocks take longer, bedrock is unbreakable, pickaxes from the
 blacksmith speed it up). Mined blocks go to your bag (`I`) and are spent when you build.
 
+Creative mode is a switch on the pause screen. While it is on, your bag holds every block, placing costs nothing, a click
+breaks a block at once, `F` flies for free, every spell is free and nothing can hurt you. Monsters, the Wyrm and the law
+ignore you. The First Law still holds, so the Wyrm and the Demon Lord cannot be wounded until you are Oathbound. The mode
+is saved with your world, and what you build stays when you turn it off.
+
+## Crafting, gear and the deep
+
+Everything you carry sits in one bag of 36 slots, and the first nine are your hotbar, which holds anything. The right tool
+mines faster, and better blocks need a better pickaxe: nine tiers from wood to dragonsteel, in ten kinds of tool and weapon, and
+fourteen sets of armour. Tools wear out, and an anvil repairs them. A crafting table, furnace, forge, anvil, alchemy table and
+chest each open with a right click. The recipe book in the bag grows as you pick things up.
+
+Under the land are three sizes of cave. Tight squeezes and winding tunnels near the top lead down to colossal halls, each in a biome
+of its own. The Old Ways run through all of it: lit corridors, bridges and rope ladders, with lamps marking where they meet the surface.
+
 ## Controls
 
 | Action | Key |
 |---|---|
 | Move | WASD or the arrow keys |
 | Jump, sprint | Space, Shift |
-| Attack, mine, place | Click, hold click, right click |
+| Attack, mine, use what is in your hand | Click, hold click, right click |
+| Climb a rope ladder or vine | W up, S down |
 | Choose a dock slot | 1–0 or the mouse wheel |
 | Talk to whoever is under the crosshair | E, then pick what to say with a click or 1–9. Shops and services open alongside |
 | Pray to the god | T |
 | Bag, journal, laws, map | I, J, L, M |
-| Spells | Q fireball · R heal · Z frost nova · X chain lightning · C blink · B mana ward · H meteor |
+| Your two chosen spells (pick them in the bag) | Q, R |
 | Health and mana potions | G, V |
 | Flight | F |
 | Pause and resume | Esc to pause. Click, Enter or Space to resume |

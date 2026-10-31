@@ -1,10 +1,4000 @@
 {
-  "potion": { "name": "Health Potion (+10 HP, key G)", "base": 15, "sold_by": ["trade"] },
-  "mana": { "name": "Mana Potion (+50 mana, key V)", "base": 12, "sold_by": ["trade"] },
-  "iron_sword": { "name": "Iron Sword (+3 damage)", "base": 60, "weapon": 3, "sold_by": ["smith"] },
-  "mithril_sword": { "name": "Mithril Sword (+7 damage)", "base": 220, "weapon": 7, "sold_by": ["smith"] },
-  "iron_pickaxe": { "name": "Iron Pickaxe (mine 2.5x faster)", "base": 40, "tool": 2.5, "sold_by": ["smith"] },
-  "mithril_pickaxe": { "name": "Mithril Pickaxe (mine 5x faster)", "base": 160, "tool": 5.0, "sold_by": ["smith"] },
-  "leather": { "name": "Leather Armor (-20% damage)", "base": 50, "armor": 0.2, "sold_by": ["smith"] },
-  "plate": { "name": "Knight Plate (-45% damage)", "base": 200, "armor": 0.45, "sold_by": ["smith"] }
+ "dirt": {
+  "name": "Dirt",
+  "group": "blocks",
+  "stack": 99,
+  "block": 2
+ },
+ "stone": {
+  "name": "Stone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 3
+ },
+ "sand": {
+  "name": "Sand",
+  "group": "blocks",
+  "stack": 99,
+  "block": 4
+ },
+ "oak_log": {
+  "name": "Oak Log",
+  "group": "blocks",
+  "stack": 99,
+  "block": 6,
+  "fuel": 15
+ },
+ "oak_leaves": {
+  "name": "Oak Leaves",
+  "group": "blocks",
+  "stack": 99,
+  "block": 7
+ },
+ "elderwood": {
+  "name": "Elderwood",
+  "group": "blocks",
+  "stack": 99,
+  "block": 8,
+  "fuel": 15
+ },
+ "elven_leaves": {
+  "name": "Elven Leaves",
+  "group": "blocks",
+  "stack": 99,
+  "block": 9
+ },
+ "pink_coral": {
+  "name": "Pink Coral",
+  "group": "blocks",
+  "stack": 99,
+  "block": 11
+ },
+ "orange_coral": {
+  "name": "Orange Coral",
+  "group": "blocks",
+  "stack": 99,
+  "block": 12
+ },
+ "blue_coral": {
+  "name": "Blue Coral",
+  "group": "blocks",
+  "stack": 99,
+  "block": 13
+ },
+ "kelp": {
+  "name": "Kelp",
+  "group": "blocks",
+  "stack": 99,
+  "block": 14
+ },
+ "pearlstone": {
+  "name": "Pearlstone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 15
+ },
+ "mana_crystal": {
+  "name": "Mana Crystal",
+  "group": "blocks",
+  "stack": 99,
+  "block": 16,
+  "value": 30
+ },
+ "snow": {
+  "name": "Snow",
+  "group": "blocks",
+  "stack": 99,
+  "block": 17
+ },
+ "planks": {
+  "name": "Planks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 18,
+  "fuel": 15
+ },
+ "cobblestone": {
+  "name": "Cobblestone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 19
+ },
+ "roof_tiles": {
+  "name": "Roof Tiles",
+  "group": "blocks",
+  "stack": 99,
+  "block": 20
+ },
+ "glass": {
+  "name": "Glass",
+  "group": "blocks",
+  "stack": 99,
+  "block": 21
+ },
+ "lantern": {
+  "name": "Lantern",
+  "group": "blocks",
+  "stack": 99,
+  "art": "lantern",
+  "block": 22
+ },
+ "thatch": {
+  "name": "Thatch",
+  "group": "blocks",
+  "stack": 99,
+  "block": 23
+ },
+ "red_clay": {
+  "name": "Red Clay",
+  "group": "blocks",
+  "stack": 99,
+  "block": 25
+ },
+ "glowshroom": {
+  "name": "Glowshroom",
+  "group": "blocks",
+  "stack": 99,
+  "block": 26
+ },
+ "gravel": {
+  "name": "Gravel",
+  "group": "blocks",
+  "stack": 99,
+  "block": 29
+ },
+ "royal_banner": {
+  "name": "Royal Banner",
+  "group": "blocks",
+  "stack": 99,
+  "block": 30
+ },
+ "acacia_leaves": {
+  "name": "Acacia Leaves",
+  "group": "blocks",
+  "stack": 99,
+  "block": 32
+ },
+ "tribal_totem": {
+  "name": "Tribal Totem",
+  "group": "blocks",
+  "stack": 99,
+  "block": 33
+ },
+ "blackstone": {
+  "name": "Blackstone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 34
+ },
+ "ashen_ground": {
+  "name": "Ashen Ground",
+  "group": "blocks",
+  "stack": 99,
+  "block": 35
+ },
+ "magma": {
+  "name": "Magma",
+  "group": "blocks",
+  "stack": 99,
+  "block": 36
+ },
+ "obsidian": {
+  "name": "Obsidian",
+  "group": "blocks",
+  "stack": 99,
+  "block": 37
+ },
+ "birch_log": {
+  "name": "Birch Log",
+  "group": "blocks",
+  "stack": 99,
+  "block": 38,
+  "fuel": 15
+ },
+ "birch_leaves": {
+  "name": "Birch Leaves",
+  "group": "blocks",
+  "stack": 99,
+  "block": 39
+ },
+ "spruce_log": {
+  "name": "Spruce Log",
+  "group": "blocks",
+  "stack": 99,
+  "block": 40,
+  "fuel": 15
+ },
+ "spruce_leaves": {
+  "name": "Spruce Leaves",
+  "group": "blocks",
+  "stack": 99,
+  "block": 41
+ },
+ "palm_log": {
+  "name": "Palm Log",
+  "group": "blocks",
+  "stack": 99,
+  "block": 42,
+  "fuel": 15
+ },
+ "palm_leaves": {
+  "name": "Palm Leaves",
+  "group": "blocks",
+  "stack": 99,
+  "block": 43
+ },
+ "stone_bricks": {
+  "name": "Stone Bricks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 44
+ },
+ "mossy_cobblestone": {
+  "name": "Mossy Cobblestone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 45
+ },
+ "mossy_stone_bricks": {
+  "name": "Mossy Stone Bricks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 46
+ },
+ "plaster": {
+  "name": "Plaster",
+  "group": "blocks",
+  "stack": 99,
+  "block": 47
+ },
+ "timber_frame": {
+  "name": "Timber Frame",
+  "group": "blocks",
+  "stack": 99,
+  "block": 48
+ },
+ "sandstone": {
+  "name": "Sandstone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 49
+ },
+ "terracotta": {
+  "name": "Terracotta",
+  "group": "blocks",
+  "stack": 99,
+  "block": 50
+ },
+ "dark_terracotta": {
+  "name": "Dark Terracotta",
+  "group": "blocks",
+  "stack": 99,
+  "block": 51
+ },
+ "coal_ore": {
+  "name": "Coal Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 52
+ },
+ "iron_ore": {
+  "name": "Iron Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 53
+ },
+ "mana_ore": {
+  "name": "Mana Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 54
+ },
+ "ice": {
+  "name": "Ice",
+  "group": "blocks",
+  "stack": 99,
+  "block": 55
+ },
+ "hay_bale": {
+  "name": "Hay Bale",
+  "group": "blocks",
+  "stack": 99,
+  "block": 60,
+  "fuel": 20
+ },
+ "fence": {
+  "name": "Fence",
+  "group": "blocks",
+  "stack": 99,
+  "art": "fence",
+  "block": 61
+ },
+ "tall_grass": {
+  "name": "Tall Grass",
+  "group": "blocks",
+  "stack": 99,
+  "block": 62
+ },
+ "fern": {
+  "name": "Fern",
+  "group": "blocks",
+  "stack": 99,
+  "block": 63
+ },
+ "poppy": {
+  "name": "Poppy",
+  "group": "blocks",
+  "stack": 99,
+  "block": 64
+ },
+ "dandelion": {
+  "name": "Dandelion",
+  "group": "blocks",
+  "stack": 99,
+  "block": 65
+ },
+ "cornflower": {
+  "name": "Cornflower",
+  "group": "blocks",
+  "stack": 99,
+  "block": 66
+ },
+ "fae_bloom": {
+  "name": "Fae Bloom",
+  "group": "blocks",
+  "stack": 99,
+  "block": 67
+ },
+ "dry_grass": {
+  "name": "Dry Grass",
+  "group": "blocks",
+  "stack": 99,
+  "block": 68
+ },
+ "dead_bush": {
+  "name": "Dead Bush",
+  "group": "blocks",
+  "stack": 99,
+  "block": 69
+ },
+ "cactus": {
+  "name": "Cactus",
+  "group": "blocks",
+  "stack": 99,
+  "block": 70
+ },
+ "sea_grass": {
+  "name": "Sea Grass",
+  "group": "blocks",
+  "stack": 99,
+  "block": 71
+ },
+ "lily_pad": {
+  "name": "Lily Pad",
+  "group": "blocks",
+  "stack": 99,
+  "block": 72
+ },
+ "moss": {
+  "name": "Moss",
+  "group": "blocks",
+  "stack": 99,
+  "block": 73
+ },
+ "bone_block": {
+  "name": "Bone Block",
+  "group": "blocks",
+  "stack": 99,
+  "block": 74
+ },
+ "basalt": {
+  "name": "Basalt",
+  "group": "blocks",
+  "stack": 99,
+  "block": 75
+ },
+ "torch": {
+  "name": "Torch",
+  "group": "blocks",
+  "stack": 99,
+  "art": "torch",
+  "block": 76,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 2,
+  "note": "lights the dark"
+ },
+ "slate_tiles": {
+  "name": "Slate Tiles",
+  "group": "blocks",
+  "stack": 99,
+  "block": 89
+ },
+ "plank_slab": {
+  "name": "Plank Slab",
+  "group": "blocks",
+  "stack": 99,
+  "block": 90
+ },
+ "stone_slab": {
+  "name": "Stone Slab",
+  "group": "blocks",
+  "stack": 99,
+  "block": 91
+ },
+ "red_wool": {
+  "name": "Red Wool",
+  "group": "blocks",
+  "stack": 99,
+  "block": 92
+ },
+ "white_wool": {
+  "name": "White Wool",
+  "group": "blocks",
+  "stack": 99,
+  "block": 93
+ },
+ "red_carpet": {
+  "name": "Red Carpet",
+  "group": "blocks",
+  "stack": 99,
+  "block": 94
+ },
+ "bookshelf": {
+  "name": "Bookshelf",
+  "group": "blocks",
+  "stack": 99,
+  "block": 95
+ },
+ "barrel": {
+  "name": "Barrel",
+  "group": "blocks",
+  "stack": 99,
+  "block": 96
+ },
+ "glow_vine": {
+  "name": "Glow Vine",
+  "group": "blocks",
+  "stack": 99,
+  "block": 97
+ },
+ "red_mushroom": {
+  "name": "Red Mushroom",
+  "group": "blocks",
+  "stack": 99,
+  "block": 98
+ },
+ "mushroom_cap": {
+  "name": "Mushroom Cap",
+  "group": "blocks",
+  "stack": 99,
+  "block": 99
+ },
+ "copper_ore": {
+  "name": "Copper Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 100
+ },
+ "silver_ore": {
+  "name": "Silver Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 101
+ },
+ "gold_ore": {
+  "name": "Gold Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 102
+ },
+ "mithril_ore": {
+  "name": "Mithril Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 103
+ },
+ "adamant_ore": {
+  "name": "Adamant Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 104
+ },
+ "ruby_ore": {
+  "name": "Ruby Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 105
+ },
+ "sapphire_ore": {
+  "name": "Sapphire Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 106
+ },
+ "emerald_ore": {
+  "name": "Emerald Ore",
+  "group": "blocks",
+  "stack": 99,
+  "block": 107
+ },
+ "deepstone": {
+  "name": "Deepstone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 108
+ },
+ "cobbled_deepstone": {
+  "name": "Cobbled Deepstone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 109
+ },
+ "deepstone_bricks": {
+  "name": "Deepstone Bricks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 110
+ },
+ "marble": {
+  "name": "Marble",
+  "group": "blocks",
+  "stack": 99,
+  "block": 111
+ },
+ "polished_marble": {
+  "name": "Polished Marble",
+  "group": "blocks",
+  "stack": 99,
+  "block": 112
+ },
+ "marble_pillar": {
+  "name": "Marble Pillar",
+  "group": "blocks",
+  "stack": 99,
+  "block": 113
+ },
+ "gilded_marble": {
+  "name": "Gilded Marble",
+  "group": "blocks",
+  "stack": 99,
+  "block": 114
+ },
+ "limestone": {
+  "name": "Limestone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 115
+ },
+ "stalactite": {
+  "name": "Stalactite",
+  "group": "blocks",
+  "stack": 99,
+  "block": 116
+ },
+ "stalagmite": {
+  "name": "Stalagmite",
+  "group": "blocks",
+  "stack": 99,
+  "block": 117
+ },
+ "amethyst_block": {
+  "name": "Amethyst Block",
+  "group": "blocks",
+  "stack": 99,
+  "block": 118,
+  "value": 40
+ },
+ "crystal_cluster": {
+  "name": "Crystal Cluster",
+  "group": "blocks",
+  "stack": 99,
+  "block": 119
+ },
+ "glow_moss": {
+  "name": "Glow Moss",
+  "group": "blocks",
+  "stack": 99,
+  "block": 120
+ },
+ "mycelium": {
+  "name": "Mycelium",
+  "group": "blocks",
+  "stack": 99,
+  "block": 121
+ },
+ "mushroom_stem": {
+  "name": "Mushroom Stem",
+  "group": "blocks",
+  "stack": 99,
+  "block": 122
+ },
+ "blue_ice": {
+  "name": "Blue Ice",
+  "group": "blocks",
+  "stack": 99,
+  "block": 123
+ },
+ "hanging_roots": {
+  "name": "Hanging Roots",
+  "group": "blocks",
+  "stack": 99,
+  "block": 124
+ },
+ "birch_planks": {
+  "name": "Birch Planks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 125,
+  "fuel": 15
+ },
+ "spruce_planks": {
+  "name": "Spruce Planks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 126,
+  "fuel": 15
+ },
+ "palm_planks": {
+  "name": "Palm Planks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 127,
+  "fuel": 15
+ },
+ "elder_planks": {
+  "name": "Elder Planks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 128,
+  "fuel": 15
+ },
+ "bricks": {
+  "name": "Bricks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 129
+ },
+ "polished_stone": {
+  "name": "Polished Stone",
+  "group": "blocks",
+  "stack": 99,
+  "block": 130
+ },
+ "chiseled_stone_bricks": {
+  "name": "Chiseled Stone Bricks",
+  "group": "blocks",
+  "stack": 99,
+  "block": 131
+ },
+ "block_of_coal": {
+  "name": "Block of Coal",
+  "group": "blocks",
+  "stack": 99,
+  "block": 132,
+  "fuel": 800,
+  "value": 18
+ },
+ "block_of_copper": {
+  "name": "Block of Copper",
+  "group": "blocks",
+  "stack": 99,
+  "block": 133,
+  "value": 36
+ },
+ "block_of_iron": {
+  "name": "Block of Iron",
+  "group": "blocks",
+  "stack": 99,
+  "block": 134,
+  "value": 72
+ },
+ "block_of_silver": {
+  "name": "Block of Silver",
+  "group": "blocks",
+  "stack": 99,
+  "block": 135,
+  "value": 126
+ },
+ "block_of_gold": {
+  "name": "Block of Gold",
+  "group": "blocks",
+  "stack": 99,
+  "block": 136,
+  "value": 108
+ },
+ "block_of_mithril": {
+  "name": "Block of Mithril",
+  "group": "blocks",
+  "stack": 99,
+  "block": 137,
+  "value": 360
+ },
+ "block_of_adamant": {
+  "name": "Block of Adamant",
+  "group": "blocks",
+  "stack": 99,
+  "block": 138,
+  "value": 810
+ },
+ "block_of_ruby": {
+  "name": "Block of Ruby",
+  "group": "blocks",
+  "stack": 99,
+  "block": 139,
+  "value": 270
+ },
+ "block_of_sapphire": {
+  "name": "Block of Sapphire",
+  "group": "blocks",
+  "stack": 99,
+  "block": 140,
+  "value": 270
+ },
+ "block_of_emerald": {
+  "name": "Block of Emerald",
+  "group": "blocks",
+  "stack": 99,
+  "block": 141,
+  "value": 270
+ },
+ "crafting_table": {
+  "name": "Crafting Table",
+  "group": "blocks",
+  "stack": 99,
+  "art": "crafting_table",
+  "block": 142,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 6,
+  "note": "3 by 3 crafting"
+ },
+ "furnace": {
+  "name": "Furnace",
+  "group": "blocks",
+  "stack": 99,
+  "art": "furnace",
+  "block": 143
+ },
+ "forge": {
+  "name": "Forge",
+  "group": "blocks",
+  "stack": 99,
+  "art": "forge",
+  "block": 145
+ },
+ "anvil": {
+  "name": "Anvil",
+  "group": "blocks",
+  "stack": 99,
+  "art": "anvil",
+  "block": 147
+ },
+ "alchemy_table": {
+  "name": "Alchemy Table",
+  "group": "blocks",
+  "stack": 99,
+  "art": "alchemy_table",
+  "block": 148
+ },
+ "chest": {
+  "name": "Chest",
+  "group": "blocks",
+  "stack": 99,
+  "art": "chest",
+  "block": 149
+ },
+ "mana_shard": {
+  "name": "Mana Shard",
+  "group": "blocks",
+  "stack": 99,
+  "block": 150
+ },
+ "mana_cluster": {
+  "name": "Mana Cluster",
+  "group": "blocks",
+  "stack": 99,
+  "block": 151
+ },
+ "rope_ladder": {
+  "name": "Rope Ladder",
+  "group": "blocks",
+  "stack": 99,
+  "block": 152,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 4,
+  "note": "climb it, both ways"
+ },
+ "roof_tile_stairs": {
+  "name": "Roof Tile Stairs",
+  "group": "blocks",
+  "stack": 99,
+  "block": 77,
+  "place": [
+   77,
+   78,
+   79,
+   80
+  ]
+ },
+ "thatch_stairs": {
+  "name": "Thatch Stairs",
+  "group": "blocks",
+  "stack": 99,
+  "block": 81,
+  "place": [
+   81,
+   82,
+   83,
+   84
+  ]
+ },
+ "slate_stairs": {
+  "name": "Slate Stairs",
+  "group": "blocks",
+  "stack": 99,
+  "block": 85,
+  "place": [
+   85,
+   86,
+   87,
+   88
+  ]
+ },
+ "stick": {
+  "name": "Stick",
+  "group": "materials",
+  "stack": 99,
+  "art": "stick",
+  "pal": "wood",
+  "fuel": 5,
+  "value": 1
+ },
+ "coal": {
+  "name": "Coal",
+  "group": "materials",
+  "stack": 99,
+  "art": "coal",
+  "pal": "coal",
+  "fuel": 80,
+  "value": 2
+ },
+ "charcoal": {
+  "name": "Charcoal",
+  "group": "materials",
+  "stack": 99,
+  "art": "coal",
+  "pal": "charcoal",
+  "fuel": 80,
+  "value": 1
+ },
+ "flint": {
+  "name": "Flint",
+  "group": "materials",
+  "stack": 99,
+  "art": "flint",
+  "pal": "flint",
+  "value": 1
+ },
+ "clay_ball": {
+  "name": "Clay",
+  "group": "materials",
+  "stack": 99,
+  "art": "clay",
+  "pal": "clay",
+  "value": 1
+ },
+ "brick": {
+  "name": "Brick",
+  "group": "materials",
+  "stack": 99,
+  "art": "brick",
+  "pal": "brick",
+  "value": 2
+ },
+ "leather": {
+  "name": "Leather",
+  "group": "materials",
+  "stack": 99,
+  "art": "leather",
+  "pal": "leather",
+  "value": 8
+ },
+ "chain_link": {
+  "name": "Chain Links",
+  "group": "materials",
+  "stack": 99,
+  "art": "chain",
+  "pal": "chain",
+  "value": 3
+ },
+ "mana_dust": {
+  "name": "Mana Dust",
+  "group": "materials",
+  "stack": 99,
+  "art": "dust",
+  "pal": "mana",
+  "value": 8
+ },
+ "glass_bottle": {
+  "name": "Glass Bottle",
+  "group": "materials",
+  "stack": 99,
+  "art": "bottle",
+  "value": 2
+ },
+ "bowl": {
+  "name": "Bowl",
+  "group": "materials",
+  "stack": 99,
+  "art": "bowl",
+  "pal": "wood",
+  "value": 1
+ },
+ "wheat": {
+  "name": "Wheat",
+  "group": "materials",
+  "stack": 99,
+  "art": "wheat",
+  "value": 1
+ },
+ "wheat_seeds": {
+  "name": "Wheat Seeds",
+  "group": "materials",
+  "stack": 99,
+  "art": "seeds",
+  "place": [
+   59
+  ],
+  "value": 1
+ },
+ "knight_steel": {
+  "name": "Knight Steel",
+  "group": "materials",
+  "stack": 99,
+  "art": "bar",
+  "pal": "knight",
+  "value": 18
+ },
+ "demon_plate": {
+  "name": "Demon Plate",
+  "group": "materials",
+  "stack": 99,
+  "art": "bar",
+  "pal": "demon",
+  "value": 45
+ },
+ "elven_weave": {
+  "name": "Elven Weave",
+  "group": "materials",
+  "stack": 99,
+  "art": "bolt",
+  "pal": "elven",
+  "value": 25
+ },
+ "arcane_cloth": {
+  "name": "Arcane Cloth",
+  "group": "materials",
+  "stack": 99,
+  "art": "bolt",
+  "pal": "arcane",
+  "value": 25
+ },
+ "raw_copper": {
+  "name": "Raw Copper",
+  "group": "materials",
+  "stack": 99,
+  "art": "raw_copper",
+  "pal": "copper",
+  "value": 2
+ },
+ "copper_ingot": {
+  "name": "Copper Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot",
+  "pal": "copper",
+  "value": 5
+ },
+ "raw_iron": {
+  "name": "Raw Iron",
+  "group": "materials",
+  "stack": 99,
+  "art": "raw_iron",
+  "pal": "rawiron",
+  "value": 4
+ },
+ "iron_ingot": {
+  "name": "Iron Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot",
+  "pal": "iron",
+  "value": 8
+ },
+ "raw_silver": {
+  "name": "Raw Silver",
+  "group": "materials",
+  "stack": 99,
+  "art": "raw_silver",
+  "pal": "silver",
+  "value": 7
+ },
+ "silver_ingot": {
+  "name": "Silver Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot_fine",
+  "pal": "silver",
+  "value": 14
+ },
+ "raw_gold": {
+  "name": "Raw Gold",
+  "group": "materials",
+  "stack": 99,
+  "art": "raw_gold",
+  "pal": "gold",
+  "value": 6
+ },
+ "gold_ingot": {
+  "name": "Gold Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot_fine",
+  "pal": "gold",
+  "value": 12
+ },
+ "raw_mithril": {
+  "name": "Raw Mithril",
+  "group": "materials",
+  "stack": 99,
+  "art": "raw_mithril",
+  "pal": "mithril",
+  "value": 20
+ },
+ "mithril_ingot": {
+  "name": "Mithril Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot_fine",
+  "pal": "mithril",
+  "value": 40
+ },
+ "raw_adamant": {
+  "name": "Raw Adamant",
+  "group": "materials",
+  "stack": 99,
+  "art": "raw_adamant",
+  "pal": "adamant",
+  "value": 45
+ },
+ "adamant_ingot": {
+  "name": "Adamant Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot_fine",
+  "pal": "adamant",
+  "value": 90
+ },
+ "dragonsteel_ingot": {
+  "name": "Dragonsteel Ingot",
+  "group": "materials",
+  "stack": 99,
+  "art": "ingot_fine",
+  "pal": "dragon",
+  "value": 220
+ },
+ "ruby": {
+  "name": "Ruby",
+  "group": "materials",
+  "stack": 99,
+  "art": "gem_oval",
+  "pal": "ruby",
+  "value": 30
+ },
+ "sapphire": {
+  "name": "Sapphire",
+  "group": "materials",
+  "stack": 99,
+  "art": "gem_square",
+  "pal": "sapphire",
+  "value": 30
+ },
+ "emerald": {
+  "name": "Emerald",
+  "group": "materials",
+  "stack": 99,
+  "art": "gem_cut",
+  "pal": "emerald",
+  "value": 30
+ },
+ "amethyst": {
+  "name": "Amethyst",
+  "group": "materials",
+  "stack": 99,
+  "art": "shard",
+  "pal": "amethyst",
+  "value": 10
+ },
+ "golem_core": {
+  "name": "Golem Core",
+  "group": "materials",
+  "stack": 99,
+  "art": "core",
+  "pal": "golem",
+  "value": 40,
+  "loot": true
+ },
+ "hunter_badge": {
+  "name": "Hunter Badge",
+  "group": "materials",
+  "stack": 99,
+  "art": "badge",
+  "pal": "gold",
+  "value": 10,
+  "loot": true
+ },
+ "deer_hide": {
+  "name": "Deer Hide",
+  "group": "materials",
+  "stack": 99,
+  "art": "hide",
+  "pal": "deer",
+  "value": 4,
+  "loot": true
+ },
+ "boar_tusk": {
+  "name": "Boar Tusk",
+  "group": "materials",
+  "stack": 99,
+  "art": "tusk",
+  "pal": "ivory",
+  "value": 6,
+  "loot": true
+ },
+ "crab_claw": {
+  "name": "Crab Claw",
+  "group": "materials",
+  "stack": 99,
+  "art": "claw",
+  "pal": "crab",
+  "value": 3,
+  "loot": true
+ },
+ "slime_gel": {
+  "name": "Slime Gel",
+  "group": "materials",
+  "stack": 99,
+  "art": "gel",
+  "pal": "slime",
+  "value": 3,
+  "loot": true
+ },
+ "goblin_ear": {
+  "name": "Goblin Ear",
+  "group": "materials",
+  "stack": 99,
+  "art": "ear",
+  "pal": "goblin",
+  "value": 6,
+  "loot": true
+ },
+ "wolf_pelt": {
+  "name": "Wolf Pelt",
+  "group": "materials",
+  "stack": 99,
+  "art": "hide",
+  "pal": "wolf",
+  "value": 5,
+  "loot": true
+ },
+ "stolen_purse": {
+  "name": "Stolen Purse",
+  "group": "materials",
+  "stack": 99,
+  "art": "purse",
+  "pal": "purse",
+  "value": 12,
+  "loot": true
+ },
+ "old_bone": {
+  "name": "Old Bone",
+  "group": "materials",
+  "stack": 99,
+  "art": "bone",
+  "pal": "bone",
+  "value": 7,
+  "loot": true
+ },
+ "spider_silk": {
+  "name": "Spider Silk",
+  "group": "materials",
+  "stack": 99,
+  "art": "silk",
+  "pal": "silk",
+  "value": 7,
+  "loot": true
+ },
+ "orc_tusk": {
+  "name": "Orc Tusk",
+  "group": "materials",
+  "stack": 99,
+  "art": "tusk",
+  "pal": "orc",
+  "value": 14,
+  "loot": true
+ },
+ "troll_hide": {
+  "name": "Troll Hide",
+  "group": "materials",
+  "stack": 99,
+  "art": "hide",
+  "pal": "trollhide",
+  "value": 30,
+  "loot": true
+ },
+ "wraith_ash": {
+  "name": "Wraith Ash",
+  "group": "materials",
+  "stack": 99,
+  "art": "ash",
+  "pal": "ash",
+  "value": 35,
+  "loot": true
+ },
+ "imp_wing": {
+  "name": "Imp Wing",
+  "group": "materials",
+  "stack": 99,
+  "art": "wing",
+  "pal": "imp",
+  "value": 8,
+  "loot": true
+ },
+ "demon_horn": {
+  "name": "Demon Horn",
+  "group": "materials",
+  "stack": 99,
+  "art": "horn",
+  "pal": "demon",
+  "value": 25,
+  "loot": true
+ },
+ "dragon_scale": {
+  "name": "Dragon Scale",
+  "group": "materials",
+  "stack": 99,
+  "art": "scale",
+  "pal": "dragon",
+  "value": 120,
+  "loot": true
+ },
+ "wood_pickaxe": {
+  "name": "Wooden Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 0.6,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 3,
+  "unit": "planks",
+  "tool": "pick",
+  "level": 0,
+  "speed": 2
+ },
+ "wood_axe": {
+  "name": "Wooden Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 1.3,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 3,
+  "unit": "planks",
+  "tool": "axe",
+  "level": 0,
+  "speed": 2
+ },
+ "wood_shovel": {
+  "name": "Wooden Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 0.5,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 1,
+  "unit": "planks",
+  "tool": "shovel",
+  "level": 0,
+  "speed": 2
+ },
+ "wood_hoe": {
+  "name": "Wooden Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 0.3,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 2,
+  "unit": "planks",
+  "tool": "hoe",
+  "level": 0,
+  "speed": 2
+ },
+ "wood_hammer": {
+  "name": "Wooden Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer0",
+  "pal": "wood",
+  "dur": 177,
+  "dmg": 1.3,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 6,
+  "unit": "planks",
+  "tool": "pick",
+  "level": 0,
+  "speed": 2,
+  "area": 1
+ },
+ "wood_sword": {
+  "name": "Wooden Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 1,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 2,
+  "unit": "planks"
+ },
+ "wood_greatsword": {
+  "name": "Wooden Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword0",
+  "pal": "wood",
+  "dur": 88,
+  "dmg": 1.7,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 4,
+  "unit": "planks"
+ },
+ "wood_dagger": {
+  "name": "Wooden Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger0",
+  "pal": "wood",
+  "dur": 47,
+  "dmg": 0.6,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 1,
+  "unit": "planks"
+ },
+ "wood_spear": {
+  "name": "Wooden Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 0.9,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 1,
+  "unit": "planks"
+ },
+ "wood_mace": {
+  "name": "Wooden Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace0",
+  "pal": "wood",
+  "dur": 59,
+  "dmg": 1.4,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 4,
+  "unit": "planks"
+ },
+ "stone_pickaxe": {
+  "name": "Stone Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 1.2,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 3,
+  "unit": "cobblestone",
+  "tool": "pick",
+  "level": 1,
+  "speed": 4,
+  "sold_by": [
+   "smith"
+  ],
+  "base": 14,
+  "note": "mines iron"
+ },
+ "stone_axe": {
+  "name": "Stone Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 2.6,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 3,
+  "unit": "cobblestone",
+  "tool": "axe",
+  "level": 1,
+  "speed": 4
+ },
+ "stone_shovel": {
+  "name": "Stone Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 1.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 1,
+  "unit": "cobblestone",
+  "tool": "shovel",
+  "level": 1,
+  "speed": 4
+ },
+ "stone_hoe": {
+  "name": "Stone Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 0.6,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 2,
+  "unit": "cobblestone",
+  "tool": "hoe",
+  "level": 1,
+  "speed": 4
+ },
+ "stone_hammer": {
+  "name": "Stone Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer0",
+  "pal": "stone",
+  "dur": 393,
+  "dmg": 2.6,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 6,
+  "unit": "cobblestone",
+  "tool": "pick",
+  "level": 1,
+  "speed": 4,
+  "area": 1
+ },
+ "stone_sword": {
+  "name": "Stone Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 2,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 2,
+  "unit": "cobblestone"
+ },
+ "stone_greatsword": {
+  "name": "Stone Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword0",
+  "pal": "stone",
+  "dur": 196,
+  "dmg": 3.4,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 4,
+  "unit": "cobblestone"
+ },
+ "stone_dagger": {
+  "name": "Stone Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger0",
+  "pal": "stone",
+  "dur": 105,
+  "dmg": 1.2,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 1,
+  "unit": "cobblestone"
+ },
+ "stone_spear": {
+  "name": "Stone Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 1.8,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 1,
+  "unit": "cobblestone"
+ },
+ "stone_mace": {
+  "name": "Stone Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace0",
+  "pal": "stone",
+  "dur": 131,
+  "dmg": 2.8,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 4,
+  "unit": "cobblestone"
+ },
+ "copper_pickaxe": {
+  "name": "Copper Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 1.2,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 15,
+  "unit": "copper_ingot",
+  "tool": "pick",
+  "level": 1,
+  "speed": 5
+ },
+ "copper_axe": {
+  "name": "Copper Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 2.6,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 15,
+  "unit": "copper_ingot",
+  "tool": "axe",
+  "level": 1,
+  "speed": 5
+ },
+ "copper_shovel": {
+  "name": "Copper Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 1.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 5,
+  "unit": "copper_ingot",
+  "tool": "shovel",
+  "level": 1,
+  "speed": 5
+ },
+ "copper_hoe": {
+  "name": "Copper Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 0.6,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 10,
+  "unit": "copper_ingot",
+  "tool": "hoe",
+  "level": 1,
+  "speed": 5
+ },
+ "copper_hammer": {
+  "name": "Copper Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer0",
+  "pal": "copper",
+  "dur": 573,
+  "dmg": 2.6,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 30,
+  "unit": "copper_ingot",
+  "tool": "pick",
+  "level": 1,
+  "speed": 5,
+  "area": 1
+ },
+ "copper_sword": {
+  "name": "Copper Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 2,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 10,
+  "unit": "copper_ingot"
+ },
+ "copper_greatsword": {
+  "name": "Copper Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword0",
+  "pal": "copper",
+  "dur": 286,
+  "dmg": 3.4,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 20,
+  "unit": "copper_ingot"
+ },
+ "copper_dagger": {
+  "name": "Copper Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger0",
+  "pal": "copper",
+  "dur": 153,
+  "dmg": 1.2,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 5,
+  "unit": "copper_ingot"
+ },
+ "copper_spear": {
+  "name": "Copper Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 1.8,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 5,
+  "unit": "copper_ingot"
+ },
+ "copper_mace": {
+  "name": "Copper Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace0",
+  "pal": "copper",
+  "dur": 191,
+  "dmg": 2.8,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 20,
+  "unit": "copper_ingot"
+ },
+ "gold_pickaxe": {
+  "name": "Golden Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 1.2,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 36,
+  "unit": "gold_ingot",
+  "tool": "pick",
+  "level": 1,
+  "speed": 12
+ },
+ "gold_axe": {
+  "name": "Golden Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 2.6,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 36,
+  "unit": "gold_ingot",
+  "tool": "axe",
+  "level": 1,
+  "speed": 12
+ },
+ "gold_shovel": {
+  "name": "Golden Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 1.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 12,
+  "unit": "gold_ingot",
+  "tool": "shovel",
+  "level": 1,
+  "speed": 12
+ },
+ "gold_hoe": {
+  "name": "Golden Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 0.6,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 24,
+  "unit": "gold_ingot",
+  "tool": "hoe",
+  "level": 1,
+  "speed": 12
+ },
+ "gold_hammer": {
+  "name": "Golden Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer1",
+  "pal": "gold",
+  "dur": 192,
+  "dmg": 2.6,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 72,
+  "unit": "gold_ingot",
+  "tool": "pick",
+  "level": 1,
+  "speed": 12,
+  "area": 1
+ },
+ "gold_sword": {
+  "name": "Golden Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 2,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 24,
+  "unit": "gold_ingot"
+ },
+ "gold_greatsword": {
+  "name": "Golden Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword1",
+  "pal": "gold",
+  "dur": 96,
+  "dmg": 3.4,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 48,
+  "unit": "gold_ingot"
+ },
+ "gold_dagger": {
+  "name": "Golden Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger1",
+  "pal": "gold",
+  "dur": 51,
+  "dmg": 1.2,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 12,
+  "unit": "gold_ingot"
+ },
+ "gold_spear": {
+  "name": "Golden Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 1.8,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 12,
+  "unit": "gold_ingot"
+ },
+ "gold_mace": {
+  "name": "Golden Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace1",
+  "pal": "gold",
+  "dur": 64,
+  "dmg": 2.8,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 48,
+  "unit": "gold_ingot"
+ },
+ "iron_pickaxe": {
+  "name": "Iron Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 1.8,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 24,
+  "unit": "iron_ingot",
+  "tool": "pick",
+  "level": 2,
+  "speed": 6,
+  "sold_by": [
+   "smith"
+  ],
+  "base": 40,
+  "note": "mines silver and gold"
+ },
+ "iron_axe": {
+  "name": "Iron Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 3.9,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 24,
+  "unit": "iron_ingot",
+  "tool": "axe",
+  "level": 2,
+  "speed": 6,
+  "sold_by": [
+   "smith"
+  ],
+  "base": 36,
+  "note": "fells trees"
+ },
+ "iron_shovel": {
+  "name": "Iron Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 1.5,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 8,
+  "unit": "iron_ingot",
+  "tool": "shovel",
+  "level": 2,
+  "speed": 6,
+  "sold_by": [
+   "smith"
+  ],
+  "base": 20,
+  "note": "digs soil and sand"
+ },
+ "iron_hoe": {
+  "name": "Iron Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 0.9,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 16,
+  "unit": "iron_ingot",
+  "tool": "hoe",
+  "level": 2,
+  "speed": 6
+ },
+ "iron_hammer": {
+  "name": "Iron Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer1",
+  "pal": "iron",
+  "dur": 750,
+  "dmg": 3.9,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 48,
+  "unit": "iron_ingot",
+  "tool": "pick",
+  "level": 2,
+  "speed": 6,
+  "area": 1
+ },
+ "iron_sword": {
+  "name": "Iron Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 3,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 16,
+  "unit": "iron_ingot",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 60,
+  "note": "+3 damage"
+ },
+ "iron_greatsword": {
+  "name": "Iron Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword1",
+  "pal": "iron",
+  "dur": 375,
+  "dmg": 5.1,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 32,
+  "unit": "iron_ingot"
+ },
+ "iron_dagger": {
+  "name": "Iron Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger1",
+  "pal": "iron",
+  "dur": 200,
+  "dmg": 1.8,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 8,
+  "unit": "iron_ingot"
+ },
+ "iron_spear": {
+  "name": "Iron Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 2.7,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 8,
+  "unit": "iron_ingot"
+ },
+ "iron_mace": {
+  "name": "Iron Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace1",
+  "pal": "iron",
+  "dur": 250,
+  "dmg": 4.2,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 32,
+  "unit": "iron_ingot"
+ },
+ "silver_pickaxe": {
+  "name": "Silver Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 2.4,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 42,
+  "unit": "silver_ingot",
+  "tool": "pick",
+  "level": 2,
+  "speed": 7,
+  "bane": 1.5
+ },
+ "silver_axe": {
+  "name": "Silver Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 5.2,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 42,
+  "unit": "silver_ingot",
+  "tool": "axe",
+  "level": 2,
+  "speed": 7,
+  "bane": 1.5
+ },
+ "silver_shovel": {
+  "name": "Silver Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 2.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 14,
+  "unit": "silver_ingot",
+  "tool": "shovel",
+  "level": 2,
+  "speed": 7,
+  "bane": 1.5
+ },
+ "silver_hoe": {
+  "name": "Silver Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 1.2,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 28,
+  "unit": "silver_ingot",
+  "tool": "hoe",
+  "level": 2,
+  "speed": 7,
+  "bane": 1.5
+ },
+ "silver_hammer": {
+  "name": "Silver Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer1",
+  "pal": "silver",
+  "dur": 960,
+  "dmg": 5.2,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 84,
+  "unit": "silver_ingot",
+  "tool": "pick",
+  "level": 2,
+  "speed": 7,
+  "area": 1,
+  "bane": 1.5
+ },
+ "silver_sword": {
+  "name": "Silver Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 4,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 28,
+  "unit": "silver_ingot",
+  "bane": 1.5
+ },
+ "silver_greatsword": {
+  "name": "Silver Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword1",
+  "pal": "silver",
+  "dur": 480,
+  "dmg": 6.8,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 56,
+  "unit": "silver_ingot",
+  "bane": 1.5
+ },
+ "silver_dagger": {
+  "name": "Silver Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger1",
+  "pal": "silver",
+  "dur": 256,
+  "dmg": 2.4,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 14,
+  "unit": "silver_ingot",
+  "bane": 1.5
+ },
+ "silver_spear": {
+  "name": "Silver Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 3.6,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 14,
+  "unit": "silver_ingot",
+  "bane": 1.5
+ },
+ "silver_mace": {
+  "name": "Silver Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace1",
+  "pal": "silver",
+  "dur": 320,
+  "dmg": 5.6,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 56,
+  "unit": "silver_ingot",
+  "bane": 1.5
+ },
+ "mithril_pickaxe": {
+  "name": "Mithril Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 4.2,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 120,
+  "unit": "mithril_ingot",
+  "tool": "pick",
+  "level": 3,
+  "speed": 9,
+  "sold_by": [
+   "smith"
+  ],
+  "base": 160,
+  "note": "mines adamant"
+ },
+ "mithril_axe": {
+  "name": "Mithril Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 9.1,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 120,
+  "unit": "mithril_ingot",
+  "tool": "axe",
+  "level": 3,
+  "speed": 9
+ },
+ "mithril_shovel": {
+  "name": "Mithril Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 3.5,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 40,
+  "unit": "mithril_ingot",
+  "tool": "shovel",
+  "level": 3,
+  "speed": 9
+ },
+ "mithril_hoe": {
+  "name": "Mithril Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 2.1,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 80,
+  "unit": "mithril_ingot",
+  "tool": "hoe",
+  "level": 3,
+  "speed": 9
+ },
+ "mithril_hammer": {
+  "name": "Mithril Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer2",
+  "pal": "mithril",
+  "dur": 2700,
+  "dmg": 9.1,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 240,
+  "unit": "mithril_ingot",
+  "tool": "pick",
+  "level": 3,
+  "speed": 9,
+  "area": 1
+ },
+ "mithril_sword": {
+  "name": "Mithril Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 7,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 80,
+  "unit": "mithril_ingot",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 220,
+  "note": "+7 damage"
+ },
+ "mithril_greatsword": {
+  "name": "Mithril Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword2",
+  "pal": "mithril",
+  "dur": 1350,
+  "dmg": 11.9,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 160,
+  "unit": "mithril_ingot"
+ },
+ "mithril_dagger": {
+  "name": "Mithril Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger2",
+  "pal": "mithril",
+  "dur": 720,
+  "dmg": 4.2,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 40,
+  "unit": "mithril_ingot"
+ },
+ "mithril_spear": {
+  "name": "Mithril Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 6.3,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 40,
+  "unit": "mithril_ingot"
+ },
+ "mithril_mace": {
+  "name": "Mithril Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace2",
+  "pal": "mithril",
+  "dur": 900,
+  "dmg": 9.8,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 160,
+  "unit": "mithril_ingot"
+ },
+ "adamant_pickaxe": {
+  "name": "Adamant Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 6.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 270,
+  "unit": "adamant_ingot",
+  "tool": "pick",
+  "level": 4,
+  "speed": 11
+ },
+ "adamant_axe": {
+  "name": "Adamant Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 13.0,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 270,
+  "unit": "adamant_ingot",
+  "tool": "axe",
+  "level": 4,
+  "speed": 11
+ },
+ "adamant_shovel": {
+  "name": "Adamant Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 5.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 90,
+  "unit": "adamant_ingot",
+  "tool": "shovel",
+  "level": 4,
+  "speed": 11
+ },
+ "adamant_hoe": {
+  "name": "Adamant Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 3.0,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 180,
+  "unit": "adamant_ingot",
+  "tool": "hoe",
+  "level": 4,
+  "speed": 11
+ },
+ "adamant_hammer": {
+  "name": "Adamant Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer2",
+  "pal": "adamant",
+  "dur": 5400,
+  "dmg": 13.0,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 540,
+  "unit": "adamant_ingot",
+  "tool": "pick",
+  "level": 4,
+  "speed": 11,
+  "area": 1
+ },
+ "adamant_sword": {
+  "name": "Adamant Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 10,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 180,
+  "unit": "adamant_ingot"
+ },
+ "adamant_greatsword": {
+  "name": "Adamant Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword2",
+  "pal": "adamant",
+  "dur": 2700,
+  "dmg": 17.0,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 360,
+  "unit": "adamant_ingot"
+ },
+ "adamant_dagger": {
+  "name": "Adamant Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger2",
+  "pal": "adamant",
+  "dur": 1440,
+  "dmg": 6.0,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 90,
+  "unit": "adamant_ingot"
+ },
+ "adamant_spear": {
+  "name": "Adamant Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 9.0,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 90,
+  "unit": "adamant_ingot"
+ },
+ "adamant_mace": {
+  "name": "Adamant Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace2",
+  "pal": "adamant",
+  "dur": 1800,
+  "dmg": 14.0,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 360,
+  "unit": "adamant_ingot"
+ },
+ "dragon_pickaxe": {
+  "name": "Dragonsteel Pickaxe",
+  "group": "tools",
+  "stack": 1,
+  "art": "pickaxe2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 8.4,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "pendulum",
+  "value": 660,
+  "unit": "dragonsteel_ingot",
+  "tool": "pick",
+  "level": 5,
+  "speed": 14
+ },
+ "dragon_axe": {
+  "name": "Dragonsteel Axe",
+  "group": "tools",
+  "stack": 1,
+  "art": "axe2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 18.2,
+  "cd": 0.7,
+  "reach": 4.5,
+  "motion": "chop",
+  "value": 660,
+  "unit": "dragonsteel_ingot",
+  "tool": "axe",
+  "level": 5,
+  "speed": 14
+ },
+ "dragon_shovel": {
+  "name": "Dragonsteel Shovel",
+  "group": "tools",
+  "stack": 1,
+  "art": "shovel2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 7.0,
+  "cd": 0.55,
+  "reach": 4.5,
+  "motion": "scoop",
+  "value": 220,
+  "unit": "dragonsteel_ingot",
+  "tool": "shovel",
+  "level": 5,
+  "speed": 14
+ },
+ "dragon_hoe": {
+  "name": "Dragonsteel Hoe",
+  "group": "tools",
+  "stack": 1,
+  "art": "hoe2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 4.2,
+  "cd": 0.45,
+  "reach": 4.5,
+  "motion": "sweep",
+  "value": 440,
+  "unit": "dragonsteel_ingot",
+  "tool": "hoe",
+  "level": 5,
+  "speed": 14
+ },
+ "dragon_hammer": {
+  "name": "Dragonsteel Hammer",
+  "group": "tools",
+  "stack": 1,
+  "art": "hammer2",
+  "pal": "dragon",
+  "dur": 9000,
+  "dmg": 18.2,
+  "cd": 0.9,
+  "reach": 4.5,
+  "motion": "slam",
+  "value": 1320,
+  "unit": "dragonsteel_ingot",
+  "tool": "pick",
+  "level": 5,
+  "speed": 14,
+  "area": 1
+ },
+ "dragon_sword": {
+  "name": "Dragonsteel Sword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "sword2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 14,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "slash",
+  "value": 440,
+  "unit": "dragonsteel_ingot"
+ },
+ "dragon_greatsword": {
+  "name": "Dragonsteel Greatsword",
+  "group": "weapons",
+  "stack": 1,
+  "art": "greatsword2",
+  "pal": "dragon",
+  "dur": 4500,
+  "dmg": 23.8,
+  "cd": 0.85,
+  "reach": 5,
+  "motion": "cleave",
+  "value": 880,
+  "unit": "dragonsteel_ingot"
+ },
+ "dragon_dagger": {
+  "name": "Dragonsteel Dagger",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dagger2",
+  "pal": "dragon",
+  "dur": 2400,
+  "dmg": 8.4,
+  "cd": 0.25,
+  "reach": 4,
+  "motion": "stab",
+  "value": 220,
+  "unit": "dragonsteel_ingot"
+ },
+ "dragon_spear": {
+  "name": "Dragonsteel Spear",
+  "group": "weapons",
+  "stack": 1,
+  "art": "spear2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 12.6,
+  "cd": 0.5,
+  "reach": 6,
+  "motion": "thrust",
+  "value": 220,
+  "unit": "dragonsteel_ingot"
+ },
+ "dragon_mace": {
+  "name": "Dragonsteel Mace",
+  "group": "weapons",
+  "stack": 1,
+  "art": "mace2",
+  "pal": "dragon",
+  "dur": 3000,
+  "dmg": 19.6,
+  "cd": 0.75,
+  "reach": 4.5,
+  "motion": "bash",
+  "value": 880,
+  "unit": "dragonsteel_ingot"
+ },
+ "hunting_bow": {
+  "name": "Hunting Bow",
+  "group": "weapons",
+  "stack": 1,
+  "art": "bow",
+  "pal": "wood",
+  "dur": 384,
+  "dmg": 8,
+  "reach": 4.5,
+  "cd": 0.3,
+  "motion": "draw",
+  "ammo": true,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 45,
+  "note": "needs arrows"
+ },
+ "longbow": {
+  "name": "Longbow",
+  "group": "weapons",
+  "stack": 1,
+  "art": "longbow",
+  "pal": "iron",
+  "dur": 640,
+  "dmg": 12,
+  "reach": 4.5,
+  "cd": 0.3,
+  "motion": "draw",
+  "ammo": true
+ },
+ "elven_bow": {
+  "name": "Elven Bow",
+  "group": "weapons",
+  "stack": 1,
+  "art": "elvenbow",
+  "pal": "mithril",
+  "dur": 1000,
+  "dmg": 16,
+  "reach": 4.5,
+  "cd": 0.3,
+  "motion": "draw",
+  "ammo": true
+ },
+ "dragon_bow": {
+  "name": "Dragonbone Bow",
+  "group": "weapons",
+  "stack": 1,
+  "art": "dragonbow",
+  "pal": "dragon",
+  "dur": 2000,
+  "dmg": 24,
+  "reach": 4.5,
+  "cd": 0.3,
+  "motion": "draw",
+  "ammo": true
+ },
+ "arrow": {
+  "name": "Arrow",
+  "group": "weapons",
+  "stack": 99,
+  "art": "arrow",
+  "pal": "arrow",
+  "arrow": 0,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 2,
+  "note": "for a bow"
+ },
+ "iron_arrow": {
+  "name": "Iron Arrow",
+  "group": "weapons",
+  "stack": 99,
+  "art": "arrow",
+  "pal": "arrow_iron",
+  "arrow": 3
+ },
+ "mithril_arrow": {
+  "name": "Mithril Arrow",
+  "group": "weapons",
+  "stack": 99,
+  "art": "arrow",
+  "pal": "arrow_mithril",
+  "arrow": 7
+ },
+ "fire_arrow": {
+  "name": "Fire Arrow",
+  "group": "weapons",
+  "stack": 99,
+  "art": "arrow",
+  "pal": "ember",
+  "arrow": 5,
+  "burn": true
+ },
+ "wooden_shield": {
+  "name": "Wooden Shield",
+  "group": "weapons",
+  "stack": 1,
+  "art": "shield0",
+  "pal": "wood",
+  "dur": 120,
+  "slot": "off",
+  "block": 0.35,
+  "motion": "guard"
+ },
+ "iron_shield": {
+  "name": "Iron Shield",
+  "group": "weapons",
+  "stack": 1,
+  "art": "shield1",
+  "pal": "iron",
+  "dur": 336,
+  "slot": "off",
+  "block": 0.5,
+  "motion": "guard",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 55,
+  "note": "hold right click"
+ },
+ "knight_shield": {
+  "name": "Knight's Shield",
+  "group": "weapons",
+  "stack": 1,
+  "art": "shieldk",
+  "pal": "knight",
+  "dur": 500,
+  "slot": "off",
+  "block": 0.6,
+  "motion": "guard"
+ },
+ "mithril_shield": {
+  "name": "Mithril Shield",
+  "group": "weapons",
+  "stack": 1,
+  "art": "shield2",
+  "pal": "mithril",
+  "dur": 900,
+  "slot": "off",
+  "block": 0.7,
+  "motion": "guard"
+ },
+ "dragon_shield": {
+  "name": "Dragonscale Shield",
+  "group": "weapons",
+  "stack": 1,
+  "art": "shieldd",
+  "pal": "dragon",
+  "dur": 1600,
+  "slot": "off",
+  "block": 0.8,
+  "motion": "guard"
+ },
+ "apprentice_staff": {
+  "name": "Apprentice Staff",
+  "group": "weapons",
+  "stack": 1,
+  "art": "staff0",
+  "pal": "wood",
+  "dmg": 1,
+  "cd": 0.5,
+  "reach": 4.5,
+  "spell": 1.1,
+  "motion": "channel"
+ },
+ "crystal_staff": {
+  "name": "Crystal Staff",
+  "group": "weapons",
+  "stack": 1,
+  "art": "staff1",
+  "pal": "silver",
+  "dmg": 1,
+  "cd": 0.5,
+  "reach": 4.5,
+  "spell": 1.25,
+  "motion": "channel"
+ },
+ "arcanist_staff": {
+  "name": "Arcanist Staff",
+  "group": "weapons",
+  "stack": 1,
+  "art": "staff2",
+  "pal": "mithril",
+  "dmg": 1,
+  "cd": 0.5,
+  "reach": 4.5,
+  "spell": 1.4,
+  "motion": "channel"
+ },
+ "archmage_staff": {
+  "name": "Archmage's Staff",
+  "group": "weapons",
+  "stack": 1,
+  "art": "staff3",
+  "pal": "adamant",
+  "dmg": 1,
+  "cd": 0.5,
+  "reach": 4.5,
+  "spell": 1.6,
+  "motion": "channel"
+ },
+ "shears": {
+  "name": "Shears",
+  "group": "tools",
+  "stack": 1,
+  "art": "shears",
+  "pal": "iron",
+  "tool": "shears",
+  "speed": 6,
+  "level": 0,
+  "dur": 238,
+  "dmg": 0,
+  "cd": 0.4,
+  "reach": 4.5,
+  "motion": "snip"
+ },
+ "leather_helm": {
+  "name": "Leather Cap",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_soft",
+  "pal": "leather",
+  "slot": "head",
+  "def": 1,
+  "dur": 54,
+  "value": 40,
+  "set": "leather",
+  "unit": "leather",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 12,
+  "note": "1 defence"
+ },
+ "leather_chest": {
+  "name": "Leather Tunic",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_soft",
+  "pal": "leather",
+  "slot": "body",
+  "def": 3,
+  "dur": 80,
+  "value": 64,
+  "set": "leather",
+  "unit": "leather",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 22,
+  "note": "3 defence"
+ },
+ "leather_legs": {
+  "name": "Leather Trousers",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_soft",
+  "pal": "leather",
+  "slot": "legs",
+  "def": 2,
+  "dur": 75,
+  "value": 56,
+  "set": "leather",
+  "unit": "leather",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 16,
+  "note": "2 defence"
+ },
+ "leather_boots": {
+  "name": "Leather Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_soft",
+  "pal": "leather",
+  "slot": "feet",
+  "def": 1,
+  "dur": 64,
+  "value": 32,
+  "set": "leather",
+  "unit": "leather",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 10,
+  "note": "1 defence"
+ },
+ "trollhide_helm": {
+  "name": "Trollhide Cap",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_soft",
+  "pal": "trollhide",
+  "slot": "head",
+  "def": 2,
+  "dur": 136,
+  "value": 150,
+  "set": "trollhide",
+  "unit": "troll_hide"
+ },
+ "trollhide_chest": {
+  "name": "Trollhide Tunic",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_soft",
+  "pal": "trollhide",
+  "slot": "body",
+  "def": 5,
+  "dur": 200,
+  "value": 240,
+  "set": "trollhide",
+  "unit": "troll_hide"
+ },
+ "trollhide_legs": {
+  "name": "Trollhide Trousers",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_soft",
+  "pal": "trollhide",
+  "slot": "legs",
+  "def": 3,
+  "dur": 188,
+  "value": 210,
+  "set": "trollhide",
+  "unit": "troll_hide"
+ },
+ "trollhide_boots": {
+  "name": "Trollhide Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_soft",
+  "pal": "trollhide",
+  "slot": "feet",
+  "def": 1,
+  "dur": 160,
+  "value": 120,
+  "set": "trollhide",
+  "unit": "troll_hide"
+ },
+ "chainmail_helm": {
+  "name": "Chainmail Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_mail",
+  "pal": "chain",
+  "slot": "head",
+  "def": 2,
+  "dur": 122,
+  "value": 15,
+  "set": "chainmail",
+  "unit": "chain_link"
+ },
+ "chainmail_chest": {
+  "name": "Chainmail Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_mail",
+  "pal": "chain",
+  "slot": "body",
+  "def": 5,
+  "dur": 180,
+  "value": 24,
+  "set": "chainmail",
+  "unit": "chain_link"
+ },
+ "chainmail_legs": {
+  "name": "Chainmail Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_plate",
+  "pal": "chain",
+  "slot": "legs",
+  "def": 3,
+  "dur": 169,
+  "value": 21,
+  "set": "chainmail",
+  "unit": "chain_link"
+ },
+ "chainmail_boots": {
+  "name": "Chainmail Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_plate",
+  "pal": "chain",
+  "slot": "feet",
+  "def": 1,
+  "dur": 144,
+  "value": 12,
+  "set": "chainmail",
+  "unit": "chain_link"
+ },
+ "copper_helm": {
+  "name": "Copper Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_plate",
+  "pal": "copper",
+  "slot": "head",
+  "def": 2,
+  "dur": 109,
+  "value": 25,
+  "set": "copper",
+  "unit": "copper_ingot"
+ },
+ "copper_chest": {
+  "name": "Copper Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_plate",
+  "pal": "copper",
+  "slot": "body",
+  "def": 5,
+  "dur": 160,
+  "value": 40,
+  "set": "copper",
+  "unit": "copper_ingot"
+ },
+ "copper_legs": {
+  "name": "Copper Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_plate",
+  "pal": "copper",
+  "slot": "legs",
+  "def": 3,
+  "dur": 150,
+  "value": 35,
+  "set": "copper",
+  "unit": "copper_ingot"
+ },
+ "copper_boots": {
+  "name": "Copper Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_plate",
+  "pal": "copper",
+  "slot": "feet",
+  "def": 1,
+  "dur": 128,
+  "value": 20,
+  "set": "copper",
+  "unit": "copper_ingot"
+ },
+ "iron_helm": {
+  "name": "Iron Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_plate",
+  "pal": "iron",
+  "slot": "head",
+  "def": 3,
+  "dur": 163,
+  "value": 40,
+  "set": "iron",
+  "unit": "iron_ingot"
+ },
+ "iron_chest": {
+  "name": "Iron Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_plate",
+  "pal": "iron",
+  "slot": "body",
+  "def": 6,
+  "dur": 240,
+  "value": 64,
+  "set": "iron",
+  "unit": "iron_ingot"
+ },
+ "iron_legs": {
+  "name": "Iron Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_plate",
+  "pal": "iron",
+  "slot": "legs",
+  "def": 4,
+  "dur": 226,
+  "value": 56,
+  "set": "iron",
+  "unit": "iron_ingot"
+ },
+ "iron_boots": {
+  "name": "Iron Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_plate",
+  "pal": "iron",
+  "slot": "feet",
+  "def": 2,
+  "dur": 192,
+  "value": 32,
+  "set": "iron",
+  "unit": "iron_ingot"
+ },
+ "gold_helm": {
+  "name": "Golden Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_fine",
+  "pal": "gold",
+  "slot": "head",
+  "def": 2,
+  "dur": 75,
+  "value": 60,
+  "set": "gold",
+  "unit": "gold_ingot"
+ },
+ "gold_chest": {
+  "name": "Golden Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_fine",
+  "pal": "gold",
+  "slot": "body",
+  "def": 5,
+  "dur": 110,
+  "value": 96,
+  "set": "gold",
+  "unit": "gold_ingot"
+ },
+ "gold_legs": {
+  "name": "Golden Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_plate",
+  "pal": "gold",
+  "slot": "legs",
+  "def": 3,
+  "dur": 103,
+  "value": 84,
+  "set": "gold",
+  "unit": "gold_ingot"
+ },
+ "gold_boots": {
+  "name": "Golden Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_plate",
+  "pal": "gold",
+  "slot": "feet",
+  "def": 1,
+  "dur": 88,
+  "value": 48,
+  "set": "gold",
+  "unit": "gold_ingot"
+ },
+ "silver_helm": {
+  "name": "Silver Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_fine",
+  "pal": "silver",
+  "slot": "head",
+  "def": 3,
+  "dur": 204,
+  "value": 70,
+  "set": "silver",
+  "unit": "silver_ingot"
+ },
+ "silver_chest": {
+  "name": "Silver Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_fine",
+  "pal": "silver",
+  "slot": "body",
+  "def": 7,
+  "dur": 300,
+  "value": 112,
+  "set": "silver",
+  "unit": "silver_ingot"
+ },
+ "silver_legs": {
+  "name": "Silver Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_plate",
+  "pal": "silver",
+  "slot": "legs",
+  "def": 5,
+  "dur": 282,
+  "value": 98,
+  "set": "silver",
+  "unit": "silver_ingot"
+ },
+ "silver_boots": {
+  "name": "Silver Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_plate",
+  "pal": "silver",
+  "slot": "feet",
+  "def": 2,
+  "dur": 240,
+  "value": 56,
+  "set": "silver",
+  "unit": "silver_ingot"
+ },
+ "knight_helm": {
+  "name": "Knight Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_knight",
+  "pal": "knight",
+  "slot": "head",
+  "def": 4,
+  "dur": 258,
+  "value": 90,
+  "set": "knight",
+  "unit": "knight_steel",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 60,
+  "note": "4 defence"
+ },
+ "knight_chest": {
+  "name": "Knight Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_knight",
+  "pal": "knight",
+  "slot": "body",
+  "def": 8,
+  "dur": 380,
+  "value": 144,
+  "set": "knight",
+  "unit": "knight_steel",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 110,
+  "note": "8 defence"
+ },
+ "knight_legs": {
+  "name": "Knight Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_plate",
+  "pal": "knight",
+  "slot": "legs",
+  "def": 6,
+  "dur": 357,
+  "value": 126,
+  "set": "knight",
+  "unit": "knight_steel",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 80,
+  "note": "6 defence"
+ },
+ "knight_boots": {
+  "name": "Knight Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_plate",
+  "pal": "knight",
+  "slot": "feet",
+  "def": 2,
+  "dur": 304,
+  "value": 72,
+  "set": "knight",
+  "unit": "knight_steel",
+  "sold_by": [
+   "smith"
+  ],
+  "base": 45,
+  "note": "2 defence"
+ },
+ "mithril_helm": {
+  "name": "Mithril Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_wing",
+  "pal": "mithril",
+  "slot": "head",
+  "def": 4,
+  "dur": 442,
+  "value": 200,
+  "set": "mithril",
+  "unit": "mithril_ingot"
+ },
+ "mithril_chest": {
+  "name": "Mithril Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_wing",
+  "pal": "mithril",
+  "slot": "body",
+  "def": 10,
+  "dur": 650,
+  "value": 320,
+  "set": "mithril",
+  "unit": "mithril_ingot"
+ },
+ "mithril_legs": {
+  "name": "Mithril Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_wing",
+  "pal": "mithril",
+  "slot": "legs",
+  "def": 7,
+  "dur": 611,
+  "value": 280,
+  "set": "mithril",
+  "unit": "mithril_ingot"
+ },
+ "mithril_boots": {
+  "name": "Mithril Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_wing",
+  "pal": "mithril",
+  "slot": "feet",
+  "def": 3,
+  "dur": 520,
+  "value": 160,
+  "set": "mithril",
+  "unit": "mithril_ingot"
+ },
+ "adamant_helm": {
+  "name": "Adamant Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_wing",
+  "pal": "adamant",
+  "slot": "head",
+  "def": 5,
+  "dur": 680,
+  "value": 450,
+  "set": "adamant",
+  "unit": "adamant_ingot"
+ },
+ "adamant_chest": {
+  "name": "Adamant Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_wing",
+  "pal": "adamant",
+  "slot": "body",
+  "def": 13,
+  "dur": 1000,
+  "value": 720,
+  "set": "adamant",
+  "unit": "adamant_ingot"
+ },
+ "adamant_legs": {
+  "name": "Adamant Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_wing",
+  "pal": "adamant",
+  "slot": "legs",
+  "def": 8,
+  "dur": 940,
+  "value": 630,
+  "set": "adamant",
+  "unit": "adamant_ingot"
+ },
+ "adamant_boots": {
+  "name": "Adamant Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_wing",
+  "pal": "adamant",
+  "slot": "feet",
+  "def": 4,
+  "dur": 800,
+  "value": 360,
+  "set": "adamant",
+  "unit": "adamant_ingot"
+ },
+ "dragonscale_helm": {
+  "name": "Dragonscale Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_scale",
+  "pal": "dragon",
+  "slot": "head",
+  "def": 6,
+  "dur": 952,
+  "value": 600,
+  "set": "dragonscale",
+  "unit": "dragon_scale"
+ },
+ "dragonscale_chest": {
+  "name": "Dragonscale Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_scale",
+  "pal": "dragon",
+  "slot": "body",
+  "def": 15,
+  "dur": 1400,
+  "value": 960,
+  "set": "dragonscale",
+  "unit": "dragon_scale"
+ },
+ "dragonscale_legs": {
+  "name": "Dragonscale Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_scale",
+  "pal": "dragon",
+  "slot": "legs",
+  "def": 10,
+  "dur": 1316,
+  "value": 840,
+  "set": "dragonscale",
+  "unit": "dragon_scale"
+ },
+ "dragonscale_boots": {
+  "name": "Dragonscale Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_scale",
+  "pal": "dragon",
+  "slot": "feet",
+  "def": 4,
+  "dur": 1120,
+  "value": 480,
+  "set": "dragonscale",
+  "unit": "dragon_scale"
+ },
+ "demonplate_helm": {
+  "name": "Demonplate Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_demon",
+  "pal": "demon",
+  "slot": "head",
+  "def": 5,
+  "dur": 544,
+  "value": 225,
+  "set": "demonplate",
+  "unit": "demon_plate"
+ },
+ "demonplate_chest": {
+  "name": "Demonplate Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_demon",
+  "pal": "demon",
+  "slot": "body",
+  "def": 12,
+  "dur": 800,
+  "value": 360,
+  "set": "demonplate",
+  "unit": "demon_plate"
+ },
+ "demonplate_legs": {
+  "name": "Demonplate Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_demon",
+  "pal": "demon",
+  "slot": "legs",
+  "def": 8,
+  "dur": 752,
+  "value": 315,
+  "set": "demonplate",
+  "unit": "demon_plate"
+ },
+ "demonplate_boots": {
+  "name": "Demonplate Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_demon",
+  "pal": "demon",
+  "slot": "feet",
+  "def": 3,
+  "dur": 640,
+  "value": 180,
+  "set": "demonplate",
+  "unit": "demon_plate"
+ },
+ "elven_helm": {
+  "name": "Elven Helm",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_elven",
+  "pal": "elven",
+  "slot": "head",
+  "def": 3,
+  "dur": 340,
+  "value": 125,
+  "set": "elven",
+  "unit": "elven_weave"
+ },
+ "elven_chest": {
+  "name": "Elven Cuirass",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_elven",
+  "pal": "elven",
+  "slot": "body",
+  "def": 8,
+  "dur": 500,
+  "value": 200,
+  "set": "elven",
+  "unit": "elven_weave"
+ },
+ "elven_legs": {
+  "name": "Elven Greaves",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_elven",
+  "pal": "elven",
+  "slot": "legs",
+  "def": 5,
+  "dur": 470,
+  "value": 175,
+  "set": "elven",
+  "unit": "elven_weave"
+ },
+ "elven_boots": {
+  "name": "Elven Boots",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_elven",
+  "pal": "elven",
+  "slot": "feet",
+  "def": 2,
+  "dur": 400,
+  "value": 100,
+  "set": "elven",
+  "unit": "elven_weave"
+ },
+ "arcane_helm": {
+  "name": "Arcane Hat",
+  "group": "armor",
+  "stack": 1,
+  "art": "helm_robe",
+  "pal": "arcane",
+  "slot": "head",
+  "def": 1,
+  "dur": 204,
+  "value": 125,
+  "set": "arcane",
+  "unit": "arcane_cloth",
+  "mana_regen": 1.5
+ },
+ "arcane_chest": {
+  "name": "Arcane Robe",
+  "group": "armor",
+  "stack": 1,
+  "art": "chest_robe",
+  "pal": "arcane",
+  "slot": "body",
+  "def": 3,
+  "dur": 300,
+  "value": 200,
+  "set": "arcane",
+  "unit": "arcane_cloth",
+  "mana_regen": 1.5
+ },
+ "arcane_legs": {
+  "name": "Arcane Skirts",
+  "group": "armor",
+  "stack": 1,
+  "art": "legs_robe",
+  "pal": "arcane",
+  "slot": "legs",
+  "def": 2,
+  "dur": 282,
+  "value": 175,
+  "set": "arcane",
+  "unit": "arcane_cloth",
+  "mana_regen": 1.5
+ },
+ "arcane_boots": {
+  "name": "Arcane Slippers",
+  "group": "armor",
+  "stack": 1,
+  "art": "boots_robe",
+  "pal": "arcane",
+  "slot": "feet",
+  "def": 1,
+  "dur": 240,
+  "value": 100,
+  "set": "arcane",
+  "unit": "arcane_cloth",
+  "mana_regen": 1.5
+ },
+ "apple": {
+  "name": "Apple",
+  "group": "food",
+  "stack": 99,
+  "art": "apple",
+  "pal": "apple",
+  "use": {
+   "heal": 3
+  },
+  "motion": "eat",
+  "value": 2
+ },
+ "golden_apple": {
+  "name": "Golden Apple",
+  "group": "food",
+  "stack": 99,
+  "art": "apple",
+  "pal": "goldapple",
+  "use": {
+   "heal": 16
+  },
+  "motion": "eat",
+  "value": 70
+ },
+ "bread": {
+  "name": "Bread",
+  "group": "food",
+  "stack": 99,
+  "art": "bread",
+  "pal": "bread",
+  "use": {
+   "heal": 5
+  },
+  "motion": "eat",
+  "value": 3,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 5,
+  "note": "+5 HP"
+ },
+ "apple_pie": {
+  "name": "Apple Pie",
+  "group": "food",
+  "stack": 99,
+  "art": "pie",
+  "pal": "pie",
+  "use": {
+   "heal": 8
+  },
+  "motion": "eat",
+  "value": 6
+ },
+ "raw_venison": {
+  "name": "Raw Venison",
+  "group": "food",
+  "stack": 99,
+  "art": "meat",
+  "pal": "rawmeat",
+  "use": {
+   "heal": 1
+  },
+  "motion": "eat",
+  "value": 2
+ },
+ "roast_venison": {
+  "name": "Roast Venison",
+  "group": "food",
+  "stack": 99,
+  "art": "meat",
+  "pal": "cooked",
+  "use": {
+   "heal": 7
+  },
+  "motion": "eat",
+  "value": 6
+ },
+ "raw_boar": {
+  "name": "Raw Boar",
+  "group": "food",
+  "stack": 99,
+  "art": "chop",
+  "pal": "rawmeat",
+  "use": {
+   "heal": 1
+  },
+  "motion": "eat",
+  "value": 2
+ },
+ "roast_boar": {
+  "name": "Roast Boar",
+  "group": "food",
+  "stack": 99,
+  "art": "chop",
+  "pal": "cooked",
+  "use": {
+   "heal": 8
+  },
+  "motion": "eat",
+  "value": 7
+ },
+ "grilled_crab": {
+  "name": "Grilled Crab",
+  "group": "food",
+  "stack": 99,
+  "art": "claw",
+  "pal": "cooked",
+  "use": {
+   "heal": 5
+  },
+  "motion": "eat",
+  "value": 5
+ },
+ "mushroom_stew": {
+  "name": "Mushroom Stew",
+  "group": "food",
+  "stack": 1,
+  "art": "stew",
+  "pal": "stew",
+  "use": {
+   "heal": 7
+  },
+  "motion": "eat",
+  "returns": "bowl",
+  "value": 5
+ },
+ "fae_nectar": {
+  "name": "Fae Nectar",
+  "group": "food",
+  "stack": 99,
+  "art": "nectar",
+  "pal": "fae",
+  "use": {
+   "heal": 4,
+   "mana": 40
+  },
+  "motion": "eat",
+  "value": 20
+ },
+ "potion": {
+  "name": "Health Potion",
+  "group": "potions",
+  "stack": 16,
+  "art": "flask",
+  "pal": "health",
+  "use": {
+   "heal": 10
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 15,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 15,
+  "note": "+10 HP, key G"
+ },
+ "greater_health": {
+  "name": "Greater Health Potion",
+  "group": "potions",
+  "stack": 16,
+  "art": "phial",
+  "pal": "health",
+  "use": {
+   "heal": 25
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 60
+ },
+ "mana": {
+  "name": "Mana Potion",
+  "group": "potions",
+  "stack": 16,
+  "art": "flask",
+  "pal": "manap",
+  "use": {
+   "mana": 50
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 12,
+  "sold_by": [
+   "trade"
+  ],
+  "base": 12,
+  "note": "+50 mana, key V"
+ },
+ "greater_mana": {
+  "name": "Greater Mana Potion",
+  "group": "potions",
+  "stack": 16,
+  "art": "phial",
+  "pal": "manap",
+  "use": {
+   "mana": 120
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 55
+ },
+ "swiftness": {
+  "name": "Potion of Swiftness",
+  "group": "potions",
+  "stack": 16,
+  "art": "flask",
+  "pal": "swift",
+  "use": {
+   "buff": "swift",
+   "time": 90
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 30
+ },
+ "strength": {
+  "name": "Potion of Strength",
+  "group": "potions",
+  "stack": 16,
+  "art": "flask",
+  "pal": "strength",
+  "use": {
+   "buff": "strength",
+   "time": 90
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 35
+ },
+ "stoneskin": {
+  "name": "Potion of Stoneskin",
+  "group": "potions",
+  "stack": 16,
+  "art": "flask",
+  "pal": "stoneskin",
+  "use": {
+   "buff": "stoneskin",
+   "time": 60
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 35
+ },
+ "night_sight": {
+  "name": "Potion of Night Sight",
+  "group": "potions",
+  "stack": 16,
+  "art": "round",
+  "pal": "night",
+  "use": {
+   "buff": "night_sight",
+   "time": 180
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 30
+ },
+ "fireproof": {
+  "name": "Potion of Fireproofing",
+  "group": "potions",
+  "stack": 16,
+  "art": "round",
+  "pal": "fireproof",
+  "use": {
+   "buff": "fireproof",
+   "time": 120
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 40
+ },
+ "water_breath": {
+  "name": "Potion of Water Breathing",
+  "group": "potions",
+  "stack": 16,
+  "art": "round",
+  "pal": "water",
+  "use": {
+   "buff": "water_breath",
+   "time": 120
+  },
+  "motion": "drink",
+  "returns": "glass_bottle",
+  "value": 30
+ }
 }

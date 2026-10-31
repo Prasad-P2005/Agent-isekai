@@ -4,17 +4,21 @@ import test, { beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fixedSteps, STEP } from '../../client/js/core/loop.js';
-import { on } from '../../client/js/core/events.js';
+import { emit, on } from '../../client/js/core/events.js';
 import { G } from '../../client/js/core/state.js';
 import { Vec3 } from '../../client/js/core/vec3.js';
-import { castBlink, castChainLightning, castFireball, castFrostNova, castHeal, castManaWard, castMeteor, drank } from '../../client/js/sim/abilities.js';
+import { castBlink, castChainLightning, castFireball, castFrostNova, castHeal, castManaWard, castMeteor, toggleFlight } from '../../client/js/sim/abilities.js';
 import { AIR, BL, dropOf, hardness, solid } from '../../client/js/sim/blocks.js';
 import { chunks, getBlock, setBlock, streamChunks } from '../../client/js/sim/chunks.js';
-import { applyEffects, applyState } from '../../client/js/sim/effects.js';
+import { applyEffects, applyState, creativeChanged } from '../../client/js/sim/effects.js';
 import { edits, loadEdits, requeueEdits, takeUnsentEdits } from '../../client/js/sim/edits.js';
 import { hasSeen, updateSightings } from '../../client/js/sim/bestiary.js';
 import { ents, hurtEntity, isFoe, isNight, meleeHit, removeEntity, spawnEntity, updateEntities } from '../../client/js/sim/entities.js';
-import { addBlock, count, heldBlock, hotbar, takeBlock } from '../../client/js/sim/inventory.js';
+import { addBlock, addItem, applyParcels, armourCut, count, heldBlock, hotbar, takeBlock, wearHeld } from '../../client/js/sim/inventory.js';
+import { craftFromBag, matchGrid, timesCanMake } from '../../client/js/sim/crafting.js';
+import { drinkBest } from '../../client/js/sim/hands.js';
+import { loadStations, stationAt, updateStations } from '../../client/js/sim/stations.js';
+import { RECIPES } from '../../client/js/core/content.js';
 import { questMarks } from '../../client/js/sim/marks.js';
 import { aim, miningBar, placeBlock, stopAiming, updateMining } from '../../client/js/sim/mining.js';
 import { lampLight, skyLight } from '../../client/js/sim/light.js';
@@ -30,7 +34,7 @@ import { CS, H, SEA, heightAt, hintQueue, idx, lairAt, setWorldData, chunkKey } 
 const fixture = JSON.parse(readFileSync(new URL('./world.json', import.meta.url)));
 let OPEN_LAND = [448, 448]; // moved in the setup below to a spot with no trees around it
 
-function newProfile() { return { gold: 30, blocks: {}, abilities: [], max_hp: 20, max_mana: 100, weapon: 0, armor: 0, tool: 1, bounty: 0 }; }
+function newProfile() { return { gold: 30, blocks: {}, bag: Array(36).fill(null), worn: { head: null, body: null, legs: null, feet: null, off: null }, seen: [], spells: ['', ''], abilities: [], max_hp: 20, max_mana: 100, bounty: 0 }; }
 function worldData() {
   return { ...fixture, player: newProfile(), spawn: { x: OPEN_LAND[0] + 0.5, z: OPEN_LAND[1] + 0.5 }, demon_lord_dead: false, demon_lord_name: 'Malzareth',
     settlements: fixture.settlements.map(s => ({ ...s, residents: [] })) };
@@ -72,7 +76,7 @@ let groundFound = false;
 
 beforeEach(() => {
   ents.length = 0; hintQueue.length = 0; projectiles.length = 0; chunks.clear(); edits.clear(); takeUnsentEdits(); clearArrivals();
-  crimes.length = 0; kills.length = 0; deaths.length = 0; hotbar.ids.fill(0); hotbar.slot = 0;
+  crimes.length = 0; kills.length = 0; deaths.length = 0; hotbar.creative.fill(null); hotbar.slot = 0;
   G.world = worldData(); G.profile = G.world.player; G.phase = 'world'; G.locked = true; G.uiOpen = false; G.keys = {}; G.mouseDown = false; G.dayTime = 0.1;
   initNoise(fixture.seed); setWorldData(G.world);
   placePlayer(G.world);
@@ -179,9 +183,10 @@ test('a short fall does not', () => {
 });
 
 test('armor reduces damage', () => {
-  G.profile.armor = 0.5;
+  G.profile.worn.body = { id: 'knight_chest', n: 1, dur: 380 };
+  assert.equal(armourCut(), 0.16);
   damagePlayer(10, 'a test');
-  assert.equal(player.hp, 15);
+  assert.equal(player.hp, 12);
 });
 
 test('dying sends you back to the spawn and tells the server', () => {
@@ -274,11 +279,11 @@ test('mining takes as long as the block is hard', () => {
   assert.equal(count(dropOf(id)), 1);
 });
 
-test('a pickaxe mines faster', () => {
+test('the right tool mines faster', () => {
   const t = aimAtGround(), id = getBlock(t.x, t.y, t.z);
-  G.profile.tool = 5;
+  G.profile.bag[0] = { id: 'iron_shovel', n: 1, dur: 250 };
   G.mouseDown = true;
-  updateMining(hardness(id) / 5 + 0.01);
+  updateMining(hardness(id) / 6 + 0.01);
   assert.equal(getBlock(t.x, t.y, t.z), AIR);
 });
 
@@ -326,7 +331,7 @@ test('new server state does not overwrite blocks mined a moment ago', () => {
 const near = (kind, opts) => spawnEntity(kind, player.pos.x + 2, player.pos.y, player.pos.z, opts);
 
 test('a melee hit does your weapon damage', () => {
-  G.profile.weapon = 3;
+  G.profile.bag[0] = { id: 'iron_sword', n: 1, dur: 250 };
   const e = near('orc');
   meleeHit(e);
   assert.equal(e.hp, 40 - 7);
@@ -604,16 +609,95 @@ test('a deeper well holds more and fills faster', () => {
   applyEffects({ mana: 999 });
   assert.equal(player.mana, 200);
   player.mana = 190;
-  drank('mana', true);
+  addItem('mana');
+  drinkBest(['mana']);
   assert.equal(player.mana, 200);
 });
 
-test('a potion only works if the server says you had one', () => {
+test('a potion is used up by drinking it, and leaves its bottle', () => {
   player.hp = 5;
-  drank('potion', false);
-  assert.equal(player.hp, 5);
-  drank('potion', true);
+  addItem('potion');
+  drinkBest(['potion']);
   assert.equal(player.hp, 15);
+  assert.equal(count('potion'), 0);
+  assert.equal(count('glass_bottle'), 1);
+  drinkBest(['potion']);
+  assert.equal(player.hp, 15);
+});
+
+// ---------- the bag ----------
+test('a used-up stack leaves nothing behind in the hotbar', () => {
+  addBlock(18);
+  assert.equal(heldBlock(), 18);
+  takeBlock(18);
+  assert.equal(G.profile.bag[0], null);
+  assert.equal(heldBlock(), 0);
+});
+
+test('anything can sit in the hotbar', () => {
+  addItem('iron_sword');
+  assert.equal(G.profile.bag[0].id, 'iron_sword');
+});
+
+test('a tool wears out and breaks', () => {
+  G.profile.bag[0] = { id: 'wood_hoe', n: 1, dur: 2 };
+  wearHeld(1);
+  assert.equal(G.profile.bag[0].dur, 1);
+  wearHeld(1);
+  assert.equal(G.profile.bag[0], null);
+});
+
+test('a parcel from the server is applied once', () => {
+  const parcel = { seq: 9001, id: 'orc_tusk', n: 2 };
+  applyParcels([parcel]);
+  applyParcels([parcel]);
+  assert.equal(count('orc_tusk'), 2);
+  applyParcels([{ seq: 9002, id: 'orc_tusk', n: -1 }]);
+  assert.equal(count('orc_tusk'), 1);
+});
+
+test('stone gives nothing to bare hands', () => {
+  const t = aimAtGround();
+  setBlock(t.x, t.y, t.z, 3);
+  G.mouseDown = true;
+  updateMining(3 * 3.3 + 0.1);
+  assert.equal(getBlock(t.x, t.y, t.z), AIR);
+  assert.equal(count('cobblestone'), 0);
+});
+
+// ---------- crafting ----------
+test('a shaped recipe fits anywhere on the grid, mirrored or not', () => {
+  const stick = { id: 'stick', n: 1 }, plank = { id: 'planks', n: 1 };
+  const axe = [plank, plank, null, plank, stick, null, null, stick, null], flipped = [null, plank, plank, null, stick, plank, null, stick, null];
+  assert.equal(matchGrid(axe, 'table').out, 'wood_axe');
+  assert.equal(matchGrid(flipped, 'table').out, 'wood_axe');
+});
+
+test('a crafting table is needed for what will not fit a hand', () => {
+  const stick = { id: 'stick', n: 1 }, plank = { id: 'planks', n: 1 };
+  assert.equal(matchGrid([plank, plank, plank, null, stick, null, null, stick, null], 'table').out, 'wood_pickaxe');
+  assert.equal(matchGrid([plank, plank, plank, stick], 'hand'), null);
+});
+
+test('crafting spends what it uses', () => {
+  const planks = RECIPES.find(r => r.out === 'stick' && r.id.endsWith('_from_planks'));
+  addItem('planks', 3);
+  assert.equal(timesCanMake(planks), 1);
+  assert.equal(craftFromBag(planks, 5), 1);
+  assert.equal(count('planks'), 1);
+  assert.equal(count('stick'), 4);
+});
+
+test('a furnace smelts while it has fuel', () => {
+  loadStations({});
+  const s = stationAt(0, 200, 0, 'furnace');
+  s.slots[0] = { id: 'raw_iron', n: 1 };
+  s.slots[1] = { id: 'coal', n: 1 };
+  updateStations(0.1);
+  assert.equal(s.slots[1], null);
+  updateStations(10);
+  assert.equal(s.slots[2].id, 'iron_ingot');
+  assert.equal(s.slots[0], null);
 });
 
 // ---------- creature lifetimes ----------
@@ -903,6 +987,92 @@ test('a slain Wyrm stays dead', () => {
   hurtEntity(e, 99999, 1, 0);
   assert.deepEqual(hintQueue, []);
   assert.equal(ents.includes(e), false);
+});
+
+// ---------- creative mode ----------
+test('nothing can hurt a creative hero', () => {
+  G.profile.creative = true;
+  damagePlayer(99, 'a test');
+  player.pos.y += 60;
+  run(4, updatePlayer);
+  assert.equal(player.hp, 20);
+  assert.equal(deaths.length, 0);
+});
+
+test('a creative hero flies without a scroll and without paying for it', () => {
+  G.profile.creative = true;
+  toggleFlight();
+  run(1, updatePlayer);
+  assert.equal(player.fly, true);
+  assert.equal(player.mana, 100);
+});
+
+test('a creative hero casts what they never learned, and practises nothing', () => {
+  const spent = heard('mana:spent');
+  G.profile.creative = true;
+  player.mana = 0; player.hp = 5;
+  castHeal();
+  assert.ok(player.hp > 5);
+  assert.equal(player.mana, 0);
+  assert.deepEqual(spent, []);
+});
+
+test('a creative hero breaks a block with one click and keeps nothing', () => {
+  const t = aimAtGround(), id = getBlock(t.x, t.y, t.z);
+  G.profile.creative = true;
+  G.mouseDown = true;
+  updateMining(STEP);
+  assert.equal(getBlock(t.x, t.y, t.z), AIR);
+  assert.equal(count(dropOf(id)), 0);
+});
+
+test('a creative hero places what they do not own, and it costs nothing', () => {
+  const t = aimAtGround();
+  player.pos.x += 3; // do not build on your own feet
+  G.profile.creative = true;
+  hotbar.creative[0] = 'planks';
+  placeBlock();
+  assert.equal(getBlock(t.x + t.n[0], t.y + t.n[1], t.z + t.n[2]), 18);
+  assert.equal(count(18), 0);
+});
+
+test('leaving creative mode takes back what the hero never earned', () => {
+  addBlock(18);
+  hotbar.creative[0] = 'stone_bricks';
+  player.fly = true;
+  creativeChanged();
+  assert.equal(player.fly, false);
+  assert.equal(heldBlock(), 18); // the real hotbar was there all along
+});
+
+test('monsters leave a creative hero alone', () => {
+  G.profile.creative = true;
+  const orc = spawnEntity('orc', player.pos.x + 1, player.pos.y, player.pos.z);
+  run(3);
+  assert.equal(player.hp, 20);
+  assert.equal(orc.aim, null);
+});
+
+test('the Wyrm gives up on a creative hero and goes back to bed', () => {
+  const moods = heard('dragon:mood'), e = wyrm(100);
+  e.mood = 'chases';
+  G.profile.creative = true;
+  run(0.1);
+  assert.equal(e.mood, 'home');
+  assert.deepEqual(moods, []);
+});
+
+test('the First Law holds in creative mode', () => {
+  const e = wyrm(), hp = e.hp;
+  G.profile.creative = true;
+  hurtEntity(e, 999, 1, 0);
+  assert.equal(e.hp, hp);
+});
+
+test('the law sees nothing a creative hero does', () => {
+  G.profile.creative = true;
+  emit('crime:committed', { type: 'vandalism', victim: null });
+  assert.equal(crimes.length, 0);
 });
 
 // ---------- the people who matter ----------

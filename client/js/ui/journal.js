@@ -66,7 +66,7 @@ definePage('powers', {
   render() {
     const known = G.profile.abilities.map(power), unknown = Object.keys(ABILITIES).filter(a => !G.profile.abilities.includes(a)).map(power);
     fill('Powers',
-      wellHTML() + (known.map(p => powerHTML(p, `${p.key ? `Press ${p.key}` : 'Always active'}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">No powers yet. Buy skill scrolls from a market, or earn the trust of the elders.</p>'),
+      wellHTML() + (known.map(p => powerHTML(p, `${p.key ? `Press ${p.key}` : p.mana ? 'Put it on Q or R in the bag' : 'Always active'}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">No powers yet. Buy skill scrolls from a market, or earn the trust of the elders.</p>'),
       `<h3>Still to learn</h3>${unknown.map(p => powerHTML(p, `Scroll: ${p.scroll} ${G.world.currency}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">You have learned every power.</p>'}`);
   },
 });
@@ -95,8 +95,8 @@ $('pageleft').addEventListener('click', e => {
 });
 
 // ---------- the controls, here and on the pause screen ----------
-const MOVING = [['WASD', 'Move'], ['Space', 'Jump or swim'], ['Shift', 'Sprint'], ['F', 'Fly, once learned'], ['Left click', 'Attack, or hold to mine'], ['Right click', 'Place a block'], ['1 to 0', 'Pick a hotbar slot']];
-const DOING = [['E', 'Talk or trade'], ['T', 'Pray to the god'], ['Q R', 'Fireball, Heal'], ['Z X C', 'Frost Nova, Chain Lightning, Blink'], ['B H', 'Mana Ward, Meteor'], ['G', 'Drink a health potion'], ['V', 'Drink a mana potion']];
+const MOVING = [['WASD', 'Move'], ['Space', 'Jump or swim'], ['Shift', 'Sprint'], ['F', 'Fly, once learned'], ['Left click', 'Attack, or hold to mine'], ['Right click', 'Use what is in your hand: place a block, eat, drink, draw a bow, raise a shield, open a station'], ['W or S on a rope', 'Climb'], ['1 to 9', 'Pick a hotbar slot']];
+const DOING = [['E', 'Talk or trade'], ['T', 'Pray to the god'], ['Q R', 'Cast the two spells you have chosen in the bag'], ['G', 'Drink a health potion'], ['V', 'Drink a mana potion']];
 const MENUS = [['I', 'Bag'], ['J', 'Journal'], ['L', 'Laws'], ['M', 'Map'], ['Esc', 'Close a menu, or pause'], ['F3', 'Position and frame rate']];
 const keyList = rows => `<dl class="keylist">${rows.map(([k, what]) => `<dt><kbd>${k}</kbd></dt><dd>${what}</dd>`).join('')}</dl>`;
 export const movesHTML = () => `<h3>Moving</h3>${keyList(MOVING)}`;

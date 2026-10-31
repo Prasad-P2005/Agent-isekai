@@ -1,9 +1,10 @@
 // The player: movement physics, health/mana and block raycasting.
-import { G } from '../core/state.js';
+import { G, creative } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
-import { BEDROCK, MAGMA, WATER, solid } from './blocks.js';
+import { BEDROCK, BL, MAGMA, WATER, solid } from './blocks.js';
 import { getBlock } from './chunks.js';
+import { armourCut, manaRegenBonus, offDef, wearArmour, wearShield } from './inventory.js';
 import { H, LAND, heightAt, landOf } from './terrain.js';
 
 const EYE_HEIGHT = 1.62;
@@ -12,11 +13,13 @@ const FLIGHT_COST = 4, FLIGHT_SPRINT_COST = 10; // mana per second
 const MANA_REGEN = 0.06, SPIRE_FLOW = 3, WARD_PRICE = 2; // a share of the well per second, how much faster it fills by a Crystal Spire, mana for each point of a warded blow
 // How quickly the body takes up the speed it is asked for, per second. Higher is snappier.
 const GRIP = { walk: 12, stop: 16, air: 5, water: 6, fly: 7 };
+const CLIMB = 3.4, SHIELD_FACING = 0.35, STONESKIN = 0.3;
 const STEP_SPRING = 20, MAX_STEP_LAG = 1.4, STEP_CLEARANCE = 0.001;
 export const player = {
   pos: new Vec3(), vel: new Vec3(), kb: new Vec3(), spawn: new Vec3(), lastEye: new Vec3(),
   onGround: false, fly: false, yaw: 0, pitch: 0, ready: false, restored: false, stepLag: 0, stepRate: 0,
   hp: 20, mana: 100, wardT: 0, iframe: 0, dj: false, wanted: 0, lastHurt: 99, atkCd: 0, wet: false, sprinting: false,
+  drawing: null, guarding: false, climbing: false, buffs: { swift: 0, strength: 0, stoneskin: 0, night_sight: 0, fireproof: 0, water_breath: 0 },
 };
 export const has = a => !!G.profile && G.profile.abilities.includes(a);
 export const maxHp = () => (G.profile ? G.profile.max_hp : 20);
@@ -87,12 +90,15 @@ export function updatePlayer(dt) {
   const inWater = getBlock(Math.floor(p.x), Math.floor(p.y + 0.4), Math.floor(p.z)) === WATER;
   if (inWater && !player.wet && player.vel.y < -3) emit('player:splashed', { x: p.x, y: p.y, z: p.z, speed: -player.vel.y });
   player.wet = inWater;
+  player.climbing = !player.fly && (BL[getBlock(Math.floor(p.x), Math.floor(p.y + 0.2), Math.floor(p.z))]?.climbable || BL[getBlock(Math.floor(p.x), Math.floor(p.y + 1.2), Math.floor(p.z))]?.climbable) === true;
   const sprint = keys.ShiftLeft || keys.ShiftRight;
   player.sprinting = !!sprint && !player.fly && Math.hypot(player.vel.x, player.vel.z) > 5;
   let speed = player.fly ? (sprint ? 30 : 14) : (sprint ? 6.5 : 4.3);
   if (has('swift')) speed *= 1.5;
-  if (inWater && !player.fly) speed *= 0.6;
-  if (player.fly) { player.mana -= (sprint ? FLIGHT_SPRINT_COST : FLIGHT_COST) * dt; if (player.mana <= 0) { player.mana = 0; player.fly = false; toast('Your mana ran dry; flight fades.'); } }
+  if (player.buffs.swift > 0) speed *= 1.3;
+  if (player.drawing != null) speed *= 0.5;
+  if (inWater && !player.fly) speed *= player.buffs.water_breath > 0 ? 1 : 0.6;
+  if (player.fly && !creative()) { player.mana -= (sprint ? FLIGHT_SPRINT_COST : FLIGHT_COST) * dt; if (player.mana <= 0) { player.mana = 0; player.fly = false; toast('Your mana ran dry; flight fades.'); } }
   const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
   let mx = 0, mz = 0;
   if (keys.KeyW || keys.ArrowUp) { mx += fx; mz += fz; }
@@ -106,6 +112,7 @@ export function updatePlayer(dt) {
   player.vel.x += (mx / l * speed - player.vel.x) * grip;
   player.vel.z += (mz / l * speed - player.vel.z) * grip;
   if (player.fly) player.vel.y += (((keys.Space ? 1 : 0) - (sprint ? 1 : 0)) * 12 - player.vel.y) * grip;
+  else if (player.climbing) player.vel.y = keys.Space || keys.KeyW ? CLIMB : keys.KeyS ? -CLIMB : 0; // a rope, a ladder or a vine holds you, even with your hands doing nothing
   else if (inWater) player.vel.y = keys.Space ? 4 : Math.max(player.vel.y - 12 * dt, -2.5);
   else { player.vel.y = Math.max(player.vel.y - 28 * dt, -50); if (keys.Space && player.onGround) player.vel.y = 9; }
   moveAxis('x', (player.vel.x + player.kb.x) * dt);
@@ -159,8 +166,12 @@ export function inView(x, y, z) {
 
 // ---------- health ----------
 export function damagePlayer(n, src, killer = null) {
-  if (n <= 0 || player.iframe > 0 || !player.ready || G.phase !== 'world') return;
-  n = Math.max(1, Math.round(n * (1 - (G.profile?.armor || 0))));
+  if (n <= 0 || player.iframe > 0 || !player.ready || G.phase !== 'world' || creative()) return;
+  const shield = player.guarding ? offDef() : null;
+  if (shield?.block) { wearShield(n); n *= 1 - shield.block; emit('player:blocked'); }
+  const raw = n;
+  n = Math.max(1, Math.round(n * (1 - armourCut()) * (player.buffs.stoneskin > 0 ? 1 - STONESKIN : 1)));
+  wearArmour(raw);
   player.iframe = 0.4;
   if (player.wardT > 0) n = wardOff(n);
   if (n <= 0) return;
@@ -188,10 +199,11 @@ function die(src, killer) {
 export function heal(n) { player.hp = Math.min(maxHp(), player.hp + n); }
 export function updateStats(dt) {
   player.iframe -= dt; player.atkCd -= dt; player.lastHurt += dt;
+  for (const b of Object.keys(player.buffs)) if (player.buffs[b] > 0) player.buffs[b] -= dt;
   if (player.wardT > 0) { player.wardT -= dt; if (player.wardT <= 0) emit('ward:broken'); }
   // Holding flight up takes all you've got. The Spires give mana off freely, which is why the Law Stones stand at their feet.
-  if (!player.fly) player.mana = Math.min(maxMana(), player.mana + maxMana() * MANA_REGEN * (landOf(player.pos.x, player.pos.z).structure === 'crystal_spire' ? SPIRE_FLOW : 1) * dt);
+  if (!player.fly) player.mana = Math.min(maxMana(), player.mana + maxMana() * MANA_REGEN * manaRegenBonus() * (landOf(player.pos.x, player.pos.z).structure === 'crystal_spire' ? SPIRE_FLOW : 1) * dt);
   if (player.lastHurt > 5) heal(0.25 * dt);
   if (player.hp > maxHp()) player.hp = maxHp();
-  if (getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y - 0.1), Math.floor(player.pos.z)) === MAGMA) damagePlayer(2, 'magma');
+  if (getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y - 0.1), Math.floor(player.pos.z)) === MAGMA && !(player.buffs.fireproof > 0)) damagePlayer(2, 'magma');
 }

@@ -116,7 +116,7 @@ async def pray(body: Say, request: Request):
 
 # ---------- events ----------
 class Event(BaseModel):
-    type: str  # kill | death | enter_land | use | boss_phase | cast | dragon | spotted
+    type: str  # kill | death | enter_land | boss_phase | cast | dragon | spotted
     kind: str = ""
     by_player: bool = True
     resident: dict | None = None
@@ -124,7 +124,6 @@ class Event(BaseModel):
     lx: int = 0
     lz: int = 0
     by: str = ""
-    item: str = ""
     phase: int = 0
     mana: float = 0
 
@@ -138,8 +137,6 @@ async def event(body: Event, request: Request):
         return commands.death(g, body.by, body.kind)
     if body.type == "enter_land":
         return commands.enter_land(g, body.lx, body.lz)
-    if body.type == "use":
-        return commands.use_item(g, body.item)
     if body.type == "boss_phase":
         return commands.boss_phase(g, body.phase)
     if body.type == "cast":
@@ -185,6 +182,16 @@ async def report(body: Report, request: Request):
 
 
 # ---------- people ----------
+class Pack(BaseModel):
+    """The bag as the client has it. It comes with anything that might need to know what is really in there."""
+    bag: list[dict | None] | None = None
+    worn: dict[str, dict | None] | None = None
+    seen: list[str] | None = None
+    spells: list[str] | None = None
+    stations: dict[str, dict] | None = None
+    taken: int = 0
+
+
 class Talk(BaseModel):
     topic: str = "hello"
     settlement: int | None = None
@@ -192,12 +199,13 @@ class Talk(BaseModel):
     creature: str = ""
     name: str = ""
     blocks: dict[str, int] | None = None
+    pack: Pack | None = None
 
 
 @router.post("/talk")
 async def talk(body: Talk, request: Request):
     g, _ = world_of(request)
-    return commands.talk(g, body.settlement, body.resident, body.creature, body.name, body.topic, body.blocks)
+    return commands.talk(g, body.settlement, body.resident, body.creature, body.name, body.topic, body.blocks, body.pack.model_dump() if body.pack else None)
 
 
 @router.get("/service")
@@ -214,24 +222,36 @@ class Act(BaseModel):
     settlement: int = -1
     index: int = 0
     npc: int | None = None
+    pack: Pack | None = None
 
 
 @router.post("/service")
 async def act(body: Act, request: Request):
     g, _ = world_of(request)
-    return commands.service_action(g, body.type, body.action, body.item, body.all, body.settlement, body.index, body.npc)
+    return commands.service_action(g, body.type, body.action, body.item, body.all, body.settlement, body.index, body.npc, body.pack.model_dump() if body.pack else None)
 
 
 class Blocks(BaseModel):
     blocks: dict[str, int]
     edits: dict[str, dict[str, int]] = {}
+    pack: Pack | None = None
 
 
 @router.post("/blocks")
 async def blocks(body: Blocks, request: Request):
     g, _ = world_of(request)
-    commands.sync_blocks(g, body.blocks, body.edits)
+    commands.sync_blocks(g, body.blocks, body.edits, body.pack.model_dump() if body.pack else None)
     return {"ok": True}
+
+
+class Creative(BaseModel):
+    on: bool
+
+
+@router.post("/creative")
+async def creative(body: Creative, request: Request):
+    g, _ = world_of(request)
+    return commands.set_creative(g, body.on)
 
 
 @router.get("/rules")

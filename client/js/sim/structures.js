@@ -2,9 +2,10 @@
 import { ID } from './blocks.js';
 import { blob, bush, cactus, deadTree, giantMushroom, palm } from './flora.js';
 import { B, SEA, heightAt } from './land.js';
+import { hash3 } from './noise.js';
 
 const {
-  Air, Water, Pearlstone, ManaCrystal, Stone, Cobblestone, MossyCobblestone, StoneBricks, MossyStoneBricks, OakLog, OakLeaves, Planks, Lantern, Torch, Glass, Kelp, PinkCoral,
+  Air, Water, Pearlstone, ManaCrystal, ManaShard, ManaCluster, Stone, Cobblestone, MossyCobblestone, StoneBricks, MossyStoneBricks, OakLog, OakLeaves, Planks, Lantern, Torch, Glass, Kelp, PinkCoral,
   Obsidian, Blackstone, Basalt, Magma, BoneBlock, RedClay, Terracotta, Sand, Snow, Ice, Glowshroom, FaeBloom, Elderwood, ElvenLeaves, Sandstone, Fence, IronOre, CoalOre,
   ThatchStairsN, ThatchStairsS, Thatch, HayBale, Barrel, Gravel,
 } = ID;
@@ -19,12 +20,21 @@ const pick = (list, r) => list[Math.floor(r() * list.length)];
 const ground = (x, z) => heightAt(x, z) + 1;
 
 // ===================== what the story stands on =====================
+// A blade of crystal: a diamond in section, narrowing all the way up to a sharp tip and leaning as it goes, so that it reads as one crystal and not as a stack of blocks.
+function shard(x, y, z, tall, wide, leanX, leanZ, set) {
+  for (let k = 0; k < tall; k++) {
+    const rad = wide * (1 - k / tall), px = x + Math.round(leanX * k / tall), pz = z + Math.round(leanZ * k / tall), reach = Math.ceil(rad);
+    for (let dx = -reach; dx <= reach; dx++) for (let dz = -reach; dz <= reach; dz++) if (Math.abs(dx) + Math.abs(dz) <= rad) set(px + dx, y + k, pz + dz, ManaCrystal);
+  }
+  set(x + Math.round(leanX), y + tall, z + Math.round(leanZ), ManaShard);
+}
 export function crystals(x, y, z, set, r) {
   const n = 3 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
-    let px = x + Math.floor(r() * 5) - 2;
-    const pz = z + Math.floor(r() * 5) - 2, len = 3 + Math.floor(r() * 5), lx = r() < 0.3 ? (r() < 0.5 ? 1 : -1) : 0, py = ground(px, pz);
-    for (let k = 0; k < len; k++) { set(px, py + k, pz, ManaCrystal); if (k === 2) px += lx; }
+    const px = x + Math.floor(r() * 5) - 2, pz = z + Math.floor(r() * 5) - 2, len = 3 + Math.floor(r() * 5), lx = r() < 0.3 ? (r() < 0.5 ? 1 : -1) : 0, py = ground(px, pz);
+    const lean = hash3(px, py, pz); // taken from the spot, so that the chunk's other features still draw the same numbers
+    shard(px, py, pz, len * 2, len > 5 ? 1.8 : 1.2, lx * 2 + Math.round(lean * 4) - 2, Math.round(lean * 37 % 4) - 2, set);
+    for (const [dx, dz] of [[2, 0], [-2, 1], [1, -2], [-1, 2]]) if (hash3(px + dx, py, pz + dz) < 0.5) set(px + dx, ground(px + dx, pz + dz), pz + dz, ManaCluster, true);
   }
 }
 export function reef(x, y, z, set, r) {
@@ -55,15 +65,14 @@ export function palace(x, y, z, set, r) {
   for (let i = 0; i < 12; i++) set(x + Math.floor(r() * 15) - 7, y, z + Math.floor(r() * 15) - 7, PinkCoral + Math.floor(r() * 3), true);
   for (let i = 0; i < 6; i++) reef(x + Math.floor(r() * 21) - 10, y, z + Math.floor(r() * 21) - 10, set, r);
 }
+const SPIRE_TALL = 34, SPIRE_WIDE = 4; // no wider, or it would hang over the Law Stone at its foot
 export function spire(x, y, z, set, r) {
-  for (let dy = -1; dy < 26; dy++) {
-    const rad = dy < 3 ? 3 : Math.max(0, 2.6 - dy / 10);
-    for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) if (dx * dx + dz * dz <= rad * rad + 0.5) set(x + dx, y + dy, z + dz, dy < 3 ? Pearlstone : ManaCrystal);
-  }
-  set(x, y + 26, z, Lantern);
+  for (let dy = -1; dy < 3; dy++) for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) if (dx * dx + dz * dz <= 9.5) set(x + dx, y + dy, z + dz, Pearlstone);
+  shard(x, y + 3, z, SPIRE_TALL, SPIRE_WIDE, 0, 0, set);
+  for (const [dx, dz, lx, lz] of [[3, 2, 4, 3], [-3, 2, -4, 3], [2, -3, 3, -4], [-2, -3, -3, -4]]) shard(x + dx, y + 3, z + dz, 16 + (dx + 9) % 5 * 2, 2.6, lx, lz, set); // lesser blades leaning out from the great one
   for (let i = 0; i < 7; i++) { // shards break the ground all around it, within a hero's reach
     const a = i / 7 * Math.PI * 2, sx = x + Math.round(Math.cos(a) * 9), sz = z + Math.round(Math.sin(a) * 9), len = 2 + Math.floor(r() * 4), g = ground(sx, sz);
-    for (let k = 0; k < len; k++) set(sx, g + k, sz, ManaCrystal);
+    shard(sx, g, sz, len * 2, 1.2, Math.round(Math.cos(a) * 2), Math.round(Math.sin(a) * 2), set);
   }
   hint('law_stone', x + 5, ground(x + 5, z), z);
 }

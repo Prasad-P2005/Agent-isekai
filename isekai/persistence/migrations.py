@@ -1,7 +1,9 @@
 """Upgrades for saves written by older versions of the game. Add a step to STEPS and every save catches up on load."""
 from __future__ import annotations
 
+from ..content import ABILITIES, ITEMS, WORLD
 from ..core.state import World
+from ..systems import shop
 from ..systems.people.jobs import POPULATION
 from ..systems.people.roster import rebalance_roster, rehome
 from ..systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
@@ -132,7 +134,63 @@ def _to_9(world: World) -> None:
         rehome(s, world.seed)
 
 
-STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8, 9: _to_9}
+SLOT_SIZE = 36
+OLD_WEAPONS = ((7, "mithril_sword"), (3, "iron_sword"))
+OLD_TOOLS = ((5, "mithril_pickaxe"), (2.5, "iron_pickaxe"))
+OLD_ARMOUR = ((0.45, "knight"), (0.2, "leather"))
+DEEPER = 64  # blocks added under the world: chunk layers are 16 x 16, and the height of a block is its index's top part
+
+
+def _pack_old_things(p) -> None:
+    """Blocks, loot, potions and bought gear were four stores. They are all one bag now, and old gear becomes the nearest new item."""
+    by_block = {str(spec["block"]): item for item, spec in ITEMS.items() if "block" in spec}
+    for item, spec in ITEMS.items():
+        for block in spec.get("place", []):
+            by_block[str(block)] = item
+    stacks: list[dict] = []
+    worn = {"head": None, "body": None, "legs": None, "feet": None, "off": None}
+
+    def carry(item: str, n: int = 1) -> None:
+        if item not in ITEMS or n <= 0:
+            return
+        spec = ITEMS[item]
+        while n > 0:
+            part = min(n, spec["stack"])
+            stacks.append({"id": item, "n": part, **({"dur": spec["dur"]} if "dur" in spec else {})})
+            n -= part
+
+    carry("potion", p.potions)
+    carry("mana", p.mana_potions)
+    carry(next((item for floor, item in OLD_WEAPONS if p.weapon >= floor), ""))
+    carry(next((item for floor, item in OLD_TOOLS if p.tool >= floor), ""))
+    armour = next((name for floor, name in OLD_ARMOUR if p.armor >= floor), None)
+    if armour:
+        for part, slot in (("helm", "head"), ("chest", "body"), ("legs", "legs"), ("boots", "feet")):
+            worn[slot] = {"id": f"{armour}_{part}", "n": 1, "dur": ITEMS[f"{armour}_{part}"]["dur"]}
+    for block, n in p.blocks.items():
+        carry(by_block.get(block, ""), n)
+    for name, n in p.loot.items():
+        carry(shop.slug(name), n)
+    p.bag = (stacks + [None] * SLOT_SIZE)[:SLOT_SIZE]
+    p.worn = worn
+    p.seen = sorted({s["id"] for s in stacks})
+    p.potions = p.mana_potions = p.weapon = 0
+    p.armor, p.tool = 0.0, 1.0
+    p.loot = {}
+
+
+def _to_10(world: World) -> None:
+    """The bag became one list of slots, the two spells on Q and R became a choice, and the world went 64 blocks deeper, so everything with a height moves up."""
+    p = world.player
+    _pack_old_things(p)
+    p.spells = ([a for a in ABILITIES if a in p.abilities and "mana" in ABILITIES[a]] + ["", ""])[:2]
+    area = WORLD["chunk"] ** 2
+    world.block_edits = {chunk: {str(int(i) + DEEPER * area): id_ for i, id_ in changes.items()} for chunk, changes in world.block_edits.items()}
+    if p.pos:
+        p.pos.y += DEEPER
+
+
+STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8, 9: _to_9, 10: _to_10}
 CURRENT_VERSION = max(STEPS)
 
 

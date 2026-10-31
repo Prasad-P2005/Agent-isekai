@@ -1,8 +1,10 @@
 // What the player can cast and drink. What each spell costs is in content/abilities.json, so that the shop and the book can show it.
+import { G, creative } from '../core/state.js';
 import { ABILITIES } from '../core/content.js';
 import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
 import { ents, hurtEntity, isFoe } from './entities.js';
+import { heldDef } from './inventory.js';
 import { collides, eye, has, heal, lineOfSight, lookDir, maxMana, player, raycast } from './player.js';
 import { spawnProjectile } from './projectiles.js';
 import { heightAt } from './terrain.js';
@@ -12,10 +14,12 @@ const BOLT_RANGE = 30, BOLT_AIM = 0.96, BOLT_DMG = 18, CHAIN_TARGETS = 4, CHAIN_
 const BLINK_RANGE = 14, BLINK_MIN = 2, BLINK_STEP = 0.5, BLINK_LIFTS = [0.1, 1.1];
 const WARD_TIME = 10;
 const METEOR_RANGE = 40, METEOR_HEIGHT = 34, METEOR_SPEED = 42, METEOR_DMG = 60, METEOR_BLAST = 7, METEOR_SIZE = 2.4;
-const UP = new Vec3(0, 1, 0);
+const UP = new Vec3(0, 1, 0), FIREBALL_DMG = 14, HEAL = 8;
+const power = () => heldDef()?.spell ?? 1; // a staff in the hand strengthens whatever is cast
 
 const spellName = id => ABILITIES[id].label.replace(/^[A-Z] /, '');
 function ready(id) {
+  if (creative()) return true;
   const cost = ABILITIES[id].mana;
   if (!has(id)) { toast(`You do not know ${spellName(id)}. (Buy a scroll from a merchant)`); return false; }
   if (cost > maxMana()) { toast(`${spellName(id)} takes ${cost} mana, and your well only holds ${maxMana()}. Attune to a Mana Crystal at a temple, or keep casting.`); return false; }
@@ -23,6 +27,7 @@ function ready(id) {
   return true;
 }
 function spend(id) {
+  if (creative()) return; // nothing spent is nothing practised, so free spells cannot deepen the well
   player.mana -= ABILITIES[id].mana;
   emit('mana:spent', ABILITIES[id].mana);
 }
@@ -36,16 +41,16 @@ export function doubleJump() {
   if (!player.onGround && !player.fly && !player.dj && has('double_jump')) { player.dj = true; player.vel.y = 9; }
 }
 export function toggleFlight() {
-  if (has('flight')) { player.fly = !player.fly; player.vel.y = 0; } else toast('You have not learned flight.', 2);
+  if (creative() || has('flight')) { player.fly = !player.fly; player.vel.y = 0; } else toast('You have not learned flight.', 2);
 }
 export function castFireball() {
   if (!pay('fireball')) return;
   const d = lookDir();
-  emit('fireball:cast', spawnProjectile(eye().addScaledVector(d, 0.8), d.multiplyScalar(30)));
+  emit('fireball:cast', spawnProjectile(eye().addScaledVector(d, 0.8), d.multiplyScalar(30), { dmg: Math.round(FIREBALL_DMG * power()) }));
 }
 export function castHeal() {
   if (!pay('heal')) return;
-  heal(8); toast('✚ Healing light surrounds you.', 2);
+  heal(Math.round(HEAL * power())); toast('✚ Healing light surrounds you.', 2);
 }
 
 // ---------- frost: everything around you stops ----------
@@ -54,7 +59,7 @@ export function castFrostNova() {
   const caught = ents.filter(e => isFoe(e) && e.pos.distanceTo(player.pos) < FROST_RADIUS);
   emit('frost:cast', { at: player.pos.clone(), caught });
   for (const e of caught) {
-    hurtEntity(e, FROST_DMG, 0, 0);
+    hurtEntity(e, Math.round(FROST_DMG * power()), 0, 0);
     if (!e.def.boss) e.frozenT = FROST_TIME; // the Demon Lord only feels the cold
   }
 }
@@ -91,7 +96,7 @@ export function castChainLightning() {
   emit('lightning:cast', { points, struck: struck.length > 0 });
   struck.forEach((e, i) => {
     const dx = e.pos.x - player.pos.x, dz = e.pos.z - player.pos.z, l = Math.hypot(dx, dz) || 1;
-    hurtEntity(e, Math.round(BOLT_DMG * CHAIN_FADE ** i), dx / l, dz / l);
+    hurtEntity(e, Math.round(BOLT_DMG * power() * CHAIN_FADE ** i), dx / l, dz / l);
   });
 }
 
@@ -131,13 +136,20 @@ export function castMeteor() {
   else at.y = heightAt(Math.floor(at.x), Math.floor(at.z)) + 1;
   if (raycast(at, UP, METEOR_HEIGHT)) return toast('No meteor can reach this spot. It needs open sky.', 2);
   spend('meteor');
-  const pr = spawnProjectile(at.clone().addScaledVector(UP, METEOR_HEIGHT), new Vec3(0, -METEOR_SPEED, 0), { dmg: METEOR_DMG, blast: METEOR_BLAST, size: METEOR_SIZE });
+  const pr = spawnProjectile(at.clone().addScaledVector(UP, METEOR_HEIGHT), new Vec3(0, -METEOR_SPEED, 0), { dmg: Math.round(METEOR_DMG * power()), blast: METEOR_BLAST, size: METEOR_SIZE });
   emit('meteor:called', { at, pr, fall: METEOR_HEIGHT / METEOR_SPEED });
 }
 
-// The server keeps the potion count, so a drink only takes effect once it answers.
-export const drink = item => emit('item:used', item);
-export function drank(item, ok) {
-  if (!ok) return toast(item === 'potion' ? 'No health potions.' : 'No mana potions.', 2);
-  if (item === 'potion') heal(10); else player.mana = Math.min(maxMana(), player.mana + 50);
+// ---------- the two spells in hand ----------
+const CASTS = { fireball: castFireball, heal: castHeal, frost_nova: castFrostNova, chain_lightning: castChainLightning, blink: castBlink, mana_ward: castManaWard, meteor: castMeteor };
+export const castable = () => Object.keys(CASTS).filter(id => creative() || has(id));
+export function castSlot(i) {
+  const id = G.profile.spells?.[i];
+  if (!id) return toast('No spell in this slot. Choose one in the bag.', 2);
+  CASTS[id]();
+}
+// A spell just learned goes straight into an empty slot, so that a new power works the moment it is bought.
+export function fillSpells() {
+  const slots = G.profile.spells ??= ['', ''];
+  for (const id of castable()) { if (slots.includes(id)) continue; const free = slots.indexOf(''); if (free < 0) break; slots[free] = id; emit('blocks:changed'); }
 }

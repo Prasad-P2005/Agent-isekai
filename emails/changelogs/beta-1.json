@@ -1,0 +1,45 @@
+{
+  "subject": "Isekai Realms Beta 1: the world wakes up",
+  "date": "31 October 2026",
+  "build": "Beta 1",
+  "summary": "The world is bigger, its creatures think for themselves, and something very old now sleeps under a black mountain in the east.",
+  "sections": [
+    {
+      "kind": "new",
+      "items": [
+        { "head": "The Wyrm.", "text": "One dragon in all the world, asleep in a cave under the Wyrmcrown. No blade can mark it until the endgame. Wake it and it chases you off the mountain, breathing fire, and it remembers you." },
+        { "head": "A bigger world.", "text": "10 by 10 lands, up from 8 by 8, with the drowned Mirefen in the south and two new villages." },
+        { "head": "Ten new creatures.", "text": "Deer, boars, crabs, bats, bandits, skeleton archers, cave spiders, mountain trolls and ashen wraiths, with shoals of fish in the water." },
+        { "head": "A bestiary.", "text": "The journal has an entry for every creature, unlocked the first time you get a good look at it." },
+        { "head": "More to do.", "text": "Five new guild quests, a longer board as your rank rises, more favors, and a final hunt the King offers once you are Oathbound." }
+      ]
+    },
+    {
+      "kind": "changed",
+      "items": [
+        { "head": "Spawning like Minecraft.", "text": "Packs by biome and by light, caves with their own monsters, and lanterns that truly keep the dark things away. Nothing appears where you are looking." },
+        { "head": "Despawning that makes sense.", "text": "Creatures leave when they are far off and idle, never in front of you. Named foes track you down again." },
+        { "head": "Real pathfinding.", "text": "A shared flow field for the hunt and A* for errands, so creatures go round walls and through doors." },
+        { "head": "Smarter by nature.", "text": "Wolves encircle you, goblins run when hurt, skeletons keep their range, spiders pounce, deer bolt as a herd and guards call for help." },
+        { "head": "Grand town buildings.", "text": "The guild hall, smithy, hospital, inn, church and keep are rebuilt from the ground up, with real interiors." }
+      ]
+    },
+    {
+      "kind": "fixed",
+      "items": [
+        { "head": "Empty shops.", "text": "Blacksmiths, guild masters and doctors now keep their posts day and night, even in the middle of a big city." },
+        { "head": "Wall hopping.", "text": "Characters only jump at a one-block step, not at every wall they meet." },
+        { "head": "Lost events.", "text": "Raids, caravans and the law wait for somewhere to stand instead of quietly failing." }
+      ]
+    },
+    {
+      "kind": "check",
+      "items": [
+        { "head": "Not played yet.", "text": "This build has not been run through the automated tests or played in a browser, so expect rough edges, especially in the new art and the dragon fight. Old saves upgrade themselves, but the far east and south coasts will change shape." }
+      ]
+    }
+  ],
+  "pictures": [
+    { "file": "gallery/dragon.png", "caption": "The Wyrm, with an adventurer for scale." }
+  ]
+}

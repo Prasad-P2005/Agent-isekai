@@ -20,6 +20,8 @@ const withMessages = res => { applyState(res); for (const m of res.messages || [
 on('land:entered', ({ lx, lz }) => report(() => api.event({ type: 'enter_land', lx, lz }), withMessages));
 on('player:died', ({ by, kind }) => report(() => api.event({ type: 'death', by, kind })));
 on('boss:phase', phase => report(() => api.event({ type: 'boss_phase', phase })));
+on('dragon:mood', kind => report(() => api.event({ type: 'dragon', kind })));
+on('creature:spotted', kind => report(() => api.event({ type: 'spotted', kind })));
 on('entity:killed', ({ kind, byPlayer, resident, named }) => report(() => api.event({ type: 'kill', kind, by_player: byPlayer, resident, named }), withMessages));
 on('item:used', item => report(() => api.event({ type: 'use', item }), res => { applyState(res); drank(item, res.ok); }));
 on('crime:reported', ({ type, civilians, body }) => report(() => api.crime(body), res => { applyState(res); crimeJudged(type, civilians, res); }));
@@ -49,7 +51,7 @@ function context() {
   const L = landOf(player.pos.x, player.pos.z), S = L.settlement != null ? G.world.settlements[L.settlement] : null;
   const where = player.ready ? { x: player.pos.x, y: player.pos.y, z: player.pos.z, hp: player.hp, mana: player.mana } : {};
   return { ...where, night: isNight(), place: S ? `${S.name} (${S.type})` : (L.name || 'the wilds'), in_settlement: !!S,
-    playing: player.ready && !isPaused(), wanted: player.wanted, day_time: G.dayTime, boss_hp: ents.find(e => e.def.boss)?.hp };
+    playing: player.ready && !isPaused(), wanted: player.wanted, day_time: G.dayTime, boss_hp: ents.find(e => e.def.boss)?.hp, dragon_hp: ents.find(e => e.kind === 'dragon')?.hp };
 }
 function leaving() {
   if (G.phase !== 'world') return;

@@ -712,7 +712,7 @@
     "Have you seen the wing? A farmer's roofed his barn with it. He says it's the first dry winter he's ever had.",
     "One dragon fewer, and I can't say the sky feels safer. It just feels emptier. Is that odd?",
     "Word is the dragon's hoard was mostly spoons. Thousands of spoons. Nobody knows what that's about.",
-    "You could see the smoke from #far_place#, they say. Now somebody's got to tell the other dragons."
+    "You could see the smoke from #far_place#, they say. There was only ever the one. The sky's going to feel strange now."
   ],
   "gossip:murder": [
     "Somebody killed {victim}, over in {place}. Just walked up and did it. Who does that?",
@@ -1004,7 +1004,7 @@
     "If it's a Law you want to change, you go where Laws are kept. Up past the snow line, where the stone hums.",
     "My brother hauled crystal from the Dragonspine. He said the Spires make a sound at night, and you should never answer it.",
     "Four Oaths and a rock, isn't it? I don't understand any of it, {you}. But I'll say a word for you when you go up.",
-    "Head northeast and climb until you can't. Mind the dragons. They're the reason it's so quiet up there.",
+    "Head northeast and climb until you can't. Stay clear of the black mountain. It's the reason it's so quiet out there.",
     "#saying# That's no use to you up in the Dragonspine, mind. Up there you want a rope."
   ],
   "mission:throne": [

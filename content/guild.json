@@ -4,8 +4,13 @@
     { "kind": "slime", "title": "Clear the slimes from the fields", "count": 4, "reward": 30 },
     { "kind": "goblin", "title": "Drive off the goblin raiders", "count": 3, "reward": 50 },
     { "kind": "wolf", "title": "Hunt the dire wolves", "count": 3, "reward": 45 },
+    { "kind": "bandit", "title": "Break up the bandit gangs on the wild roads", "count": 3, "reward": 70 },
+    { "kind": "skeleton", "title": "Lay the restless dead to rest", "count": 4, "reward": 75 },
+    { "kind": "spider", "title": "Burn out the spiders' nests", "count": 3, "reward": 80 },
     { "kind": "orc", "title": "Slay the orc marauders", "count": 2, "reward": 90 },
     { "kind": "imp", "title": "Shoot down the demon imps", "count": 4, "reward": 80 },
+    { "kind": "troll", "title": "Bring down a mountain troll", "count": 1, "reward": 130 },
+    { "kind": "wraith", "title": "Banish the wraiths of the Mirefen", "count": 2, "reward": 140 },
     { "kind": "demon_knight", "title": "Defeat the demon knights", "count": 2, "reward": 160 }
   ]
 }

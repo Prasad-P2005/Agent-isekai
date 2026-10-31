@@ -1,0 +1,96 @@
+{
+  "categories": {
+    "monster": { "cap": 16, "day_cap": 5, "every": 2, "tries": 3, "ring": [24, 60] },
+    "wildlife": { "cap": 7, "every": 5, "tries": 2, "ring": [28, 64] },
+    "folk": { "cap": 2, "every": 40, "tries": 1, "ring": [34, 64] },
+    "water": { "cap": 3, "every": 12, "tries": 2, "ring": [24, 56] },
+    "cave": { "cap": 8, "every": 3, "tries": 4, "ring": [18, 40] }
+  },
+  "biomes": {
+    "KINGDOM": {
+      "monster": [
+        { "kind": "slime", "weight": 30, "pack": [1, 3], "light": "any" },
+        { "kind": "goblin", "weight": 35, "pack": [2, 4] },
+        { "kind": "wolf", "weight": 20, "pack": [2, 4] },
+        { "kind": "skeleton", "weight": 15, "pack": [1, 2] },
+        { "kind": "bandit", "weight": 10, "pack": [2, 3], "light": "any", "wilds": true }
+      ],
+      "wildlife": [
+        { "kind": "deer", "weight": 50, "pack": [2, 4], "light": "bright" },
+        { "kind": "boar", "weight": 30, "pack": [1, 3], "light": "bright" }
+      ],
+      "folk": [{ "kind": "adventurer", "weight": 1, "pack": [1, 2], "light": "bright" }]
+    },
+    "ELF": {
+      "monster": [
+        { "kind": "slime", "weight": 40, "pack": [1, 3], "light": "any" },
+        { "kind": "wolf", "weight": 40, "pack": [2, 4] },
+        { "kind": "skeleton", "weight": 20, "pack": [1, 2] }
+      ],
+      "wildlife": [{ "kind": "deer", "weight": 1, "pack": [2, 5], "light": "bright" }],
+      "folk": [{ "kind": "elf", "weight": 1, "pack": [1, 2], "light": "bright" }]
+    },
+    "BEAST": {
+      "monster": [
+        { "kind": "wolf", "weight": 30, "pack": [3, 5], "light": "any" },
+        { "kind": "goblin", "weight": 25, "pack": [2, 4] },
+        { "kind": "orc", "weight": 25, "pack": [1, 2] },
+        { "kind": "bandit", "weight": 20, "pack": [2, 3], "light": "any", "wilds": true }
+      ],
+      "wildlife": [{ "kind": "boar", "weight": 1, "pack": [2, 4], "light": "bright" }],
+      "folk": [{ "kind": "beastkin", "weight": 1, "pack": [1, 2], "light": "bright" }]
+    },
+    "PEAKS": {
+      "monster": [
+        { "kind": "wolf", "weight": 40, "pack": [2, 4], "light": "any" },
+        { "kind": "orc", "weight": 30, "pack": [1, 2] },
+        { "kind": "troll", "weight": 30, "pack": [1, 1] }
+      ]
+    },
+    "BEACH": {
+      "monster": [{ "kind": "slime", "weight": 1, "pack": [1, 2] }],
+      "wildlife": [{ "kind": "crab", "weight": 1, "pack": [2, 4], "light": "any" }]
+    },
+    "OCEAN": {
+      "water": [{ "kind": "mermaid", "weight": 1, "pack": [1, 2], "light": "any", "depth": 6 }]
+    },
+    "DEMON": {
+      "monster": [
+        { "kind": "imp", "weight": 50, "pack": [2, 3], "light": "any" },
+        { "kind": "demon_knight", "weight": 30, "pack": [1, 2], "light": "any" },
+        { "kind": "wraith", "weight": 20, "pack": [1, 2], "light": "any" }
+      ]
+    },
+    "MIRE": {
+      "monster": [
+        { "kind": "slime", "weight": 45, "pack": [2, 4], "light": "any" },
+        { "kind": "spider", "weight": 25, "pack": [1, 3] },
+        { "kind": "skeleton", "weight": 15, "pack": [1, 2] },
+        { "kind": "wraith", "weight": 15, "pack": [1, 1] }
+      ],
+      "wildlife": [{ "kind": "boar", "weight": 1, "pack": [1, 2], "light": "bright" }]
+    }
+  },
+  "caves": {
+    "default": [
+      { "kind": "skeleton", "weight": 35, "pack": [1, 3] },
+      { "kind": "spider", "weight": 30, "pack": [1, 3] },
+      { "kind": "goblin", "weight": 20, "pack": [2, 4] },
+      { "kind": "bat", "weight": 25, "pack": [2, 4], "harmless": true }
+    ],
+    "PEAKS": [
+      { "kind": "troll", "weight": 20, "pack": [1, 1] },
+      { "kind": "skeleton", "weight": 30, "pack": [1, 2] },
+      { "kind": "bat", "weight": 30, "pack": [2, 4], "harmless": true }
+    ],
+    "DEMON": [
+      { "kind": "imp", "weight": 40, "pack": [2, 3] },
+      { "kind": "wraith", "weight": 40, "pack": [1, 2] }
+    ]
+  },
+  "structures": {
+    "ruins": { "monster": [{ "kind": "skeleton", "weight": 60, "pack": [2, 3], "light": "any" }] },
+    "demon_castle": { "monster": [{ "kind": "demon_knight", "weight": 60, "pack": [1, 2], "light": "any" }] },
+    "dragon_peak": { "monster": [{ "kind": "troll", "weight": 30, "pack": [1, 1], "light": "any" }] }
+  }
+}

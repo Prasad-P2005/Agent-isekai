@@ -7,6 +7,7 @@ import { eye, player } from '../sim/player.js';
 import { updateAmbience } from './ambience.js';
 import { syncBodies } from './bodies.js';
 import { syncFireballs } from './fireball.js';
+import { updateFish } from './fish.js';
 import { syncCracks } from './fx.js';
 import { drawHand, syncHand } from './hand.js';
 import { BASE_FOV, camera, highlight, renderer, scene, stillCamera } from './scene.js';
@@ -59,6 +60,7 @@ export function renderWorld(dt, blend) {
   walkCamera(dt, under);
   updateSky(camera.position, dt, under);
   updateAmbience(dt, under);
+  updateFish(dt);
   syncBodies(dt, blend);
   syncFireballs(dt);
   syncHand(dt, stride, gait);

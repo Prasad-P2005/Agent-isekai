@@ -12,17 +12,20 @@ import { AIR, BL, dropOf, hardness, solid } from '../../client/js/sim/blocks.js'
 import { chunks, getBlock, setBlock, streamChunks } from '../../client/js/sim/chunks.js';
 import { applyEffects, applyState } from '../../client/js/sim/effects.js';
 import { edits, loadEdits, requeueEdits, takeUnsentEdits } from '../../client/js/sim/edits.js';
-import { ents, hurtEntity, isNight, meleeHit, removeEntity, spawnEntity, updateEntities } from '../../client/js/sim/entities.js';
+import { hasSeen, updateSightings } from '../../client/js/sim/bestiary.js';
+import { ents, hurtEntity, isFoe, isNight, meleeHit, removeEntity, spawnEntity, updateEntities } from '../../client/js/sim/entities.js';
 import { addBlock, count, heldBlock, hotbar, takeBlock } from '../../client/js/sim/inventory.js';
 import { questMarks } from '../../client/js/sim/marks.js';
 import { aim, miningBar, placeBlock, stopAiming, updateMining } from '../../client/js/sim/mining.js';
+import { lampLight, skyLight } from '../../client/js/sim/light.js';
 import { initNoise } from '../../client/js/sim/noise.js';
 import { crimeJudged, replaceSettlement, talkToNearest, updateLaw, updateResidents } from '../../client/js/sim/people.js';
 import { collides, damagePlayer, eye, lookDir, placePlayer, player, raycast, settlePlayer, updatePlayer, updateStats } from '../../client/js/sim/player.js';
 import { projectiles, spawnProjectile, updateProjectiles } from '../../client/js/sim/projectiles.js';
+import { clearArrivals, spawnNear, updateArrivals, updateSpawning } from '../../client/js/sim/spawning.js';
 import { mapRole, surveyChunk } from '../../client/js/sim/survey.js';
 import { WORLD_EVENTS } from '../../client/js/sim/worldevents.js';
-import { CS, H, SEA, heightAt, hintQueue, idx, setWorldData, chunkKey } from '../../client/js/sim/terrain.js';
+import { CS, H, SEA, heightAt, hintQueue, idx, lairAt, setWorldData, chunkKey } from '../../client/js/sim/terrain.js';
 
 const fixture = JSON.parse(readFileSync(new URL('./world.json', import.meta.url)));
 let OPEN_LAND = [448, 448]; // moved in the setup below to a spot with no trees around it
@@ -46,7 +49,8 @@ function goTo(x, z) {
   streamChunks(player.pos.x, player.pos.z, Infinity);
   mow(x, z);
 }
-function run(seconds, step = updateEntities) { for (let i = 0; i < seconds * 60; i++) step(STEP); }
+const live = dt => { updateEntities(dt); updateArrivals(dt); }; // everything but what nature adds, which would make these tests a lottery
+function run(seconds, step = live) { for (let i = 0; i < seconds * 60; i++) step(STEP); }
 const heard = name => { const got = []; on(name, d => got.push(d)); return got; };
 
 const crimes = heard('crime:reported'), kills = heard('entity:killed'), deaths = heard('player:died');
@@ -67,7 +71,7 @@ function findClearGround() {
 let groundFound = false;
 
 beforeEach(() => {
-  ents.length = 0; hintQueue.length = 0; projectiles.length = 0; chunks.clear(); edits.clear(); takeUnsentEdits();
+  ents.length = 0; hintQueue.length = 0; projectiles.length = 0; chunks.clear(); edits.clear(); takeUnsentEdits(); clearArrivals();
   crimes.length = 0; kills.length = 0; deaths.length = 0; hotbar.ids.fill(0); hotbar.slot = 0;
   G.world = worldData(); G.profile = G.world.player; G.phase = 'world'; G.locked = true; G.uiOpen = false; G.keys = {}; G.mouseDown = false; G.dayTime = 0.1;
   initNoise(fixture.seed); setWorldData(G.world);
@@ -337,7 +341,7 @@ test('melee has a cooldown', () => {
 
 test('a kill is reported with who did it', () => {
   hurtEntity(near('goblin'), 999, 1, 0);
-  assert.deepEqual(kills, [{ kind: 'goblin', byPlayer: true, resident: null }]);
+  assert.deepEqual(kills, [{ kind: 'goblin', byPlayer: true, resident: null, named: '' }]);
   assert.equal(ents.length, 0);
 });
 
@@ -665,7 +669,7 @@ test('a spawn waits when the world is too crowded', () => {
   const h = lordSpot();
   goTo(h.x + 10, h.z);
   const crowd = [];
-  for (let i = 0; i < 25; i++) crowd.push(spawnEntity('slime', h.x + 30, h.y + 40, h.z));
+  for (let i = 0; i < 72; i++) crowd.push(spawnEntity('villager', h.x + 30, h.y + 40, h.z));
   run(0.6);
   assert.equal(ents.some(e => e.kind === 'demon_lord'), false);
   crowd.forEach(removeEntity);
@@ -707,9 +711,234 @@ test('a bounty hunter leaves when the bounty is paid', () => {
   assert.equal(ents.length, 0);
 });
 
-test('the world has a limit on creatures', () => {
+test('the world has a limit on monsters', () => {
+  for (let i = 0; i < 35; i++) near('slime');
+  assert.equal(ents.length, 30);
+});
+
+test('a crowd of monsters does not keep the law from arriving', () => {
   for (let i = 0; i < 30; i++) near('slime');
-  assert.equal(ents.length, 25);
+  assert.ok(near('golem'));
+});
+
+test('nobody vanishes while the hero is looking at them', () => {
+  const { x, y, z } = player.pos;
+  const golem = spawnEntity('golem', x, y, z - 20);
+  run(0.1);
+  assert.ok(ents.includes(golem));
+  run(10);
+  assert.equal(ents.includes(golem), false); // but off duty is off duty, and it does not wait for ever
+});
+
+test('a named foe left behind comes after you again, no less hurt', () => {
+  const foe = spawnEntity('orc', player.pos.x + 400, 80, player.pos.z, { name: 'Grishk', named: 'Grishk', power: 2 });
+  foe.hp = 30;
+  run(0.1);
+  assert.equal(ents.includes(foe), false);
+  run(50);
+  const back = ents.find(e => e.named === 'Grishk');
+  assert.equal(back.hp, 30);
+});
+
+test('those sent for wait for somewhere to stand', () => {
+  chunks.clear();
+  spawnNear('golem', 1, 14, 22);
+  assert.equal(ents.length, 0);
+  goTo(...OPEN_LAND);
+  run(1.5);
+  assert.equal(ents.length, 1);
+});
+
+// ---------- finding the way ----------
+const STONE = 3, LANTERN = 22;
+function wall(x, foot, z, tall, half = 4) { for (let a = -half; a <= half; a++) for (let k = 0; k < tall; k++) setBlock(x, foot + k, z + a, STONE); }
+function wanderer(x, y, z) { const e = spawnEntity('orc', x, y, z); e.wanderT = 99; e.wdir = [1, 0]; G.uiOpen = true; return e; }
+const highest = (e, seconds) => { let top = e.pos.y; run(seconds, dt => { updateEntities(dt); top = Math.max(top, e.pos.y); }); return top; };
+
+test('a wall is not jumped at', () => {
+  const { x, y, z } = player.pos;
+  wall(Math.floor(x) + 3, Math.floor(y), Math.floor(z), 3);
+  assert.ok(highest(wanderer(x + 1.5, y, z), 1.5) < y + 0.2);
+});
+
+test('a step is', () => {
+  const { x, y, z } = player.pos;
+  wall(Math.floor(x) + 3, Math.floor(y), Math.floor(z), 1);
+  assert.ok(highest(wanderer(x + 1.5, y, z), 1.5) > y + 0.9);
+});
+
+test('a hunter finds its way round a wall to the hero', () => {
+  const { x, y, z } = player.pos;
+  wall(Math.floor(x) + 4, Math.floor(y), Math.floor(z), 3);
+  spawnEntity('orc', x + 7, y, z).alertT = 99;
+  run(9);
+  assert.ok(player.hp < 20);
+});
+
+test('what cannot see you and did not hear you stays unaware', () => {
+  const { x, y, z } = player.pos;
+  wall(Math.floor(x) + 4, Math.floor(y), Math.floor(z), 3);
+  spawnEntity('orc', x + 7, y, z);
+  run(3);
+  assert.equal(player.hp, 20);
+});
+
+test('deer bolt, and the herd goes with them', () => {
+  const { x, y, z } = player.pos, a = spawnEntity('deer', x + 8, y, z), b = spawnEntity('deer', x + 11, y, z);
+  run(2);
+  assert.ok(a.pos.x > x + 9 && b.fleeT > 0);
+});
+
+test('a boar ignores you until you hit it', () => {
+  const boar = near('boar');
+  run(2);
+  assert.equal(player.hp, 20);
+  assert.equal(isFoe(boar), false);
+  hurtEntity(boar, 1, 1, 0);
+  assert.equal(isFoe(boar), true);
+  run(3);
+  assert.ok(player.hp < 20);
+});
+
+test('hunting a boar is no crime', () => {
+  hurtEntity(near('boar'), 999, 1, 0);
+  assert.deepEqual(crimes, []);
+});
+
+test('a goblin with friends comes on, and a badly hurt one runs', () => {
+  const { x, y, z } = player.pos, g = spawnEntity('goblin', x + 3, y, z);
+  g.hp = 2;
+  run(1.5);
+  assert.ok(g.pos.x > x + 3);
+});
+
+test('a skeleton keeps its distance and shoots', () => {
+  const shots = heard('foe:shot'), { x, y, z } = player.pos;
+  spawnEntity('skeleton', x + 10, y, z);
+  run(4);
+  assert.ok(shots.length >= 1);
+});
+
+// ---------- the light ----------
+test('a lantern lights what is near it and no further', () => {
+  const { x, y, z } = player.pos, fx = Math.floor(x), fy = Math.floor(y), fz = Math.floor(z);
+  setBlock(fx, fy + 2, fz, LANTERN);
+  assert.ok(lampLight(fx + 3, fy, fz) > 0);
+  assert.equal(lampLight(fx + 30, fy, fz), 0);
+});
+
+test('a roof keeps the sky out', () => {
+  const fx = Math.floor(player.pos.x), fy = Math.floor(player.pos.y), fz = Math.floor(player.pos.z);
+  assert.equal(skyLight(fx, fy, fz), 15);
+  setBlock(fx, fy + 3, fz, STONE);
+  assert.equal(skyLight(fx, fy, fz), 0);
+});
+
+test('by night the dark fills with monsters, none of them close', () => {
+  G.dayTime = 0.75;
+  for (const e of ents.slice()) removeEntity(e);
+  run(40, updateSpawning);
+  const monsters = ents.filter(e => e.cat === 'monster');
+  assert.ok(monsters.length > 0);
+  assert.ok(monsters.every(e => Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z) >= 23));
+});
+
+test('nothing dark is born under a lamp', () => {
+  G.dayTime = 0.75;
+  const { x, y, z } = player.pos;
+  for (let a = -64; a <= 64; a += 8) for (let b = -64; b <= 64; b += 8) { const px = Math.floor(x) + a, pz = Math.floor(z) + b; setBlock(px, heightAt(px, pz) + 2, pz, LANTERN); }
+  run(20, updateSpawning);
+  assert.equal(ents.filter(e => e.cat === 'monster').length, 0);
+});
+
+// ---------- the Wyrm ----------
+function wyrm(away = 20) {
+  const { x, y, z } = player.pos, home = { kind: 'dragon', x: x - away, y: y + 12, z };
+  return spawnEntity('dragon', x - 20, y + 10, z, { home });
+}
+test('only an Oathbound hand can wound the Wyrm', () => {
+  const e = wyrm(), hp = e.hp;
+  hurtEntity(e, 999, 1, 0);
+  assert.equal(e.hp, hp);
+  hurtEntity(e, 999, 1, 0, near('knight'));
+  assert.equal(e.hp, hp);
+  G.profile.oathbound = true;
+  hurtEntity(e, 40, 1, 0);
+  assert.equal(e.hp, hp - 40);
+});
+
+test('the Wyrm sleeps until the hero is in its hall', () => {
+  const e = wyrm(100);
+  run(1);
+  assert.equal(e.mood, 'asleep');
+  e.home.x = player.pos.x - 20;
+  run(0.1);
+  assert.equal(e.mood, 'wakes');
+});
+
+test('the Wyrm chases a hero who leaves, breathes fire at them and remembers', () => {
+  assert.ok(lairAt());
+  const moods = heard('dragon:mood'), fire = heard('foe:shot'), e = wyrm(100);
+  e.mood = 'wakes';
+  run(5);
+  assert.ok(moods.includes('chases'));
+  assert.ok(fire.length >= 1);
+  assert.equal(e.home.grudge, true);
+});
+
+test('there is no second dragon when the first is left behind', () => {
+  const e = wyrm();
+  G.world.dragon_dead = false;
+  hintQueue.length = 0;
+  player.pos.x += 140;
+  run(0.1);
+  assert.equal(ents.includes(e), false);
+  assert.deepEqual(hintQueue.map(h => h.kind), ['dragon']);
+});
+
+test('a slain Wyrm stays dead', () => {
+  const e = wyrm();
+  G.profile.oathbound = true;
+  G.world.dragon_dead = true;
+  hurtEntity(e, 99999, 1, 0);
+  assert.deepEqual(hintQueue, []);
+  assert.equal(ents.includes(e), false);
+});
+
+// ---------- the people who matter ----------
+test('someone who keeps a shop gets a place ahead of whoever arrived first', () => {
+  const S = G.world.settlements[0], at = { x: player.pos.x + 3, z: player.pos.z }, farmer = i => ({ id: i, name: `Farmer ${i}`, kind: 'villager', job: 'farmer', work: at, night: at });
+  S.residents = Array.from({ length: 38 }, (_, i) => farmer(i));
+  S.cx = player.pos.x; S.cz = player.pos.z;
+  run(4, updateResidents);
+  const smith = { id: 99, name: 'Hilda', kind: 'villager', job: 'blacksmith', service: 'smith', work: { x: player.pos.x + 60, z: player.pos.z }, night: { x: player.pos.x + 60, z: player.pos.z } };
+  S.residents.push(smith);
+  run(2, updateResidents);
+  assert.ok(smith._ent);
+});
+
+test('a shopkeeper stays at the counter', () => {
+  const post = { x: player.pos.x + 3, z: player.pos.z }, e = spawnEntity('villager', post.x, player.pos.y, post.z, { res: { id: 5003, kind: 'villager', job: 'blacksmith', service: 'smith', work: post, night: post } });
+  run(5);
+  assert.ok(Math.hypot(e.pos.x - post.x, e.pos.z - post.z) < 2);
+});
+
+// ---------- the journal ----------
+test('a creature is entered in the journal once the hero has seen it', () => {
+  const entered = heard('creature:spotted');
+  G.profile.bestiary = [];
+  spawnEntity('goblin', player.pos.x, player.pos.y, player.pos.z - 6);
+  updateSightings(1);
+  assert.equal(hasSeen('goblin'), true);
+  updateSightings(1);
+  assert.deepEqual(entered, ['goblin']);
+});
+
+test('what is behind the hero is not seen', () => {
+  G.profile.bestiary = [];
+  spawnEntity('goblin', player.pos.x, player.pos.y, player.pos.z + 6);
+  updateSightings(1);
+  assert.equal(hasSeen('goblin'), false);
 });
 
 // ---------- the minimap ----------

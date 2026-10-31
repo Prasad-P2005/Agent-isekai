@@ -320,6 +320,10 @@ button.slot:hover:not(:disabled), .slot[data-name]:hover { filter: brightness(1.
 /* ---------- reading: journal, laws, powers, keys ---------- */
 .beat { color: var(--ink-soft); }
 .beat:last-child { color: var(--ink); }
+.bestlist { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--gap); }
+button.beast { min-height: 0; padding: 0; border: 0; border-image: none; background: none; color: var(--ink); text-align: left; font: inherit; }
+button.beast:disabled { color: var(--ink-soft); }
+button.beast.on, button.beast:not(:disabled):hover { text-decoration: underline; }
 .law p .ic { margin-inline: var(--gap); }
 .law + .law { margin-top: var(--u); }
 .power { display: flex; align-items: center; gap: calc(var(--u) * 4); }

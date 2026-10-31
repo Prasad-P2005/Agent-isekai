@@ -23,6 +23,7 @@ const MOODS = {
   [B.ELF]: { zenith: rgb(0x3f8ccc), horizon: rgb(0xb0ecd8), light: [0.94, 1, 0.96], cloud: rgb(0xeafff6), haze: 0.86, pull: 0.5 },
   [B.BEAST]: { zenith: rgb(0x5c90c8), horizon: rgb(0xe8d6a8), light: [1, 0.96, 0.86], cloud: rgb(0xfff4e0), haze: 1, pull: 0.55 },
   [B.PEAKS]: { zenith: rgb(0x3a74d0), horizon: rgb(0xd4e8f8), light: [0.96, 0.98, 1], cloud: rgb(0xffffff), haze: 1.05, pull: 0.5 },
+  [B.MIRE]: { zenith: rgb(0x5a7f76), horizon: rgb(0xa8bda0), light: [0.88, 0.96, 0.86], cloud: rgb(0xc4d2bc), haze: 0.7, pull: 0.7 },
 };
 const mood = { zenith: [0, 0, 0], horizon: [0, 0, 0], light: [1, 1, 1], cloud: [1, 1, 1], haze: 1, pull: 0 };
 let moodReady = false, wind = 0, clock = 0, under = 0;

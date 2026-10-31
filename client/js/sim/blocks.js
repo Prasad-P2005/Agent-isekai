@@ -19,6 +19,8 @@ const SOLID = table((b, id) => id !== AIR && id !== WATER && !b.passable);
 export const OPAQUE = table((b, id) => id !== AIR && isCube(b));
 export const DIM = table((b, id) => (id === WATER ? 1 : id !== AIR && (isCube(b) || ROOFING.test(b.shape)) ? 15 : b.dim ?? 0));
 export const EMIT = table(b => b.emit ?? 0);
+// Lamps, torches and crystals keep the dark things off. Glowing rock and lava do not, or the Wastes would be safe.
+export const WARDS = table(b => (b.emit && !b.ground ? 1 : 0));
 
 export const solid = id => SOLID[id] === 1;
 export const pickable = id => id !== AIR && id !== WATER;

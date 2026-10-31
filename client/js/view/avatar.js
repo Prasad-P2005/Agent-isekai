@@ -41,6 +41,7 @@ function drawFace(put, L, mood) {
   const skin = L.skin, shade = darker(skin, 0.18), deep = darker(skin, 0.4);
   if (L.hooded) { // in the shadow of the hood, there is only a glint of eyes
     put(0, 0, FACE, FACE, darker(L.hatColor, 0.82));
+    if (L.mask) { put(0, 5, FACE, 3, L.mask); put(0, 5, FACE, 1, lighter(L.mask, 0.2)); put(0, 7, FACE, 1, darker(L.mask, 0.3)); put(2, 6, 3, 1, darker(L.mask, 0.3)); } // a scarf pulled up over the nose
     if (mood !== 'shut') { const glint = mood === 'cross' ? RED : lighter(L.eyes, 0.5); put(2, 4, 1, 1, glint); put(5, 4, 1, 1, glint); }
     return;
   }
@@ -62,7 +63,7 @@ function drawFace(put, L, mood) {
   if (L.glasses) { for (const x of [1, 5]) { put(x, 3, 2, 1, INK); put(x, 5, 2, 1, INK); } put(3, 4, 2, 1, INK); put(0, 4, 1, 1, INK); put(7, 4, 1, 1, INK); }
 }
 function faceOf(L, mood) {
-  const key = [L.skin, L.eyes, L.hair, L.female, L.glasses, L.job === 'demon_lord', L.beard, L.old, L.hooded, L.hatColor, mood].join();
+  const key = [L.skin, L.eyes, L.hair, L.female, L.glasses, L.job === 'demon_lord', L.beard, L.old, L.hooded, L.hatColor, L.mask, mood].join();
   if (faces.has(key)) return faces.get(key);
   const size = L.female ? GIRL_FACE : FACE, px = new Uint8Array(size * size * 4);
   // Rows run bottom to top here, which is the way up a plane's coordinates are.
@@ -205,7 +206,7 @@ function dressTrunk(rig, x, L, P) {
   if (L.cape) dressCape(rig, x, L, P);
   if (L.mantle) list.push([W + 3, 2.8, D + 2.6, 0, C - 0.6, 0.2, plain(CREAM, { draw: { all: [...both(1, 1, 1, 1, INK), ...both(4, 0, 1, 1, INK)] } })]); // ermine
   if (L.scarf) list.push([W + 1.4, 2.2, D + 2, 0, C - 0.2, 0.2, drape(L.scarf)], [W + 2.2, 1.4, 1.2, 0, C - 1.8, D / 2 + 0.6, drape(L.scarf)]);
-  if (L.hat === 'hood') list.push([W + 1.4, 1.8, D + 1.8, 0, C, 0.2, cloth(L.hatColor)]);
+  if (L.hat === 'hood') list.push([W + 1.4, 1.8, D + 1.8, 0, C, 0.2, cloth(L.mask ?? L.hatColor)]);
   if (L.back) list.push(...BACK_ITEMS[L.back](C, D));
   rig.add(x.chest, list);
   rig.add(x.hips, hips);

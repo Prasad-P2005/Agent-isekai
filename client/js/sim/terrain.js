@@ -1,27 +1,28 @@
 // Terrain generation. The world layout (lands, settlements, buildings) comes from the server and the shape of the land from
 // sim/land.js; this turns them into blocks deterministically, chunk by chunk.
 import { ID } from './blocks.js';
-import { acacia, baobab, birch, boulder, bush, cactus, deadTree, elfTree, fallenLog, giantTree, greatOak, oak, palm, spruce } from './flora.js';
-import { B, CS, H, LAND, LAVA_LEVEL, ROCK_LINE, SEA, SNOW_LINE, biomeAt, columnsOf, heightAt, inTown, landOf, rollBiome, setLandData, settlement, slopeAt } from './land.js';
+import { acacia, baobab, birch, boulder, bush, cactus, deadTree, elfTree, fallenLog, giantMushroom, giantTree, greatOak, oak, palm, spruce } from './flora.js';
+import { B, CROWN_TOP, CS, GORGE_FROM, H, LAND, LAVA_LEVEL, ROCK_LINE, SEA, SNOW_LINE, biomeAt, columnsOf, gorgeX, heightAt, inTown, lairAt, landOf, nearLair, onCrown, rollBiome, setLandData, settlement, slopeAt } from './land.js';
 import { NZ, hash2, hash3, mulberry, noise3, ss } from './noise.js';
 import { deckFor, lampsIn, layRoads, roadAt, roadsIn } from './roads.js';
-import { crystals, demonCastle, hint, magmaSpike, palace, raiseSight, reef, ruins, spire } from './structures.js';
+import { crystals, demonCastle, hoard, magmaSpike, palace, raiseSight, reef, ruins, spire, hint } from './structures.js';
 import { clearOfBuildings, townChunk } from './towns.js';
 
-export { B, CS, H, LAND, REALM, SEA, TOWNS, biomeAt, chunkKey, climateAt, columnsOf, heightAt, inTown, landName, landOf, settlement, settlements } from './land.js';
+export { B, CS, H, LAND, REALM, SEA, TOWNS, biomeAt, chunkKey, climateAt, columnsOf, heightAt, inCity, inTown, lairAt, landName, landOf, nearLair, onCrown, settlement, settlements } from './land.js';
 export { hintQueue } from './structures.js';
 
 const {
-  Air, Bedrock, Stone, Dirt, Sand, Sandstone, Gravel, Grass, FaeGrass, SavannaGrass, Moss, Snow, SnowLayer, Water, Magma, Blackstone, Basalt, AshenGround, RedClay, Terracotta, DarkTerracotta,
+  Air, Bedrock, Stone, Dirt, Sand, Sandstone, Gravel, Grass, FaeGrass, SavannaGrass, Moss, Snow, SnowLayer, Water, Magma, Blackstone, Basalt, AshenGround, RedClay, Terracotta, DarkTerracotta, Obsidian, BoneBlock,
   Planks, OakLog, Fence, Lantern, CoalOre, IronOre, ManaOre, OakLeaves, BirchLeaves, TallGrass, Fern, Poppy, Dandelion, Cornflower, FaeBloom, DryGrass, DeadBush, SeaGrass, LilyPad, Glowshroom, RedMushroom,
 } = ID;
 const CHUNKS_WIDE = LAND / CS, HEART = CHUNKS_WIDE / 2 - 1;
-const DRAGON_PERCH = 13; // blocks above the ground: a dragon starts on the wing, not walking out of a mountainside
 const STEEP = 3;         // a step this high shows bare rock, and nothing takes root on it
 const TRIES = 18;        // spots a chunk tries for its trees and rocks
 const STRATA = [Terracotta, RedClay, Sandstone, DarkTerracotta, RedClay, Terracotta, Sandstone]; // the bands in a mesa's side
 const VEINS = [{ id: CoalOre, count: 9, low: 8, high: 92, size: 8 }, { id: IronOre, count: 6, low: 6, high: 60, size: 6 }, { id: ManaOre, count: 2, low: 6, high: 30, size: 4 }];
 const CAVE_STEP = 4, CAVE_SIZE = 0.085, CAVE_TOP = 96, CAVE_ROOF = 6, LAVA_FLOOR = 9;
+// The hall under the Wyrmcrown: a dome big enough for what sleeps there, a shaft up to the summit that it flies through, and a tunnel you walk.
+const HALL_FLOOR = SEA + 34, HALL_MID = SEA + 44, HALL_R = 30, HALL_TALL = 16, SHAFT_R = 10, TUNNEL_R = 5, TUNNEL_TALL = 8, TEETH_AT = 60;
 
 export function setWorldData(w) { setLandData(w); layRoads(); }
 const mod = (a, b) => ((a % b) + b) % b;
@@ -46,7 +47,36 @@ function ground(b, h, y, det, steep) {
     return depth < 4 ? RedClay : Stone;
   }
   if (b === B.ELF) return depth === 0 ? (steep ? Stone : det > 0.62 ? Moss : FaeGrass) : depth < 4 ? Dirt : Stone;
+  if (b === B.MIRE) return depth === 0 ? (det > 0.2 ? Moss : det < -0.45 ? Gravel : Dirt) : depth < 3 ? Dirt : Stone;
   return depth === 0 ? (steep ? Stone : Grass) : depth < 4 ? Dirt : Stone;
+}
+// Black rock with fire showing through the cracks, and glass at the tips of the horns.
+function crownRock(h, y, det, x, z) {
+  const depth = h - y;
+  if (depth > 3) return Stone;
+  if (depth) return Blackstone;
+  return Math.abs(NZ.M(x / 13, z / 13)) < 0.02 ? Magma : h > CROWN_TOP - 22 ? Obsidian : det > 0.1 ? Basalt : Blackstone;
+}
+// Runs by the column, not as a structure, because a hall this wide reaches further than a feature may.
+function carveLair(cx, cz, d, cols) {
+  const L = lairAt(), bx = cx * CS, bz = cz * CS;
+  if (!L || Math.hypot(bx + 8 - L.x, bz + 8 - L.z) > GORGE_FROM + 24) return;
+  for (let x = 0; x < CS; x++) for (let z = 0; z < CS; z++) {
+    const wx = bx + x, wz = bz + z, dx = wx - L.x, dz = wz - L.z, r = Math.hypot(dx, dz), h = cols.h[x + z * CS], bump = 3 * NZ.D(wx / 11, wz / 11);
+    const way = dz > 0 && r < GORGE_FROM + 8 && Math.abs(wx - gorgeX(wz)) < TUNNEL_R + bump * 0.4, hall = HALL_R + bump;
+    for (let y = HALL_FLOOR; y <= h; y++) {
+      const dome = (r / hall) ** 2 + ((y - HALL_MID) / HALL_TALL) ** 2 < 1, shaft = y > HALL_MID && r < SHAFT_R + bump * 0.6, tunnel = way && y < HALL_FLOOR + TUNNEL_TALL + bump;
+      if (!dome && !shaft && !tunnel) continue;
+      const tooth = tunnel && !dome && Math.abs(r - TEETH_AT) < 2 && !(wx & 3) && y >= HALL_FLOOR + TUNNEL_TALL - 4; // the mouth has teeth
+      d[idx(x, y, z)] = tooth ? BoneBlock : Air;
+    }
+    if (r >= hall) continue;
+    d[idx(x, HALL_FLOOR - 1, z)] = r > 13 && NZ.D(wx / 7, wz / 7) > 0.42 ? Magma : r < 12 ? Obsidian : Basalt; // pools of fire light the place
+    const spur = hash3(wx, 9, wz);
+    if (r < 14 || spur < 0.965) continue;
+    const roof = Math.floor(HALL_MID + HALL_TALL * Math.sqrt(Math.max(0, 1 - (r / hall) ** 2))), long = 3 + Math.floor((spur - 0.965) * 260);
+    for (let k = 0; k < long; k++) { d[idx(x, roof - k, z)] = Basalt; if (spur > 0.985 && k < long >> 1) d[idx(x, HALL_FLOOR + k, z)] = Obsidian; } // what grows down, and what grows up to meet it
+  }
 }
 
 // Caves are the lines where two slow noises both cross zero, read on a coarse lattice because most of a chunk is nowhere near one.
@@ -115,11 +145,12 @@ function growTree(b, x, h, z, set, r) {
   else if (b === B.BEAST) { if (roll < 0.08) baobab(x, y, z, set, r); else if (roll < 0.6) acacia(x, y, z, set, r); else if (roll < 0.85) cactus(x, y, z, set, r); else boulder(x, y, z, set, r); }
   else if (b === B.PEAKS) { if (h > ROCK_LINE) { if (roll < 0.5) crystals(x, y, z, set, r); else boulder(x, y, z, set, r); } else if (roll < 0.75) spruce(x, y, z, set, r); else boulder(x, y, z, set, r); }
   else if (b === B.DEMON) { if (roll < 0.5) magmaSpike(x, y, z, set, r); else deadTree(x, y, z, set, r); }
+  else if (b === B.MIRE) { if (h < SEA) return; if (roll < 0.14) giantMushroom(x, y, z, set, r); else if (roll < 0.6) deadTree(x, y, z, set, r, OakLog); else if (roll < 0.85) bush(x, y, z, OakLeaves, set, r); else fallenLog(x, y, z, OakLog, set, r); }
   else if (b === B.BEACH) { if (h >= SEA && roll < 0.8) palm(x, y, z, set, r); }
   else if (b === B.OCEAN && h < SEA - 3) reef(x, y, z, set, r);
 }
 // How likely a spot is to carry a tree, by biome: forests stand in clumps with meadows and glades between them.
-const PLENTY = { [B.ELF]: 0.95, [B.KINGDOM]: 0.5, [B.BEAST]: 0.16, [B.PEAKS]: 0.55, [B.DEMON]: 0.3, [B.BEACH]: 0.14, [B.OCEAN]: 0.5 };
+const PLENTY = { [B.ELF]: 0.95, [B.KINGDOM]: 0.5, [B.BEAST]: 0.16, [B.PEAKS]: 0.55, [B.DEMON]: 0.3, [B.BEACH]: 0.14, [B.OCEAN]: 0.5, [B.MIRE]: 0.5 };
 function growth(cx, cz, L, skipX, skipZ, set, r) {
   const bx = cx * CS, bz = cz * CS, town = L.settlement != null ? settlement(L.settlement) : null, density = 0.2 + 1.6 * L.density;
   for (let i = 0; i < TRIES; i++) {
@@ -129,7 +160,7 @@ function growth(cx, cz, L, skipX, skipZ, set, r) {
     let b = biomeAt(x, z, h);
     if (b === B.ELF || b === B.KINGDOM || b === B.BEAST) b = rollBiome(x, z, rr); // the two sides of a border mingle
     const clump = b === B.OCEAN || b === B.BEACH ? 1 : ss(-0.3, 0.35, NZ.F(x / 64, z / 64));
-    if (pass > (PLENTY[b] ?? 0) * density * clump || (h <= SEA && b !== B.OCEAN) || (h >= SEA && (b === B.OCEAN || slopeAt(x, z) >= STEEP)) || roadAt(x, z)) continue;
+    if (pass > (PLENTY[b] ?? 0) * density * clump || (h <= SEA && b !== B.OCEAN) || (h >= SEA && (b === B.OCEAN || slopeAt(x, z) >= STEEP)) || roadAt(x, z) || nearLair(x, z, HALL_R + 2)) continue;
     if (inTown(x, z)) { if (!town || pass > 0.25 || !clearOfBuildings(town, x, z)) continue; } // a yard may keep one tree
     growTree(b, x, h, z, set, r);
   }
@@ -139,7 +170,7 @@ function plantColumn(d, x, z, wx, wz, h, b) {
   const roll = hash3(wx, 11, wz), top = d[idx(x, h, z)], up = idx(x, h + 1, z);
   if (h < SEA) {
     const still = landOf(wx, wz).b; // rivers and lakes, not the open sea
-    if (h >= SEA - 3 && roll > 0.94 && (still === B.KINGDOM || still === B.ELF) && d[idx(x, SEA + 1, z)] === Air) d[idx(x, SEA + 1, z)] = LilyPad;
+    if (h >= SEA - 3 && roll > (still === B.MIRE ? 0.8 : 0.94) && (still === B.KINGDOM || still === B.ELF || still === B.MIRE) && d[idx(x, SEA + 1, z)] === Air) d[idx(x, SEA + 1, z)] = LilyPad;
     else if (roll < 0.16 && d[up] === Water && (top === Sand || top === Gravel)) d[up] = SeaGrass;
     return;
   }
@@ -171,8 +202,8 @@ function features(cx, cz, set) {
   else {
     const hx = bx + CS, hz = bz + CS;
     switch (L.structure) {
-      // Every open land of the Peaks keeps a dragon. The spires have none, or the Law Stones would be guarded by something the story can't get past.
-      case 'none': if (heart && L.b === B.PEAKS) hint('dragon', hx, heightAt(hx, hz) + DRAGON_PERCH, hz); break;
+      // There is one dragon, and this is where it sleeps. It is lands away from the Spires, so the story never has to get past it.
+      case 'dragon_peak': if (heart) { hoard(hx, HALL_FLOOR, hz, set, r); clear(); } break;
       case 'treehouse_grove': if (sh > SEA + 1 && roll < 0.45) { giantTree(sx, sh + 1, sz, set, r); clear(); } break;
       case 'mermaid_palace': if (heart && sh < SEA - 9) { palace(sx, sh + 1, sz, set, r); clear(); } break;
       case 'crystal_spire': if (heart) { spire(hx, heightAt(hx, hz) + 1, hz, set, r); clear(); } break;
@@ -183,7 +214,7 @@ function features(cx, cz, set) {
         break;
     }
     // Each open land has four sites a sight of its realm may stand on, well clear of whatever its middle holds.
-    if (ix % 4 === 1 && iz % 4 === 1 && roll > 0.55) { raiseSight(biomeAt(sx, sz, sh), sx, sz, set, r); clear(); }
+    if (ix % 4 === 1 && iz % 4 === 1 && roll > 0.55 && !onCrown(sx, sz)) { raiseSight(biomeAt(sx, sz, sh), sx, sz, set, r); clear(); }
   }
   growth(cx, cz, L, skipX, skipZ, set, r);
 }
@@ -191,14 +222,15 @@ function features(cx, cz, set) {
 export function genChunk(cx, cz, edits) {
   const d = new Uint8Array(CS * CS * H), bx = cx * CS, bz = cz * CS, cols = columnsOf(cx, cz);
   for (let x = 0; x < CS; x++) for (let z = 0; z < CS; z++) {
-    const wx = bx + x, wz = bz + z, h = cols.h[x + z * CS], b = biomeAt(wx, wz, h), det = NZ.D(wx / 9, wz / 9), steep = slopeAt(wx, wz) >= STEEP;
+    const wx = bx + x, wz = bz + z, h = cols.h[x + z * CS], b = biomeAt(wx, wz, h), det = NZ.D(wx / 9, wz / 9), steep = slopeAt(wx, wz) >= STEEP, crowned = onCrown(wx + det * 7, wz - det * 7);
     d[idx(x, 0, z)] = Bedrock;
-    for (let y = 1; y <= h; y++) d[idx(x, y, z)] = ground(b, h, y, det, steep);
+    for (let y = 1; y <= h; y++) d[idx(x, y, z)] = crowned ? crownRock(h, y, det, wx, wz) : ground(b, h, y, det, steep);
     for (let y = h + 1; y <= SEA; y++) d[idx(x, y, z)] = Water;
     if (b === B.DEMON) for (let y = h + 1; y <= LAVA_LEVEL; y++) d[idx(x, y, z)] = Magma; // the Wastes' rivers run with fire
   }
   carveCaves(cx, cz, d, cols);
   layOres(cx, cz, d);
+  carveLair(cx, cz, d, cols);
   const set = (wx, y, wz, id, soft) => {
     const x = wx - bx, z = wz - bz;
     if (x < 0 || z < 0 || x >= CS || z >= CS || y < 1 || y >= H) return;

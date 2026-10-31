@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
-from ..content import LAWS, NAMES
+from ..content import CREATURES, LAWS, NAMES
 from ..core.state import Law, Nemesis, World
 from . import chronicle, story
 from .laws import law_text
@@ -97,7 +97,7 @@ def run_event(game: "Game", event: str, cause: str = "the god", **data) -> bool:
 # ---------- the nemesis ----------
 def nemesis_rises(world: World, kind: str, by: str) -> None:
     """The monster that killed the hero gets a name, grows stronger for it, and comes looking again."""
-    if not kind or kind == "demon_lord":
+    if not kind or CREATURES.get(kind, {}).get("warded"):  # the great ones have names already, and there is only one of each
         return
     n = world.nemesis
     if n and n.kind == kind:

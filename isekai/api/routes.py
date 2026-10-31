@@ -81,6 +81,7 @@ class Context(BaseModel):
     wanted: float = 0
     day_time: float | None = None
     boss_hp: float | None = None
+    dragon_hp: float | None = None
 
 
 @router.post("/context")
@@ -115,7 +116,7 @@ async def pray(body: Say, request: Request):
 
 # ---------- events ----------
 class Event(BaseModel):
-    type: str  # kill | death | enter_land | use | boss_phase | cast
+    type: str  # kill | death | enter_land | use | boss_phase | cast | dragon | spotted
     kind: str = ""
     by_player: bool = True
     resident: dict | None = None
@@ -143,6 +144,10 @@ async def event(body: Event, request: Request):
         return commands.boss_phase(g, body.phase)
     if body.type == "cast":
         return commands.cast(g, body.mana)
+    if body.type == "dragon":
+        return commands.dragon_mood(g, body.kind)
+    if body.type == "spotted":
+        return commands.spotted(g, body.kind)
     raise HTTPException(400, "unknown event")
 
 

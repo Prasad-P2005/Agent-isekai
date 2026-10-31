@@ -20,7 +20,7 @@ const SURVEY_MS = { open: 10, closed: 1 }; // quietly while you play, quickly if
 const GRID = 'rgba(46, 45, 63, .16)';
 const HINT = 'Drag to move. Scroll to zoom.';
 const LANDMARKS = {
-  treehouse_grove: ['grove', 'Treehouse grove'], crystal_spire: ['crystal', 'Crystal spire'], demon_castle: ['demon', "The Demon Lord's castle"],
+  treehouse_grove: ['grove', 'Treehouse grove'], crystal_spire: ['crystal', 'Crystal spire'], demon_castle: ['demon', "The Demon Lord's castle"], dragon_peak: ['skull', 'The Wyrmcrown'],
   mermaid_palace: ['palace', 'Mermaid palace'], ruins: ['ruins', 'Ruins'],
 };
 // Block ids of what a town is mostly seen from above as: its roofs, and its wall where it has one.

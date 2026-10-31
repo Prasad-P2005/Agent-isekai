@@ -39,6 +39,16 @@ def _name_places(world: World, rng: random.Random) -> None:
         s.description = fill(world, rng.choice(LINES[f"about:{s.type}"]), rng, place=s.name)
 
 
+def found_settlement(world: World, s: Settlement) -> None:
+    """A place that appears after genesis: named from what is left, and peopled."""
+    rng = random.Random(f"{world.seed}/{s.id}")
+    taken = {o.name for o in world.settlements}
+    s.name = rng.choice([n for n in NAMES[f"{s.type}_places"] if n not in taken])
+    s.description = fill(world, rng.choice(LINES[f"about:{s.type}"]), rng, place=s.name)
+    make_roster(s, world.seed)
+    world.settlements.append(s)
+
+
 def run_genesis(world: World) -> None:
     rng = random.Random(world.seed)
     world.lands, world.settlements, world.demon_land = build_map()

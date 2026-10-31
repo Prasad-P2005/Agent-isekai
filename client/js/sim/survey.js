@@ -5,7 +5,7 @@ import { chunks } from './chunks.js';
 import { NZ, hash3 } from './noise.js';
 import { player } from './player.js';
 import { roadAt } from './roads.js';
-import { B, CS, H, SEA, biomeAt, chunkKey as key, heightAt, idx, inTown, landOf } from './terrain.js';
+import { B, CS, H, SEA, biomeAt, chunkKey as key, heightAt, idx, inTown, landOf, onCrown } from './terrain.js';
 
 const RELIEF = 0.06, MAX_RELIEF = 0.32; // how much each block of slope lights or shades a column
 const DEEP = 30;                        // blocks of water that hide the sea floor completely
@@ -60,6 +60,7 @@ function groundOf(b, h, det) {
   if (b === B.ELF) return ID.FaeGrass;
   if (b === B.BEAST) return h > SEA + 11 ? ID.Terracotta : det > 0.5 ? ID.RedClay : ID.SavannaGrass;
   if (b === B.DEMON) return det > 0.58 ? ID.Magma : ID.AshenGround;
+  if (b === B.MIRE) return det > 0.2 ? ID.Moss : ID.Dirt;
   if (b === B.PEAKS) return h > SEA + 46 ? ID.Snow : det > 0.15 ? ID.Grass : ID.Stone;
   return b === B.KINGDOM ? ID.Grass : ID.Sand; // the rest is sand: beaches and the sea bed
 }
@@ -75,7 +76,7 @@ const seaLevelled = (x, z) => Math.max(SEA, heightAt(x, z));
 export function surveyTile(cx, cz) {
   const pixels = new Uint8ClampedArray(CS * CS * 4);
   for (let i = 0; i < CS; i++) for (let j = 0; j < CS; j++) {
-    const x = cx * CS + j, z = cz * CS + i, h = heightAt(x, z), b = biomeAt(x, z, h), road = roadAt(x, z), ground = BL[groundOf(b, h, NZ.D(x / 9, z / 9))].top;
+    const x = cx * CS + j, z = cz * CS + i, h = heightAt(x, z), b = biomeAt(x, z, h), road = roadAt(x, z), ground = BL[onCrown(x, z) ? ID.Basalt : groundOf(b, h, NZ.D(x / 9, z / 9))].top;
     const colour = road ? BL[road].top : h < SEA ? throughWater(ground, SEA - h) : canopy(x, z, b) ?? ground;
     paint(pixels, (j + i * CS) * 4, colour, relief(Math.max(h, SEA), seaLevelled(x, z - 1), seaLevelled(x - 1, z)));
   }

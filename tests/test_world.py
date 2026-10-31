@@ -22,8 +22,16 @@ def test_saves_keep_emoji_and_old_windows_saves_still_load(world, tmp_path):
 
 
 def test_map_has_the_planned_settlements(world):
-    assert Counter(s.type for s in world.settlements) == {"human": 4, "city": 2, "elfcity": 1, "elf": 2, "beast": 4}
+    assert Counter(s.type for s in world.settlements) == {"human": 5, "city": 2, "elfcity": 1, "elf": 2, "beast": 5}
     assert world.land_at(*world.demon_land).structure == "demon_castle"
+    assert sum(land.structure == "dragon_peak" for row in world.lands for land in row) == 1
+
+
+def test_people_with_a_post_can_be_found_at_any_hour(world):
+    for s in world.settlements:
+        for r in s.residents:
+            if r.service:
+                assert (r.work.x, r.work.z) == (r.night.x, r.night.z) or r.service == "inn" or r.job in ("king", "queen", "elf_king", "elf_queen")
 
 
 def test_every_settlement_has_its_required_jobs(world):

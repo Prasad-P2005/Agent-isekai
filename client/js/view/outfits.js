@@ -61,7 +61,7 @@ export function lookFor(kind, job, seed, def) {
     hair: HAIR[pick(r, hairPool)], eyes: pick(r, EYES),
     style: female ? pick(r, ['long', 'twintails', 'ponytail', 'bob', 'side', 'long']) : pick(r, ['short', 'spiky', 'swept', 'crop', 'short']),
     top: 0x62789a, bottom: UMBER, shoes: UMBER, belt: null, trim: null, skirt: false, gown: false, bareArms: false,
-    armor: null, plate: false, pads: null, gauntlets: null, coat: null, tabard: null, apron: null, cape: null, torn: false, scarf: null, mantle: false,
+    armor: null, plate: false, pads: null, gauntlets: null, coat: null, tabard: null, apron: null, cape: null, torn: false, scarf: null, mask: null, mantle: false,
     hat: null, hatColor: null, hooded: false, helmet: false, crown: null, bow: null, beard: null, old: false, glasses: false, back: null, held: null, off: null, busy: false,
     tail: race === 'beastkin', catEars: race === 'beastkin', elfEars: race === 'elf', mermaid: race === 'mermaid', build: 'normal',
   };
@@ -111,5 +111,6 @@ export const OUTFITS = {
   mermaid: (L, r) => { L.top = pick(r, [ROSE, 0xf3c6d8, 0xffc48a]); L.bottom = pick(r, [TEAL, 0x4a9ad8, 0xb07cff]); L.bareArms = true; L.style = 'long'; L.hair = pick(r, [HAIR.pink, HAIR.mint, HAIR.blue, HAIR.lavender]); L.bow = 0xffb0c8; },
   mermaid_queen: L => { L.top = 0x7fe0e0; L.bottom = 0x1f8f9f; L.bareArms = true; L.style = 'long'; L.hair = HAIR.lavender; L.crown = 'tiara'; L.held = 'trident'; L.bow = GOLD; },
   bounty_hunter: L => { L.top = COAL; L.bottom = COAL; L.coat = 0x3a2a30; L.hat = 'hood'; L.hatColor = WINE; L.hooded = true; L.cape = WINE; L.torn = true; L.gauntlets = COVER; L.pads = SLATE; L.held = 'sword'; L.belt = LEATHER; L.female = false; L.style = 'short'; L.shoes = COAL; },
+  bandit: (L, r) => { L.top = COAL; L.bottom = UMBER; L.armor = UMBER; L.gauntlets = COVER; L.belt = COVER; L.hat = 'hood'; L.hatColor = pick(r, [COAL, UMBER]); L.hooded = true; L.mask = pick(r, [COVER, OLIVE, NAVY]); L.held = 'sword'; L.female = false; L.style = 'short'; L.shoes = COAL; },
   demon_lord: L => { L.top = COAL; L.bottom = 0x2a2030; L.cape = WINE; L.torn = true; L.scarf = WINE; L.armor = SLATE; L.plate = true; L.pads = DUSK; L.gauntlets = DUSK; L.trim = RED; L.crown = 'horns'; L.hair = HAIR.silver; L.eyes = RED; L.style = 'long'; L.skin = PALE; L.female = false; L.bow = null; L.shoes = DUSK; L.held = 'doom'; },
 };

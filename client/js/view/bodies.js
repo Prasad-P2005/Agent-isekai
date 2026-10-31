@@ -31,11 +31,12 @@ function drawLabel(e) {
   x.clearRect(0, 0, 256, 80);
   x.textAlign = 'center'; x.lineWidth = 4; x.strokeStyle = '#000';
   const name = (e.reportT > 0 ? '❗ ' : e.angryT > 0 ? '⚔ ' : '') + e.name;
-  x.font = '30px Jersey, sans-serif'; x.fillStyle = e.def.friendly ? '#bfffff' : '#ffb0b0';
+  const calm = e.def.friendly || e.def.wild;
+  x.font = '30px Jersey, sans-serif'; x.fillStyle = calm ? '#bfffff' : '#ffb0b0';
   x.strokeText(name, 128, 24); x.fillText(name, 128, 24);
   if (e.title) { x.font = '20px Jersey, sans-serif'; x.fillStyle = '#ffe9a8'; x.strokeText(e.title, 128, 46); x.fillText(e.title, 128, 46); }
   x.fillStyle = '#300'; x.fillRect(48, 56, 160, 9);
-  x.fillStyle = e.def.friendly ? '#3c3' : '#e33'; x.fillRect(48, 56, 160 * Math.max(0, e.hp / e.maxHp), 9);
+  x.fillStyle = calm ? '#3c3' : '#e33'; x.fillRect(48, 56, 160 * Math.max(0, e.hp / e.maxHp), 9);
   tex.needsUpdate = true;
 }
 // The label changes rarely, so it is only redrawn when something on it does.

@@ -1,15 +1,16 @@
 // Applying what the server decided: the new player state, and the effects only the client can carry out.
 import { G } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
-import { ents, spawnNear } from './entities.js';
+import { ents } from './entities.js';
 import { takeBlock } from './inventory.js';
 import { heal, maxMana, player } from './player.js';
+import { spawnNear } from './spawning.js';
 import { LAND, SEA, heightAt } from './terrain.js';
 
 export function applyState(res) {
   if (!res) return;
   // The client owns the block inventory: the server's copy can be a moment behind what was just mined.
-  if (res.player) G.profile = { ...res.player, blocks: G.profile?.blocks ?? res.player.blocks };
+  if (res.player) G.profile = { ...res.player, blocks: G.profile?.blocks ?? res.player.blocks, bestiary: [...new Set([...res.player.bestiary ?? [], ...G.profile?.bestiary ?? []])] };
   if (res.story) { G.objective = res.story.objective; G.oaths = res.story.oaths; G.marks = res.story.marks; emit('objective:changed', G.objective); }
   for (const o of res.reached || []) toast(`📜 New objective: ${o}`, 7);
 }
@@ -17,7 +18,7 @@ export function applyState(res) {
 function exileLand() {
   const here = [Math.floor(player.pos.x / LAND), Math.floor(player.pos.z / LAND)], far = [];
   G.world.lands.forEach((row, lz) => row.forEach((land, lx) => {
-    if (land.realm !== 'ocean' && land.realm !== 'demon' && Math.hypot(lx - here[0], lz - here[1]) >= 3) far.push([lx, lz]);
+    if (land.realm !== 'ocean' && land.realm !== 'demon' && land.structure !== 'dragon_peak' && Math.hypot(lx - here[0], lz - here[1]) >= 3) far.push([lx, lz]);
   }));
   return far[Math.floor(Math.random() * far.length)];
 }

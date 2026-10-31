@@ -6,9 +6,9 @@ from ..systems.people.jobs import POPULATION
 from ..systems.people.roster import rebalance_roster, rehome
 from ..systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
 from ..systems.story import BEATS, advance
-from ..world.genesis import first_spawn
+from ..world.genesis import first_spawn, found_settlement
 from ..world.layouts import make_layout
-from ..world.map import LAND
+from ..world.map import LAND, build_map
 
 
 def _move_port_village(world: World) -> None:
@@ -118,7 +118,21 @@ def _to_8(world: World) -> None:
     world.spawn = first_spawn(world)
 
 
-STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8}
+def _to_9(world: World) -> None:
+    """The map grew east and south around the old one, which stays where it was, and gained the Mirefen, the Wyrmcrown and two villages.
+    Shopkeepers now live at their posts, so everyone is given a workplace and a home again."""
+    lands, settlements, _ = build_map()
+    for lz, row in enumerate(lands):
+        for lx in range(len(row)):
+            row[lx] = world.land_at(lx, lz) or row[lx]
+    world.lands = lands
+    for s in settlements[len(world.settlements):]:
+        found_settlement(world, s)
+    for s in world.settlements:
+        rehome(s, world.seed)
+
+
+STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8, 9: _to_9}
 CURRENT_VERSION = max(STEPS)
 
 

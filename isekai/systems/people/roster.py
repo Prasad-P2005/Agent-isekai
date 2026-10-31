@@ -12,6 +12,7 @@ from .jobs import BASE_KIND, ELF_KIND, FILLER, JOBS, POPULATION, RACE_OF, REQUIR
 from .names import gen_name
 
 HOME_KINDS = {"house", "treehouse", "hut", "chief", "keep", "palace"}
+HALLS = {"guild", "hospital", "inn", "church", "smithy", "elfhall", "lodge", "keep"}  # room for staff to stand around the middle of the floor
 ID_BASE = WORLD["resident_id_base"]  # a resident's settlement can be read back from their id
 
 
@@ -50,7 +51,8 @@ def _spot(s: Settlement, where: str, rng: random.Random) -> Pos:
         length = math.hypot(dx, dz) or 1
         return Pos(x=b.x + 0.5 + dx / length * 1.5, z=b.z + 0.5 + dz / length * 1.5)
     off = 4.5 if b.kind in ("palace", "shrine", "treehouse") else 0.5
-    return Pos(x=b.x + off, z=b.z + off)
+    spread = 1 if b.kind in HALLS else 0
+    return Pos(x=b.x + off + rng.uniform(-spread, spread), z=b.z + off + rng.uniform(-spread, spread))
 
 
 def _inside_land(value: float, index: int) -> float:
@@ -86,11 +88,14 @@ def _schedule(s: Settlement, job_name: str, index: int, homes: list, rng: random
     job = JOBS[job_name]
     home = homes[index % len(homes)] if homes else None
     tree = home is not None and home.kind in ("treehouse", "palace", "shrine")
+    work = _spot(s, job.work, rng)
+    if job.night == job.work:  # those who keep a post live at it, so they can be found at any hour
+        return work, work
     night = _spot(s, job.night, rng) if job.night else Pos(
         x=(home.x if home else s.cx) + (4.5 if tree else 0.5) + (rng.random() - 0.5) * 3,
         z=(home.z if home else s.cz) + (4.5 if tree else 0.5) + (rng.random() - 0.5) * 3,
     )
-    return _spot(s, job.work, rng), night
+    return work, night
 
 
 def make_roster(s: Settlement, seed: int, ruler_job: str | None = None, ruler_name: str | None = None) -> None:

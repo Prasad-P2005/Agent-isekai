@@ -221,3 +221,16 @@ def test_upgrading_queues_newcomers_for_the_empty_homes(world):
     old_save(world)
     migrate(world)
     assert [(t.kind, t.data, t.due) for t in world.timers] == [("successor", {"settlement": s.id, "resident": farmer.id}, world.clock + NEWCOMER_DELAY)]
+
+
+def test_old_saves_grow_with_the_map_and_keep_their_places(world):
+    old = world.model_copy(deep=True)
+    old.lands = [row[:8] for row in old.lands[:8]]
+    old.settlements = old.settlements[:13]
+    old.save_version = 8
+    name = old.settlements[0].name
+    migrate(old)
+    assert len(old.lands) == 10 and len(old.settlements) == 15 and old.settlements[0].name == name
+    assert all(s.name and s.residents for s in old.settlements)
+    assert len({s.name for s in old.settlements}) == 15
+    assert any(land.structure == "dragon_peak" for row in old.lands for land in row)

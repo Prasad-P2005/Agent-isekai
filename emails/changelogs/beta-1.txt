@@ -1,0 +1,31 @@
+Isekai Realms Beta 1: the world wakes up
+31 October 2026 | Beta 1
+
+The world is bigger, its creatures think for themselves, and something very old now sleeps under a black mountain in the east.
+
+NEW
+- The Wyrm. One dragon in all the world, asleep in a cave under the Wyrmcrown. No blade can mark it until the endgame. Wake it and it chases you off the mountain, breathing fire, and it remembers you.
+- A bigger world. 10 by 10 lands, up from 8 by 8, with the drowned Mirefen in the south and two new villages.
+- Ten new creatures. Deer, boars, crabs, bats, bandits, skeleton archers, cave spiders, mountain trolls and ashen wraiths, with shoals of fish in the water.
+- A bestiary. The journal has an entry for every creature, unlocked the first time you get a good look at it.
+- More to do. Five new guild quests, a longer board as your rank rises, more favors, and a final hunt the King offers once you are Oathbound.
+
+CHANGED
+- Spawning like Minecraft. Packs by biome and by light, caves with their own monsters, and lanterns that truly keep the dark things away. Nothing appears where you are looking.
+- Despawning that makes sense. Creatures leave when they are far off and idle, never in front of you. Named foes track you down again.
+- Real pathfinding. A shared flow field for the hunt and A* for errands, so creatures go round walls and through doors.
+- Smarter by nature. Wolves encircle you, goblins run when hurt, skeletons keep their range, spiders pounce, deer bolt as a herd and guards call for help.
+- Grand town buildings. The guild hall, smithy, hospital, inn, church and keep are rebuilt from the ground up, with real interiors.
+
+FIXED
+- Empty shops. Blacksmiths, guild masters and doctors now keep their posts day and night, even in the middle of a big city.
+- Wall hopping. Characters only jump at a one-block step, not at every wall they meet.
+- Lost events. Raids, caravans and the law wait for somewhere to stand instead of quietly failing.
+
+STILL TO CHECK
+- Not played yet. This build has not been run through the automated tests or played in a browser, so expect rough edges, especially in the new art and the dragon fight. Old saves upgrade themselves, but the far east and south coasts will change shape.
+
+The Wyrm, with an adventurer for scale: https://raw.githubusercontent.com/Prasad-P2005/Agent-isekai/main/gallery/dragon.png
+
+Code: https://github.com/Prasad-P2005/Agent-isekai
+Sent from a no-reply address, so replies are not read.

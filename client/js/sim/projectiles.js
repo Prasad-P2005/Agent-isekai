@@ -16,7 +16,7 @@ export function spawnProjectile(pos, vel, opts = null) {
   emit('projectile:spawned', pr);
   return pr;
 }
-on('foe:shot', ({ pos, vel, dmg, src, killer }) => spawnProjectile(pos, vel, { hostile: true, dmg, src, killer }));
+on('foe:shot', ({ pos, vel, dmg, src, killer, size }) => spawnProjectile(pos, vel, { hostile: true, dmg, src, killer, size }));
 
 function strikePlayer(pr) {
   const p = pr.pos;

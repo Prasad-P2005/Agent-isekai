@@ -138,6 +138,7 @@ class Player(BaseModel):
     mana_practice: float = 0  # mana spent on spells since the well last deepened
     kills: int = 0
     deaths: int = 0
+    bestiary: list[str] = Field(default_factory=list)  # kinds of creature the hero has had a good look at
     guild_rank: int = 0
     guild_done: int = 0
     active_quest: GuildQuest | None = None
@@ -196,6 +197,8 @@ class World(BaseModel):
     demon_realm_name: str = "the Ashen Throne"
     demon_lord_dead: bool = False
     boss_hp: float | None = None  # the Demon Lord's wounds; None until he has been hurt
+    dragon_dead: bool = False
+    dragon_hp: float | None = None  # the Wyrm's, the same way
     ending: str | None = None  # hero | crown | broken
     raid_every: float = 480
     raid_level: int = 0

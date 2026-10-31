@@ -54,14 +54,27 @@
     "cairn": { "structure": "ruins", "creature": "cairn", "label": "The cairn" },
     "law_stone": { "structure": "crystal_spire", "creature": "law_stone", "label": "A Law Stone" },
     "crystals": { "structure": "crystal_spire", "label": "Mana Crystals" },
-    "demon_lord": { "structure": "demon_castle", "creature": "demon_lord", "label": "{demon_lord}" }
+    "demon_lord": { "structure": "demon_castle", "creature": "demon_lord", "label": "{demon_lord}" },
+    "dragon": { "structure": "dragon_peak", "creature": "dragon", "label": "The Wyrm" }
   },
+
+  "side_marks": [{ "at": "dragon", "needs": ["wyrm_quest"], "not": ["wyrm_slain"] }],
 
   "hunts": [
     { "kind": "orc", "flag": "tribe_trial", "count": "orcs", "needed": 3, "progress": "The chief's hunt: {done}/{needed} Orcs" }
   ],
 
   "beats": {
+    "wyrm_tale": {
+      "speaker": "king", "needs": ["law_amended"], "not": ["wyrm_quest"],
+      "label": "Is there anything left in this world I can't fight?",
+      "lines": [
+        "One thing. You've seen the black mountain in the east, the one with the horns. My grandfather sent an army up it. He got back a single boot.",
+        "The Wyrm has slept under that mountain for longer than there's been a Crown. No blade has ever marked it, by the same old Law that keeps {demon_lord} on his throne. That's why we've left it alone, and why it's left us alone.",
+        "But the Law you amended doesn't only cover him. If anyone alive could put a blade through those scales, it's you, and there's three centuries of treasure under it. Take the gorge up from the south. And don't expect it to let you leave."
+      ],
+      "sets": ["wyrm_quest"]
+    },
     "king_summons": {
       "speaker": "king", "not": ["met_king"], "label": "I was told you'd have work for me, Your Majesty.",
       "lines": [

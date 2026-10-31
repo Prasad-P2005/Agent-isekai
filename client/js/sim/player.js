@@ -7,6 +7,7 @@ import { getBlock } from './chunks.js';
 import { H, LAND, heightAt, landOf } from './terrain.js';
 
 const EYE_HEIGHT = 1.62;
+const VIEW_RANGE = 96, VIEW_CONE = 0.35; // past this, haze does the hiding. The cone is wider than the screen, to allow for a turn of the head
 const FLIGHT_COST = 4, FLIGHT_SPRINT_COST = 10; // mana per second
 const MANA_REGEN = 0.06, SPIRE_FLOW = 3, WARD_PRICE = 2; // a share of the well per second, how much faster it fills by a Crystal Spire, mana for each point of a warded blow
 // How quickly the body takes up the speed it is asked for, per second. Higher is snappier.
@@ -148,6 +149,12 @@ export function lineOfSight(a, b) {
   d.multiplyScalar(1 / len);
   const hit = raycast(a, d, len);
   return !hit || hit.t >= len - 0.6;
+}
+
+// Whether the hero could see this spot right now, so that nothing appears or vanishes in front of them.
+export function inView(x, y, z) {
+  const from = eye(), d = lookDir(), dx = x - from.x, dy = y - from.y, dz = z - from.z, l = Math.hypot(dx, dy, dz) || 1;
+  return l < VIEW_RANGE && (dx * d.x + dy * d.y + dz * d.z) / l > VIEW_CONE && lineOfSight(from, { x, y, z });
 }
 
 // ---------- health ----------

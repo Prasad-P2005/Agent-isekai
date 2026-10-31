@@ -3,11 +3,14 @@ from __future__ import annotations
 
 import time
 
-from ..content import BLOCK_IDS, CHUNK_VOLUME, WORLD
+from ..content import BLOCK_IDS, CHUNK_VOLUME, CREATURES, WORLD
 from ..systems import chronicle, dialogue, favors, guild, laws, magic, shop, story, storyteller
 from ..systems.people.succession import delay_for
 from .game import Game
 from .state import Vec3
+
+DRAGON_HOARD, DRAGON_HEART = 600, 10  # what killing the Wyrm is worth
+DRAGON_MOODS = {"wakes", "chases", "warns"}
 
 MURDER_RENOWN = 6  # lost on top of what the law takes, when a killing is seen
 
@@ -21,7 +24,7 @@ def _finish(game: Game, **extra) -> dict:
 
 # ---------- the world around the player ----------
 def report_context(game: Game, night: bool, place: str, in_settlement: bool, playing: bool, x: float | None, y: float | None, z: float | None,
-                   hp: float | None, mana: float | None, wanted: float, day_time: float | None, boss_hp: float | None) -> None:
+                   hp: float | None, mana: float | None, wanted: float, day_time: float | None, boss_hp: float | None, dragon_hp: float | None = None) -> None:
     """The client's regular report: where the player is, and whether they are playing right now."""
     game.ctx = {"night": night, "place": place, "in_settlement": in_settlement, "playing": playing}
     game.last_report = time.monotonic()
@@ -37,6 +40,8 @@ def report_context(game: Game, night: bool, place: str, in_settlement: bool, pla
         w.day_time = day_time % 1
     if boss_hp is not None:
         w.boss_hp = boss_hp
+    if dragon_hp is not None:
+        w.dragon_hp = dragon_hp
     game.save()
 
 
@@ -124,7 +129,12 @@ def _claim_kill(game: Game, kind: str, named: str) -> list[str]:
         chronicle.record(w, "demon_lord")
         story.play_scene(w, "lord_falls")
     elif kind == "dragon":
-        chronicle.fame(w, 4)
+        w.dragon_dead = True
+        w.story.flags["wyrm_slain"] = True
+        p.gold += DRAGON_HOARD
+        p.max_hp += DRAGON_HEART
+        msgs.append(f"The Wyrm is dead. +{DRAGON_HOARD} {w.currency} from its hoard, and +{DRAGON_HEART} health")
+        chronicle.fame(w, 12)
         chronicle.record(w, "dragon")
         storyteller.narrate(w, "dragon", important=True)
     elif p.kills % 8 == 0:
@@ -143,6 +153,20 @@ def kill(game: Game, kind: str, resident: dict | None, by_player: bool, named: s
     elif by_player:
         msgs = _claim_kill(game, kind, named)
     return _finish(game, messages=msgs)
+
+
+def dragon_mood(game: Game, mood: str) -> dict:
+    if mood in DRAGON_MOODS:
+        storyteller.narrate(game.world, f"dragon:{mood}", important=True)
+    return _finish(game)
+
+
+def spotted(game: Game, kind: str) -> dict:
+    """A kind of creature the hero has now seen, for the journal."""
+    book = game.world.player.bestiary
+    if kind in CREATURES and kind not in book:
+        book.append(kind)
+    return _finish(game)
 
 
 def boss_phase(game: Game, phase: int) -> dict:

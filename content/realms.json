@@ -6,7 +6,8 @@
     { "key": "KINGDOM", "realm": "human", "name": "The Kingdom", "kind": "Human Lands", "level": 5, "hills": 7, "grass": "#86c95c", "leaves": "#58a844" },
     { "key": "BEAST", "realm": "beast", "name": "Beastkin Wilds", "kind": "Savanna", "level": 5, "hills": 4, "grass": "#cdb954", "leaves": "#a5a83e" },
     { "key": "PEAKS", "realm": "peaks", "name": "Dragonspine Peaks", "kind": "Crystal Mountains", "level": 24, "hills": 12, "grass": "#7cab7c", "leaves": "#4f7d5a" },
-    { "key": "DEMON", "realm": "demon", "name": "Demon Wastes", "kind": "Demon Lord's Domain", "level": 8, "hills": 8, "grass": "#8a6352", "leaves": "#5c3a32" }
+    { "key": "DEMON", "realm": "demon", "name": "Demon Wastes", "kind": "Demon Lord's Domain", "level": 8, "hills": 8, "grass": "#8a6352", "leaves": "#5c3a32" },
+    { "key": "MIRE", "realm": "mire", "name": "The Mirefen", "kind": "Drowned Fen", "level": 1, "hills": 3, "grass": "#6d8a52", "leaves": "#4d6b45" }
   ],
   "realms": {
     "ocean": { "letter": "O", "biome": "OCEAN", "label": "Open sea" },
@@ -14,6 +15,7 @@
     "human": { "letter": "H", "biome": "KINGDOM", "label": "Human lands" },
     "beast": { "letter": "B", "biome": "BEAST", "label": "Beastkin wilds" },
     "peaks": { "letter": "P", "biome": "PEAKS", "label": "Dragonspine Peaks" },
-    "demon": { "letter": "D", "biome": "DEMON", "label": "Demon wastes" }
+    "demon": { "letter": "D", "biome": "DEMON", "label": "Demon wastes" },
+    "mire": { "letter": "M", "biome": "MIRE", "label": "The Mirefen" }
   }
 }

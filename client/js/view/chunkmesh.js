@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { on } from '../core/events.js';
 import { AIR, BL, DIM, EMIT, ID, OPAQUE, WATER } from '../sim/blocks.js';
-import { LIGHT_REACH, RD, chunks, neighboursLoaded } from '../sim/chunks.js';
+import { LIGHT_REACH, RD, chunks, lampsOf, neighboursLoaded } from '../sim/chunks.js';
 import { hash3 } from '../sim/noise.js';
 import { CS, H, columnsOf, chunkKey as key } from '../sim/terrain.js';
 import { tileIndex } from './blocktex.js';
@@ -129,13 +129,6 @@ function lightSky(top) {
     if (z < W - 1) seed(i, i + W);
   }
   flood(sky, tail, top);
-}
-// Lamps are found once per chunk: a whole chunk would be too much to read every time one changes.
-function lampsOf(ch) {
-  if (ch.lamps) return ch.lamps;
-  const out = [], { d } = ch;
-  for (let i = 0; i < d.length; i++) if (EMIT[d[i]]) out.push(i);
-  return (ch.lamps = out);
 }
 function lightLamps(ch, top) {
   lamp.fill(0, 0, (top + 2) * AREA);

@@ -14,7 +14,7 @@ def test_full_flow(tmp_path):
     with TestClient(app) as c:
         assert c.post("/api/new", json={"seed": 7}).status_code == 200
         w = c.get("/api/world").json()
-        assert len(w["settlements"]) == 13 and w["laws"]
+        assert len(w["settlements"]) == 15 and w["laws"]
         assert c.post("/api/heaven", json={"topic": "who_are_you"}).json()["lines"]
         c.post("/api/descend")
         r = c.post("/api/crime", json={"crime": "kill_human", "in_city": False, "realm": "human", "civilians": ["Mia"]}).json()

@@ -29,10 +29,26 @@
     "I'm counting, by the way. {kills}! I made a little chart.",
     "{kills} monsters. Remember when a slime scared you? I do. I wrote it down."
   ],
+  "tell:dragon:wakes": [
+    "Oh no. Oh no, it's awake. I told you it was asleep. It was asleep!",
+    "That sound was its eye opening. Leave. Leave now. Don't run in a straight line."
+  ],
+  "tell:dragon:chases": [
+    "It's coming after you! It does this! It won't stop at the edge of the mountain!",
+    "It wants you to remember this. Keep moving. Do not, whatever you do, look back and admire it."
+  ],
+  "tell:dragon:warns": [
+    "It's turned back. It wanted you to know that it could have kept going. It will remember your smell now.",
+    "That was a warning. I've seen what comes after the warning. Please don't go back up there."
+  ],
+  "tell:arrive:dragon_peak": [
+    "That's the Wyrmcrown. Nothing nests up there. Nothing would dare. Whatever you're thinking, stop.",
+    "There's only one of it in all the world, and that's its mountain. Its breath keeps the rock warm. I wouldn't."
+  ],
   "tell:dragon": [
-    "YOU KILLED A DRAGON?! Okay. Okay! I'm being very calm and very professional. YOU KILLED A DRAGON!",
-    "A dragon. You. With your hands. They'll be singing about this one before you've wiped your blade.",
-    "Dragons are not supposed to lose. I'm going to have to tell the other gods. There aren't any other gods. I'm still telling them."
+    "YOU KILLED THE WYRM?! Okay. Okay! I'm being very calm and very professional. YOU KILLED THE WYRM!",
+    "The Wyrm. You. With your hands. They'll be singing about this one before you've wiped your blade.",
+    "That thing was not supposed to lose. I'm going to have to tell the other gods. There aren't any other gods. I'm still telling them."
   ],
   "tell:punished": [
     "You {deed}, and {by} enforced \"{law}\". I did warn you. I think. I meant to.",

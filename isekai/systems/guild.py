@@ -15,7 +15,7 @@ def board(world: World, settlement_id: int) -> list[GuildQuest]:
     # the board refreshes every 10 minutes of play
     rng = random.Random(world.seed * 31 + settlement_id * 7 + int(world.clock // 600))
     rank = world.player.guild_rank
-    pool = QUEST_TYPES[: 3 + min(3, rank)]
+    pool = QUEST_TYPES[: 3 + rank + rank // 2]
     out = []
     for kind, title, n, reward in rng.sample(pool, 3):
         count = n + rng.randint(0, 2)

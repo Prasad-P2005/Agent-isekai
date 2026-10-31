@@ -17,15 +17,33 @@ const FRAY = 7;        // how far single columns stray either side of a border, 
 const TOWN_BANK = 20;  // blocks over which a town's level ground eases back into the land
 export const TOWN_LEVEL = SEA + 5;
 export const SNOW_LINE = SEA + 46, ROCK_LINE = SEA + 38, LAVA_LEVEL = SEA + 4;
+// The Wyrmcrown, the one mountain that is not the land's doing. Its shoulder, the bowl at its summit, and the valley cut up to the cave's mouth.
+export const CROWN_REACH = 104, CROWN_SHOULDER = 126, CROWN_BOWL = 108, CROWN_TOP = H - 4, GORGE_FLOOR = SEA + 33, GORGE_FROM = 64;
 
 export const chunkKey = (cx, cz) => (cx + 16384) * 32768 + (cz + 16384);
 
-let W = null;
+let W = null, lair = null;
 // Every chunk also runs its neighbours' features, so the same columns are asked for again and again: each chunk's are worked out once.
 const columns = new Map(); // chunk key -> { h, zone, town, grass, leaves }
-export function setLandData(w) { W = w; columns.clear(); for (const row of w.lands) for (const L of row) delete L._c; }
+export function setLandData(w) {
+  W = w; lair = null; columns.clear();
+  w.lands.forEach((row, lz) => row.forEach((L, lx) => {
+    delete L._c;
+    if (L.structure === 'dragon_peak') lair = { x: (lx + 0.5) * LAND, z: (lz + 0.5) * LAND };
+  }));
+}
+export const lairAt = () => lair;
+// The line the gorge and the tunnel follow south from the cave, wandering so that neither is a ruled line.
+export const gorgeX = z => lair.x + 6 * Math.sin((z - lair.z) / 15);
 export const settlement = id => W.settlements[id];
 export const settlements = () => W.settlements;
+// Inside the walls of a city. Guards walk these streets, and nothing is born in them.
+export function inCity(x, z) {
+  const id = landOf(x, z).settlement;
+  if (id == null) return false;
+  const S = settlement(id), wall = TOWNS[S.type].wall;
+  return (S.type === 'city' || S.type === 'elfcity') && Math.hypot(x - S.cx, z - S.cz) <= wall;
+}
 function land(lx, lz) {
   const L = W.lands[lz]?.[lx];
   if (!L) return OCEAN_LAND;
@@ -70,6 +88,20 @@ function townFlat(x, z) {
   return flat;
 }
 const mix = (a, b, t) => a + (b - a) * t;
+// Black flanks thrown up out of the Peaks, buttressed like roots, with a ring of horns round a bowl at the top.
+function crown(x, z, h) {
+  const dx = x - lair.x, dz = z - lair.z, gone = Math.hypot(dx, dz);
+  if (gone > CROWN_REACH) return h;
+  const a = Math.atan2(dz, dx), r = gone + 8 * fbm(NZ.M, x / 40, z / 40, 2), t = ss(CROWN_REACH, 24, r);
+  const buttress = 1 - Math.abs(Math.sin(a * 3.5 + fbm(NZ.M, x / 70 - 9, z / 70, 2) * 2)), crag = 1 - Math.abs(NZ.M(x / 17, z / 17));
+  let m = mix(h, CROWN_SHOULDER, t ** 1.3) + t * (1 - t) * 4 * (22 * buttress * buttress + 9 * crag * crag);
+  m += Math.max(0, Math.cos(a * 9 + fbm(NZ.W, x / 30, z / 30, 2) * 1.6)) ** 6 * ss(34, 24, r) * ss(12, 20, r) * 28; // the horns
+  m = mix(m, CROWN_BOWL, ss(20, 11, r));
+  if (dz > 0) m = mix(m, GORGE_FLOOR, ss(13, 6, Math.abs(x - gorgeX(z))) * ss(GORGE_FROM - 6, GORGE_FROM + 8, gone)); // walls either side of the way in
+  return Math.min(CROWN_TOP, m);
+}
+export const onCrown = (x, z) => !!lair && Math.hypot(x - lair.x, z - lair.z) < CROWN_REACH - 24;
+export const nearLair = (x, z, reach) => !!lair && Math.hypot(x - lair.x, z - lair.z) < reach;
 function columnHeight(x, z, flat) {
   let level = 0, hills = 0;
   for (let b = 0; b < blend.length; b++) { level += blend[b] * LOOK[b].level; hills += blend[b] * LOOK[b].hills; }
@@ -90,7 +122,8 @@ function columnHeight(x, z, flat) {
   h = mix(h, mix(SEA + 2, LAVA_LEVEL + 1, demon), valley * open);
   h = mix(h, mix(SEA - 3, SEA + 2, demon), Math.max(bed, lake) * open); // just above the beach line, or a fire river would run on sand
   h = mix(h, TOWN_LEVEL, flat);
-  return Math.max(4, Math.min(H - 24, Math.floor(h)));
+  h = Math.max(4, Math.min(H - 24, h));
+  return Math.floor(lair ? crown(x, z, h) : h);
 }
 function surveyColumns(cx, cz) {
   const n = CS * CS, c = { h: new Int16Array(n), zone: new Uint8Array(n), town: new Uint8Array(n), grass: new Uint8Array(n * 3), leaves: new Uint8Array(n * 3) };
@@ -120,9 +153,10 @@ const column = (x, z) => (x & 15) + (z & 15) * CS;
 export const heightAt = (x, z) => columnsOf(x >> 4, z >> 4).h[column(x, z)]; // whole block coordinates
 export const inTown = (x, z) => columnsOf(x >> 4, z >> 4).town[column(x, z)] === 1; // on a town's ground, or its banks
 export function biomeAt(x, z, h) {
+  const b = columnsOf(x >> 4, z >> 4).zone[column(x, z)];
+  if (b === B.MIRE) return B.MIRE; // a fen is its own shore
   if (h < SEA) return B.OCEAN;
   if (h <= SEA + 1) return B.BEACH;
-  const b = columnsOf(x >> 4, z >> 4).zone[column(x, z)];
   if (b === B.DEMON) return B.DEMON;
   if (b === B.OCEAN) return B.BEACH;
   if (h > ROCK_LINE) return B.PEAKS;

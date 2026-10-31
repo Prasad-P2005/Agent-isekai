@@ -6,13 +6,17 @@ import { Vec3 } from '../core/vec3.js';
 import { BUILT } from './blocks.js';
 import { chunkReady } from './chunks.js';
 import { applyEffects } from './effects.js';
-import { ents, spawnEntity, removeEntity, fitsAt, spawnNear, isNight, pickEntity } from './entities.js';
+import { ents, spawnEntity, removeEntity, fitsAt, isNight, pickEntity } from './entities.js';
 import { player, lineOfSight } from './player.js';
-import { TOWNS, landOf, settlement, heightAt } from './terrain.js';
+import { spawnNear } from './spawning.js';
+import { inCity, landOf, heightAt } from './terrain.js';
 
 // ---------- residents: only the ones near the player physically exist ----------
-const MAX_RESIDENTS = 34, MAX_SPAWNS_PER_TICK = 6, SPAWN_DIST = 56, DESPAWN_DIST = 76;
+const MAX_RESIDENTS = 38, MAX_SPAWNS_PER_TICK = 6, SPAWN_DIST = 56, NOTABLE_DIST = 96, DESPAWN_DIST = 76, NOTABLE_LEAVE = 120, MATTERS = 60, EVICT_MARGIN = 12;
 let residentTimer = 0;
+const matters = r => !!(r.notable || r.service);
+const worth = (r, d) => (matters(r) ? d - MATTERS : d); // a shopkeeper across town outranks a farmer next door
+const leave = e => { e.res._hp = e.hp; removeEntity(e); }; // they will be back, and no better for leaving
 export function updateResidents(dt) {
   residentTimer -= dt;
   if (residentTimer > 0) return;
@@ -20,24 +24,31 @@ export function updateResidents(dt) {
   const night = isNight(), candidates = [];
   // despawn residents left behind, wherever they are (the player may have died, been exiled or flown away)
   // A witness stays until they have reported: running away from them does not make them forget.
-  for (const e of ents.slice()) if (e.res && !(e.reportT > 0) && e.pos.distanceTo(player.pos) > DESPAWN_DIST) removeEntity(e);
+  for (const e of ents.slice()) if (e.res && !(e.reportT > 0) && e.pos.distanceTo(player.pos) > (matters(e.res) ? NOTABLE_LEAVE : DESPAWN_DIST)) leave(e);
   for (const S of G.world.settlements) {
-    if (Math.hypot(S.cx - player.pos.x, S.cz - player.pos.z) > 140) continue;
+    if (Math.hypot(S.cx - player.pos.x, S.cz - player.pos.z) > 160) continue;
     for (const r of S.residents) {
       if (r._ent || r.dead) continue;
       const t = night ? r.night : r.work, d = Math.hypot(t.x - player.pos.x, t.z - player.pos.z);
-      if (d <= SPAWN_DIST && chunkReady(t.x, t.z)) candidates.push([r.notable || r.service ? d - 40 : d, r, t]);
+      if (d <= (matters(r) ? NOTABLE_DIST : SPAWN_DIST) && chunkReady(t.x, t.z)) candidates.push([worth(r, d), r, t]);
     }
   }
-  // the people that matter (rulers, shopkeepers, guild staff) and the nearest ones get the limited slots
+  // The people that matter (rulers, shopkeepers, guild staff) and the nearest ones get the limited slots. The slots follow the hero: whoever
+  // filled them on the way in gives one up to someone who matters more, or a blacksmith at the heart of a city would never get to exist.
   candidates.sort((a, b) => a[0] - b[0]);
-  let live = ents.filter(e => e.res).length, spawned = 0;
-  for (const [, r, t] of candidates) {
-    if (live >= MAX_RESIDENTS) break;
+  const live = ents.filter(e => e.res).map(e => [worth(e.res, e.pos.distanceTo(player.pos)), e]).sort((a, b) => b[0] - a[0]);
+  let spawned = 0;
+  for (const [score, r, t] of candidates) {
     if (spawned === MAX_SPAWNS_PER_TICK) { residentTimer = 0.1; break; } // a town fills in over a few ticks, not in one long frame
+    if (live.length >= MAX_RESIDENTS) {
+      const [worst, e] = live[0];
+      if (worst < score + EVICT_MARGIN || e.reportT > 0) break;
+      live.shift(); leave(e);
+    }
     let y = heightAt(Math.floor(t.x), Math.floor(t.z)) + 1; // ground floor, not the roof
     while (!fitsAt(t.x, y, t.z) && y < 150) y++;
-    if (spawnEntity(r.kind, t.x, y, t.z, { name: r.name, title: r.label, body: r.body, hair: r.hair, res: r })) { live++; spawned++; }
+    const e = spawnEntity(r.kind, t.x, y, t.z, { name: r.name, title: r.label, body: r.body, hair: r.hair, res: r, hp: r._hp });
+    if (e) { live.push([score, e]); spawned++; }
   }
 }
 // Everyone who is still the same person stays where they stand, so one newcomer doesn't make a whole town blink.
@@ -52,12 +63,6 @@ export function replaceSettlement(id, fresh) {
 }
 
 // ---------- crimes ----------
-function inCity(x, z) {
-  const L = landOf(x, z);
-  if (L.settlement == null) return false;
-  const S = settlement(L.settlement);
-  return (S.type === 'city' || S.type === 'elfcity') && Math.hypot(x - S.cx, z - S.cz) <= TOWNS[S.type].wall;
-}
 function witnesses(victim) {
   const eye = new Vec3(player.pos.x, player.pos.y + 1.6, player.pos.z), range = isNight() ? 12 : 26;
   const lawmen = [], civilians = [];

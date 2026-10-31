@@ -2,26 +2,26 @@
 // The colours come from content/creatures.json, so a named monster painted differently still works. A kind with no
 // model here falls back on the shape its data asks for.
 import * as THREE from 'three';
-import { COVER, CREAM, GOLD, LEATHER, MAUVE, PALE, ROSE } from './outfits.js';
-import { cloth, flesh, fur, hash, leather, metal, plain, plates, scales, stone as rock, torn, wood } from './paint.js';
-import { poseBeast, poseDragon, poseFigure, poseFlier, poseSlime, poseStone } from './pose.js';
+import { COVER, CREAM, GOLD, LEATHER, MAUVE, OLIVE, PALE, ROSE } from './outfits.js';
+import { cloth, drape, flesh, fur, hash, leather, metal, plain, plates, scales, stone as rock, torn, wood } from './paint.js';
+import { poseBat, poseBeast, poseCrab, poseDragon, poseFigure, poseFlier, poseSlime, poseSpider, poseStone } from './pose.js';
 import { Atlas, INK, Rig, figureBones, handBoxes, held, mixHex, solid } from './voxel.js';
 
-const EMBER = 0xffd24a, FORWARD = -1.2;
+const EMBER = 0xffd24a, FORWARD = -1.2, UP = -0.72; // UP allows for the bent elbow of a carrying arm, as it does in avatar.js
 const hex = c => (typeof c === 'string' ? parseInt(c.slice(1), 16) : c ?? MAUVE);
 const paints = D => ({ body: hex(D.body), head: hex(D.head ?? D.body), hair: hex(D.hair ?? D.body) });
 const darker = (c, k = 0.3) => mixHex(c, INK, k), lighter = (c, k = 0.3) => mixHex(c, CREAM, k);
 
-// Plain limbs for any upright body.
-function limbs(rig, x, P, { armW = 6, legW = 8, arm, leg, fist, k = 1 }) {
+// Plain limbs for any upright body. `thin` is how much narrower the lower ones are.
+function limbs(rig, x, P, { armW = 6, legW = 8, arm, leg, fist, k = 1, thin = 0 }) {
   const thigh = Math.ceil(P.leg / 2) - 1, shin = Math.floor(P.leg / 2), foot = Math.max(3, shin >> 1), calf = shin - foot + 1;
   x.legs.forEach((bone, i) => {
     rig.add(bone, [[legW, thigh + 1, legW + 1, 0, -thigh / 2, 0, leg[0]]]);
-    rig.add(x.shins[i], [[legW, calf, legW + 1, 0, -calf / 2, 0, leg[1]], [legW + 1, foot, legW + 5, 0, foot / 2 - shin, -2, leg[2]]]);
+    rig.add(x.shins[i], [[legW - thin, calf, legW + 1 - thin, 0, -calf / 2, 0, leg[1]], [legW + 1, foot, legW + 5, 0, foot / 2 - shin, -2, leg[2]]]);
   });
   x.arms.forEach((bone, i) => {
     rig.add(bone, [[armW, P.upper + 1, armW + 1, 0, 0.5 - P.upper / 2, 0, arm[0]]]);
-    rig.add(x.fores[i], [[armW, P.fore + 1, armW + 1, 0, 0.5 - P.fore / 2, 0, arm[1]]]);
+    rig.add(x.fores[i], [[armW - thin, P.fore + 1, armW + 1 - thin, 0, 0.5 - P.fore / 2, 0, arm[1]]]);
     rig.add(x.hands[i], handBoxes(fist, k));
   });
 }
@@ -67,6 +67,58 @@ function imp(D, mats) {
   hang(rig, x, tail, 0, 0, 11, [[2.4, 2.4, 9, 0, 0, 4, hide], [6, 2.4, 6, 0, 0, 11, plain(horn)]], 1, 0.9);
   rig.finish();
   return { g: rig.g, extra: x, pose: poseFlier };
+}
+
+// ---------------- the dead ----------------
+// Rows with gaps between them, a breastbone down the front and the line of the spine up the back.
+const ribcage = (i, j, W, H, f) => f === 'top' || f === 'bottom' || (j % 2 === 1 && !((f === 'front' || f === 'back') && Math.abs(i - (W - 1) / 2) < 1));
+function skeleton(D, mats) {
+  const { body, head, hair: rag } = paints(D), P = { leg: 29, trunk: 24, span: 12, upper: 12, fore: 12, neck: 25 };
+  const rig = new Rig(D.h, 76, mats), x = figureBones(rig, P), bone = plain(body), pale = plain(lighter(body, 0.25)), shade = plain(darker(body, 0.25)), stave = wood(COVER), tatter = cloth(rag, { cut: torn(3, 9) });
+  x.hunch = 0.06;
+  x.legs.forEach((thigh, i) => {
+    rig.add(thigh, [[5, 15, 5, 0, -7, 0, bone]]);
+    rig.add(x.shins[i], [[6.4, 3, 6.4, 0, 0, 0, pale], [4.4, 12, 4.4, 0, -6, 0, bone], [6, 3, 11, 0, -12.5, -2, pale]]);
+  });
+  x.arms.forEach((arm, i) => {
+    rig.add(arm, [[7, 5, 7, 0, 0, 0, pale], [5, 13, 5, 0, -6, 0, bone]]);
+    rig.add(x.fores[i], [[6.4, 3, 6.4, 0, 0, 0, pale], [4.4, 12, 4.4, 0, -6, 0, bone]]);
+    rig.add(x.hands[i], handBoxes(pale, 0.7));
+  });
+  rig.add(x.hips, [[15, 7, 9, 0, 0, 0, bone], [12, 12, 1, 0, -6, -5.2, tatter], [12, 10, 1, 0, -5, 5.2, tatter]]);
+  rig.add(x.chest, [[17, 19, 10, 0, 13, 0, plain(body, { cut: ribcage })], [4.4, 26, 4.4, 0, 11, 0.6, shade], [25, 3.4, 7, 0, 22.6, 0, pale], [5, 5, 5, 0, 25, 0, shade],
+    [7, 18, 5, -3, 13, 8.4, leather(COVER), 0.3], [3.4, 6, 3.4, -6.4, 23.6, 8.4, plain(PALE), 0.3]]);
+  const skull = plain(head, { draw: { front: [[1, 2, 2, 3, INK], [-3, 2, 2, 3, INK], [3, 4, 2, 2, INK]] } });
+  rig.add(x.head, [[19, 15, 19, 0, 11, 0, skull], [14, 5, 14, 0, 2, -2.4, plain(darker(head, 0.12), { draw: { front: [[1, 0, 1, 1, INK], [-2, 0, 1, 1, INK]] } })]]);
+  // The bow is in the left hand, so that the right arm's blow reads as a draw and a loose. Its limbs lean back from the grip, and the string joins their tips.
+  rig.add(x.hands[0], [...held(UP, [[3.4, 9, 3.4, 0, leather(COVER)]], -3), ...held(UP + 0.3, [[2.4, 24, 2.6, 13, stave]], -3), ...held(UP - 0.3, [[2.4, 24, 2.6, -13, stave]], -3), [1.6, 46, 1.6, 0, 1.7, 5.3, plain(rag), 0, UP]]);
+  x.carry[0] = true;
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseFigure };
+}
+
+// A robe with nobody in it, drifting a little off the ground, and all there is under the hood is two lights.
+function wraith(D, mats) {
+  const { body, head: ash, hair: glow } = paints(D), P = { leg: 36, trunk: 23, span: 15, upper: 13, fore: 13 };
+  const rig = new Rig(D.h, 88, mats), x = figureBones(rig, P), robe = drape(body), deep = darker(body, 0.25), rag = (seed, depth = 4) => drape(deep, { cut: torn(depth, seed) }), hand = flesh(ash);
+  x.hover = true; x.bob = 0; x.hunch = 0.16; x.legs = []; x.shins = []; x.carry = [true, true];
+  rig.add(x.hips, [[20, 14, 14, 0, -2, 0, robe]]);
+  const skirt = hang(rig, x, x.hips, 0, -8, 0, [[24, 13, 17, 0, -5.5, 0, robe]], 0.25);
+  hang(rig, x, skirt, 0, -11, 0, [[28, 13, 20, 0, -5.5, 0, rag(3, 3)]], 0.35, 0.6);
+  for (const s of [-1, 1]) hang(rig, x, x.hips, s * 8, 2, 11, [[7, 34, 1.2, 0, -16, 0, rag(5 + s)]], 0.5, s);
+  rig.add(x.chest, [[22, 25, 13, 0, 10.5, 0, robe], [31, 7, 18, 0, 20, 0.6, cloth(deep)]]);
+  const cape = hang(rig, x, x.chest, 0, 22, 8, [[26, 24, 1.4, 0, -11, 0, drape(deep)]], 0.4);
+  hang(rig, x, cape, 0, -23, 0, [[25.6, 22, 1.2, 0, -10, 0, rag(11, 5)]], 0.5, 0.7);
+  x.arms.forEach((arm, i) => {
+    rig.add(arm, [[10, 14, 11, 0, -6, 0, robe]]);
+    rig.add(x.fores[i], [[9.4, 14, 10.4, 0, -6.5, 0, rag(7 + i, 3)]]);
+    rig.add(x.hands[i], handBoxes(hand, 0.6));
+    hang(rig, x, x.fores[i], 0, -8, 5.6, [[8.4, 14, 1.2, 0, -6.4, 0, rag(13 + i)]], 0.6, i);
+  });
+  const hood = cloth(darker(body, 0.12), { cut: (i, j, W, H, f) => f === 'bottom' || (f === 'front' && j >= 2 && j < H - 1 && i >= 2 && i < W - 2) });
+  rig.add(x.head, [[21, 21, 21, 0, 10, 1, plain(darker(body, 0.8))], [25, 25, 25, 0, 10.5, 0, hood], [12, 5.4, 14, 0, 23, 5, cloth(deep)], [4.4, 2.4, 1, -4.4, 11.6, -9.6, glow], [4.4, 2.4, 1, 4.4, 11.6, -9.6, glow]]);
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseFigure };
 }
 
 // ---------------- the large ----------------
@@ -124,6 +176,24 @@ function golem(D, mats) {
   return { g: rig.g, extra: x, pose: poseFigure };
 }
 
+// Bent over under its own shoulders. Both arms count as carrying, because a bent elbow is what brings hands this long back
+// under a hunch; the club hangs out in front, with its end near the ground, and comes over the top when it swings.
+function troll(D, mats) {
+  const { body, head, hair: moss } = paints(D), P = { leg: 38, trunk: 46, span: 30, upper: 28, fore: 28, stance: 12, neck: 44 };
+  const rig = new Rig(D.h, 108, mats), x = figureBones(rig, P), hide = leather(body), dark = leather(darker(body, 0.3)), skin = leather(head), mossy = fur(mixHex(moss, OLIVE, 0.5)), bark = wood(COVER), loin = leather(darker(moss, 0.2), { cut: torn(3, 6) });
+  x.hunch = 0.35; x.carry = [true, true];
+  limbs(rig, x, P, { armW: 15, legW: 18, arm: [hide, skin], leg: [hide, hide, dark], fist: dark, k: 2.4, thin: 0.6 });
+  rig.add(x.hips, [[42, 14, 28, 0, 1, 0, hide], [44, 4, 30, 0, 5, 0, leather(LEATHER)], [18, 26, 1.4, 0, -9.6, -14.8, loin], [18, 24, 1.4, 0, -8.6, 14.8, loin]]);
+  rig.add(x.chest, [[46, 36, 33, 0, 17, 0, hide], [54, 17, 37, 0, 36, 3, dark], [34, 22, 1.4, 0, 12, -17, skin], [40, 7, 26, 0, 46.4, 4, mossy], [22, 6, 9, -8, 39, 22, mossy], [14, 8, 7, 12, 29, 18, mossy]]);
+  for (const a of x.arms) rig.add(a, [[18, 7, 19, 0, 2, 0, mossy]]);
+  rig.add(x.head, [[26, 20, 23, 0, 8, -5, skin], [29, 6, 12, 0, 14.4, -12, dark], [8, 11, 8, 0, 6, -19.4, leather(lighter(head, 0.2))], [22, 8, 17, 0, -1, -9, dark], [18, 1.6, 1, 0, 2.4, -17.9, INK],
+    [4.4, 2.4, 1, -7, 9.6, -17.2, EMBER], [4.4, 2.4, 1, 7, 9.6, -17.2, EMBER], [3, 5, 3, -7, 5, -17, plain(CREAM)], [3, 5, 3, 7, 5, -17, plain(CREAM)],
+    [11, 5, 8, -17, 8, -2, skin, 0.35], [11, 5, 8, 17, 8, -2, skin, -0.35], [16, 5, 16, 0, 20, -2, mossy], [9, 5, 9, 4, 23, 1, mossy]]);
+  rig.add(x.hands[1], [...held(-2.35, [[6, 36, 6, 11, bark], [11, 24, 12, 38, bark], [8, 7, 8, 52, wood(darker(COVER, 0.2))], [12.4, 7, 13.4, 33, mossy]], -6), [15, 4.4, 4.4, 8, -25.6, -20, bark, 0.4], [8, 6, 8, 15, -23, -20, mossy]]);
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseFigure };
+}
+
 // A plain upright body for a kind nobody has drawn yet.
 function brute(D, mats) {
   const { body, head, hair: top } = paints(D), P = { leg: 30, trunk: 24, span: 13, upper: 13, fore: 12 };
@@ -159,6 +229,93 @@ function wolf(D, mats) {
   x.wag.push(tail, end);
   rig.finish();
   return { g: rig.g, extra: x, pose: poseBeast };
+}
+
+// Long in the leg and slight in the body, with a white rump and a tail held up to show it, which is most of what anyone sees of a deer.
+function deer(D, mats) {
+  const { body, head, hair: pale } = paints(D), coat = fur(body), dark = fur(darker(body, 0.35)), cream = fur(pale), face = fur(head), horn = plain(darker(pale, 0.3)), hoof = plain(darker(body, 0.65)), rig = new Rig(D.h, 90, mats);
+  const spine = rig.bone(null, 0, 46, 0), x = { spine, spineY: 46, legs: [], shins: [], wag: [] };
+  rig.add(spine, [[17, 17, 50, 0, 0, 3, coat], [20, 21, 20, 0, 0, -15, coat], [19, 20, 16, 0, 0.5, 23, coat], [14, 3.4, 40, 0, 9.4, 2, dark], [12, 4, 34, 0, -9, 3, cream],
+    [13, 13, 2, 0, 1, 31, cream], [10, 12, 2, 0, -1, -25, cream], [11, 30, 13, 0, 14.5, -27, coat, 0, -0.59], [7, 20, 2, 0, 10.6, -32.7, cream, 0, -0.59]]);
+  x.head = rig.bone(spine, 0, 25, -34);
+  rig.add(x.head, [[14, 13, 17, 0, 3, -7, face], [14.6, 2.4, 14, 0, 9, -7, dark], [9, 7, 14, 0, 0.4, -21, fur(lighter(head, 0.2))], [6, 3.4, 2, 0, 2, -28.4, INK], [1, 3.4, 3.4, -7.2, 4.6, -9, INK], [1, 3.4, 3.4, 7.2, 4.6, -9, INK],
+    ...[-1, 1].flatMap(s => [[9, 4, 6, s * 10.5, 9.5, -1, face, s * 0.35], [3.4, 11, 3.4, s * 5.6, 14, -2, horn, s * -0.3], [3.4, 7, 3.4, s * 6.4, 15.6, -5.6, horn, 0, -0.7], [7, 3.4, 3.4, s * 9, 17.4, -2, horn, s * 0.5]])]);
+  x.jaw = rig.bone(x.head, 0, -3.4, -14);
+  rig.add(x.jaw, [[8, 2.4, 14, 0, 0.2, -6, cream]]);
+  for (const [s, z, k] of [[-1, -17, 1], [1, -17, 1], [-1, 22, 1.3], [1, 22, 1.3]]) {
+    const leg = rig.bone(spine, s * 6, -6, z), shin = rig.bone(leg, 0, -20, 0);
+    rig.add(leg, [[7 * k, 26, 9 * k, 0, -8, 0, coat]]);
+    rig.add(shin, [[5, 18, 5.6, 0, -9, 0, dark], [6, 4, 7, 0, -18, -0.6, hoof]]);
+    x.legs.push(leg); x.shins.push(shin);
+  }
+  const tail = rig.bone(spine, 0, 6, 30);
+  rig.add(tail, [[7, 3.4, 11, 0, 3.5, 4.2, coat, 0, -0.7], [9, 3.4, 12, 0, 1.4, 5.8, cream, 0, -0.7]]);
+  x.wag.push(tail);
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseBeast };
+}
+
+// All shoulder, on legs that look borrowed from something smaller, with its head carried low and its bristles up.
+function boar(D, mats) {
+  const { body, head, hair: bristle } = paints(D), coat = fur(body), dark = fur(darker(body, 0.35)), mane = fur(bristle), face = fur(head), hoof = plain(darker(body, 0.6)), tusk = plain(CREAM), rig = new Rig(D.h, 60, mats);
+  const spine = rig.bone(null, 0, 33, 0), x = { spine, spineY: 33, legs: [], shins: [], wag: [] };
+  rig.add(spine, [[30, 28, 54, 0, 0, 2, coat], [34, 31, 22, 0, 2, -15, dark], [32, 30, 20, 0, 0.4, 20, coat], [22, 4, 36, 0, -14.4, 2, dark], [12, 3, 40, 0, 14.4, 2, mane],
+    ...[[-24, 25], [-14, 27], [-4, 24], [6, 22], [16, 22], [26, 20]].map(([z, top]) => [6.8, top - 11, 6.8, 0, (top + 11) / 2, z, mane])]);
+  x.head = rig.bone(spine, 0, -3, -29);
+  rig.add(x.head, [[26, 24, 20, 0, 1.4, -6, face], [27.6, 6, 14.6, 0, 11.4, -7.6, mane], [16, 14, 17, 0, -4, -21, face], [14, 11, 3, 0, -3, -30, flesh(mixHex(head, ROSE, 0.35))],
+    [2.4, 3.4, 1, -3.4, -3, -31.6, INK], [2.4, 3.4, 1, 3.4, -3, -31.6, INK], [3.4, 3.4, 1, -9, 4, -16.2, INK], [3.4, 3.4, 1, 9, 4, -16.2, INK], [7, 9, 3.4, -11, 16, -1, dark, 0.2], [7, 9, 3.4, 11, 16, -1, dark, -0.2]]);
+  x.jaw = rig.bone(x.head, 0, -11, -14);
+  rig.add(x.jaw, [[13, 3.4, 15, 0, -0.6, -7.5, dark], ...[-1, 1].flatMap(s => [[3.4, 9, 3.4, s * 9.4, 2.4, -11, tusk], [3, 5.4, 3, s * 10.4, 8.6, -12, tusk, s * -0.35, 0.3]])]);
+  for (const [s, z] of [[-1, -16], [1, -16], [-1, 20], [1, 20]]) {
+    const leg = rig.bone(spine, s * 10, -14, z), shin = rig.bone(leg, 0, -8, 0);
+    rig.add(leg, [[11, 14, 13, 0, -3, 0, coat]]);
+    rig.add(shin, [[9, 8, 11, 0, -4, 0, dark], [10, 3.4, 12, 0, -9.3, -0.6, hoof]]);
+    x.legs.push(leg); x.shins.push(shin);
+  }
+  const tail = rig.bone(spine, 0, 9, 30);
+  rig.add(tail, [[3.4, 3.4, 8, 0, 0, 3.5, dark], [5, 6, 5, 0, -1, 8, mane]]);
+  x.wag.push(tail);
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseBeast };
+}
+
+// ---------------- many legs ----------------
+// A leg held out to one side: up to a knee, then down to the foot. All four numbers are from the joint before.
+function legOut(rig, x, parent, [hipX, hipY, z], s, [reach, rise, out, drop], thick, upper, lower) {
+  const leg = rig.bone(parent, s * hipX, hipY, z), shin = rig.bone(leg, s * reach, rise, 0);
+  rig.add(leg, [[Math.hypot(reach, rise) + 1, thick, thick, s * reach / 2, rise / 2, 0, upper, s * Math.atan2(rise, reach)]]);
+  rig.add(shin, [[thick * 0.7, Math.hypot(out, drop), thick * 0.7, s * out / 2, -drop / 2, 0, lower, s * Math.atan2(out, drop)]]);
+  x.legs.push(leg); x.shins.push(shin);
+}
+function crab(D, mats) {
+  const { body, head: top, hair: sand } = paints(D), rim = plain(body), palm = plain(top), dark = plain(darker(body, 0.35)), under = plain(sand), rig = new Rig(D.h, 30, mats);
+  const spine = rig.bone(null, 0, 10, 0), x = { spine, spineY: 10, legs: [], shins: [], splay: [0.45, 0, -0.45], arms: [], nips: [] };
+  rig.add(spine, [[37, 9, 25, 0, 0.5, 0, rim], [27, 3.4, 18, 0, 6.2, 0.6, plates(top)], [27, 3.4, 18, 0, -4.2, 0, under], [14, 3.4, 1, 0, -1, -12.8, dark],
+    ...[-1, 1].flatMap(s => [[2.4, 5, 2.4, s * 5, 6.5, -10, dark], [4, 4, 4, s * 5, 10.5, -10, INK]])]);
+  for (const z of [-6, 1.5, 9]) for (const s of [-1, 1]) legOut(rig, x, spine, [15, -1, z], s, [10, 4, 5, 13], 3.4, rim, dark);
+  for (const s of [-1, 1]) {
+    const arm = rig.bone(spine, s * 15, 1, -9), claw = rig.bone(arm, s * 9, 3, -5), nip = rig.bone(claw, 0, 8, -3);
+    rig.add(arm, [[13, 4.4, 5, s * 4.6, 1.4, -2.6, rim, s * 0.28, 0, s * 0.5]]);
+    rig.add(claw, [[10, 10, 11, 0, 3.6, 0, palm], [7, 8, 3.4, 0, 12, 3.4, under]]);
+    rig.add(nip, [[7, 9, 3.4, 0, 3.6, 0, under]]);
+    x.arms.push(arm); x.nips.push(nip);
+  }
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseCrab };
+}
+
+function spider(D, mats) {
+  const { body, head, hair: mark } = paints(D), coat = fur(body), hide = fur(head), fang = plain(head, { draw: { all: [[0, -1, 0, 1, CREAM]] } }), rig = new Rig(D.h, 48, mats);
+  const spine = rig.bone(null, 0, 24, 0), x = { spine, spineY: 24, legs: [], shins: [], splay: [0.85, 0.3, -0.25, -0.8] };
+  rig.add(spine, [[21, 14, 26, 0, 1, -8, hide], [15, 3.4, 18, 0, 8.4, -8, coat], [3.4, 3.4, 1, -3.4, 4, -21.4, mark], [3.4, 3.4, 1, 3.4, 4, -21.4, mark], [3.4, 2.4, 1, -7.4, 6, -21.4, mark], [3.4, 2.4, 1, 7.4, 6, -21.4, mark]]);
+  x.jaw = rig.bone(spine, 0, -3, -19);
+  rig.add(x.jaw, [[4, 9, 3.4, -3.6, -3.6, -2.8, fang], [4, 9, 3.4, 3.6, -3.6, -2.8, fang]]);
+  x.belly = rig.bone(spine, 0, 3, 4);
+  const marked = fur(body, { draw: { top: [[2, 2, 4, 2, mark], [3, 4, 2, 3, mark], [2, 7, 4, 2, mark]], back: [[3, 1, 2, 3, mark]] } }); // an hourglass, for those who look down on it
+  rig.add(x.belly, [[34, 18, 28, 0, 5, 19, coat], [26, 25, 36, 0, 5.4, 19, marked]]);
+  for (const z of [-17, -11, -5, 1]) for (const s of [-1, 1]) legOut(rig, x, spine, [9, -1, z], s, [17, 24, 9, 47], 7, coat, hide);
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseSpider };
 }
 
 // ---------------- the dragon ----------------
@@ -221,6 +378,33 @@ function dragon(D, mats) {
   return { g: rig.g, extra: x, pose: poseDragon };
 }
 
+// ---------------- small things ----------------
+// The same skin as the dragon's wing, on something that would fit in a hand.
+function bat(D, mats) {
+  const { body, head, hair: skin } = paints(D), coat = fur(body), face = fur(head), dark = fur(darker(body, 0.3)), rig = new Rig(D.h, 27, mats);
+  const root = rig.bone(null, 0, 10, 0), x = { body: root, bodyY: 10, wings: [], tips: [] };
+  rig.add(root, [[11, 12, 9, 0, 0, 0, coat], [13, 3.4, 11, 0, 4.4, 0, dark], [2.4, 3.4, 2.4, -2.6, -7, 0, dark], [2.4, 3.4, 2.4, 2.6, -7, 0, dark]]);
+  x.head = rig.bone(root, 0, 5, 0);
+  rig.add(x.head, [[12, 10, 11, 0, 4.4, -1, face], [5, 3, 2, 0, 2.4, -7, flesh(lighter(head, 0.2))], [3.4, 2.4, 1, -3.4, 6, -6.7, EMBER], [3.4, 2.4, 1, 3.4, 6, -6.7, EMBER], [2, 2, 1, -1.6, 0, -7.4, CREAM], [2, 2, 1, 1.6, 0, -7.4, CREAM],
+    [4.4, 7, 2.4, -4, 12, 0, face, 0.2], [4.4, 7, 2.4, 4, 12, 0, face, -0.2]]);
+  for (const s of [-1, 1]) {
+    const wing = rig.bone(root, s * 5, 3, 0), tip = rig.bone(wing, s * 14, 0, 0);
+    rig.add(wing, [[15, 2.4, 3.4, s * 7, 0.4, -1.4, dark], [14, 1.4, 17, s * 7, 0, 7, wingSkin(skin, s, 0.5, 0)]]);
+    rig.add(tip, [[16, 2, 2.4, s * 8, 0.2, -1, dark], [16.4, 1.4, 17, s * 8.2, 0, 7, wingSkin(skin, s, 0.5, 0.85)]]);
+    x.wings.push(wing); x.tips.push(tip);
+  }
+  rig.finish();
+  return { g: rig.g, extra: x, pose: poseBat };
+}
+
+// Only the lookbook draws this one as a body: fish in the water are view/fish.js. It holds still to be looked at.
+function fish(D, mats) {
+  const { body, head, hair: fin } = paints(D), silver = plain(body), bright = plain(head), tail = plain(fin), rig = new Rig(D.h, 12, mats), root = rig.bone(null, 0, 5, 0);
+  rig.add(root, [[6.8, 10, 18, 0, 0, 0, silver], [5.4, 7, 5, 0, -0.4, -11, bright], [7.4, 2.4, 2.4, 0, 1, -8, INK], [3.4, 3.4, 9, 0, 6, 1, tail], [3.4, 10, 3.4, 0, 0, 10, tail], [3.4, 13, 3.4, 0, 0, 13.4, tail]]);
+  rig.finish();
+  return { g: rig.g, extra: {}, pose: () => {} };
+}
+
 // ---------------- slime and stone ----------------
 function slime(D, mats) {
   const c = hex(D.body), g = new THREE.Group(), blob = new THREE.Group(), sheet = new Atlas(128), jelly = plain(c);
@@ -253,7 +437,7 @@ function stone(D, mats, kind) {
   return { g: rig.g, extra: { crystal, crystalY: y }, pose: poseStone };
 }
 
-const MODELS = { goblin, imp, orc, demon_knight: demonKnight, golem, wolf, dragon, slime, cairn: stone, law_stone: stone };
+const MODELS = { goblin, imp, orc, demon_knight: demonKnight, golem, wolf, dragon, slime, cairn: stone, law_stone: stone, deer, boar, crab, bat, fish, skeleton, spider, troll, wraith };
 export function buildCreature(kind, D, mats) {
   const make = MODELS[kind] || (D.slime ? slime : D.stone ? stone : D.wings ? dragon : D.quad ? wolf : brute);
   return make(D, mats, kind);

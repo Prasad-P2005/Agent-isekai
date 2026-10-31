@@ -27,7 +27,7 @@ function styleHere(p, under) {
   if (best === B.PEAKS) return p.y > 80 ? STYLES.snow : STYLES.pollen;
   if (best === B.ELF) return night ? STYLES.fireflies : STYLES.petals;
   if (best === B.BEAST) return night ? STYLES.fireflies : STYLES.dust;
-  if (best === B.KINGDOM) return night ? STYLES.fireflies : STYLES.pollen;
+  if (best === B.KINGDOM || best === B.MIRE) return night ? STYLES.fireflies : STYLES.pollen;
   return null;
 }
 

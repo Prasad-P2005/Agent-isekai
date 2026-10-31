@@ -86,6 +86,16 @@ export function poseFlier(x, m) {
   poseFigure(x, m);
   flap(x, 15, 0.6, m.t + m.seed);
 }
+// A bat is mostly wing, and it rides each beat. Nothing here follows the stride: on something this small that runs at ten a second.
+export function poseBat(x, m) {
+  const idle = m.t + m.seed, beat = idle * 30;
+  flap(x, 30, 0.7, idle);
+  x.tips.forEach((tip, i) => { tip.rotation.z = (i ? 1 : -1) * (-0.25 + Math.sin(beat - 1.2) * 0.55); });
+  x.body.position.y = x.bodyY - Math.sin(beat) * 1.4;
+  x.body.rotation.x = -0.3 - 0.3 * m.walk - 0.2 * m.hurt;
+  x.head.rotation.x = m.nod + 0.3 + 0.2 * m.walk;
+  x.head.rotation.y = m.look;
+}
 
 // Four legs at a trot, with the diagonals moving together.
 export function poseBeast(x, m) {
@@ -102,6 +112,41 @@ export function poseBeast(x, m) {
   x.head.rotation.y = m.look;
   x.jaw.rotation.x = -0.65 * bite;
   x.wag.forEach((b, i) => { b.rotation.y = Math.sin(idle * mix(2, 9, m.walk) - i) * 0.3; b.rotation.x = -0.25 + 0.3 * m.run * m.walk; });
+}
+
+// Legs held out to the sides, in two sets that take turns, as anything with more than four goes about. `x.legs` runs from the
+// front, left then right, and `x.splay` fans each row out from straight across.
+function scuttle(x, m, sweep, lift) {
+  const s = Math.sin(m.phase), c = Math.cos(m.phase);
+  x.legs.forEach((leg, i) => {
+    const out = i & 1 ? 1 : -1, row = i >> 1, set = (row + i) & 1 ? -1 : 1, up = Math.max(0, set * c) * lift * m.walk + 0.3 * m.air;
+    leg.rotation.y = out * (x.splay[row] + set * s * sweep * m.walk);
+    leg.rotation.z = out * up;
+    x.shins[i].rotation.z = -out * up * 0.7;
+  });
+}
+// A crab turns side on to go anywhere, and comes back round to face what it means to pinch.
+export function poseCrab(x, m) {
+  const idle = m.t + m.seed, up = drawn(m.strike), hit = landed(m.strike);
+  scuttle(x, m, 0.1, 0.55);
+  x.spine.position.y = x.spineY + Math.cos(m.phase * 2) * 0.5 * m.walk + Math.sin(idle * 1.8) * 0.2 * (1 - m.walk);
+  x.spine.position.z = -4 * hit;
+  x.spine.rotation.x = -0.2 * m.hurt;
+  x.spine.rotation.y = 1.3 * m.walk;
+  x.arms.forEach((arm, i) => {
+    arm.rotation.x = Math.sin(idle * 1.6 + i) * 0.06 + 0.5 * up - 0.7 * hit;
+    x.nips[i].rotation.x = -(0.25 + 0.2 * Math.max(0, Math.sin(idle * 2.3 + i * 2)) + 0.55 * up) * (1 - hit);
+  });
+}
+// A spider rears to bite, fangs apart, and its abdomen rides along behind.
+export function poseSpider(x, m) {
+  const idle = m.t + m.seed, bite = drawn(m.strike) + landed(m.strike);
+  scuttle(x, m, 0.24, 0.5);
+  x.spine.position.y = x.spineY + Math.cos(m.phase * 2) * 0.7 * m.walk + Math.sin(idle * 1.6) * 0.3 * (1 - m.walk);
+  x.spine.position.z = -5 * bite;
+  x.spine.rotation.x = 0.3 * bite - 0.2 * m.hurt;
+  x.jaw.rotation.x = 0.7 * bite;
+  x.belly.rotation.x = Math.sin(idle * 1.6) * 0.04 + 0.1 * m.walk * Math.sin(m.phase);
 }
 
 // Something this big beats its wings slowly and heavily, and the whole body rides each stroke. The neck holds an S, as a

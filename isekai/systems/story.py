@@ -69,7 +69,7 @@ def _met(world: World, needs: dict) -> bool:
 def wanted(world: World) -> list[dict]:
     """The chapter's marks that stand right now, and those of each unsworn oath once the hero has heard of them."""
     f = world.story.flags
-    rules = CHAPTERS[world.story.stage].get("marks", []) + [m for oath, spec in OATHS.items() if f.get("met_king") and not f.get(oath) for m in spec["marks"]]
+    rules = CHAPTERS[world.story.stage].get("marks", []) + STORY["side_marks"] + [m for oath, spec in OATHS.items() if f.get("met_king") and not f.get(oath) for m in spec["marks"]]
     return [m for m in rules if _met(world, m)]
 
 

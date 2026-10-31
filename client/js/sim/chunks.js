@@ -19,6 +19,13 @@ export function neighboursLoaded(cx, cz) {
   return true;
 }
 export const chunkReady = (x, z) => neighboursLoaded(Math.floor(x / CS), Math.floor(z / CS));
+// Lamps are found once per chunk: a whole chunk would be too much to read every time one changes.
+export function lampsOf(ch) {
+  if (ch.lamps) return ch.lamps;
+  const out = [], { d } = ch;
+  for (let i = 0; i < d.length; i++) if (EMIT[d[i]]) out.push(i);
+  return (ch.lamps = out);
+}
 export function setBlock(wx, y, wz, id) {
   if (y < 1 || y >= H) return;
   const cx = Math.floor(wx / CS), cz = Math.floor(wz / CS), k = key(cx, cz), ch = chunks.get(k);

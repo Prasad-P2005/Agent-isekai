@@ -1,6 +1,7 @@
-// The journal in the book: the story so far, the laws, your powers and the controls.
+// The journal in the book: the story so far, the laws, your powers, the creatures you have met and the controls.
 import { G } from '../core/state.js';
-import { ABILITIES } from '../core/content.js';
+import { ABILITIES, BESTIARY, CREATURES } from '../core/content.js';
+import { hasSeen } from '../sim/bestiary.js';
 import { maxMana } from '../sim/player.js';
 import { esc, icon, power, rich } from './art.js';
 import { storyFeed } from './hud.js';
@@ -68,6 +69,29 @@ definePage('powers', {
       wellHTML() + (known.map(p => powerHTML(p, `${p.key ? `Press ${p.key}` : 'Always active'}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">No powers yet. Buy skill scrolls from a market, or earn the trust of the elders.</p>'),
       `<h3>Still to learn</h3>${unknown.map(p => powerHTML(p, `Scroll: ${p.scroll} ${G.world.currency}${manaCost(p)}. ${p.about}`)).join('') || '<p class="note">You have learned every power.</p>'}`);
   },
+});
+
+// ---------- creatures ----------
+// An entry is empty until the hero has had a proper look at the thing (sim/bestiary.js).
+let reading = null;
+const danger = D => (D.warded ? 'Cannot be wounded by ordinary means' : D.friendly ? 'Harmless, unless provoked' : !D.dmg ? 'Harmless' : D.dmg < 4 ? 'A nuisance' : D.dmg < 8 ? 'Dangerous' : 'Deadly');
+const beastHTML = kind => {
+  const seen = hasSeen(kind);
+  return `<button type="button" class="beast${reading === kind ? ' on' : ''}" data-beast="${kind}"${seen ? '' : ' disabled'}>${seen ? esc(CREATURES[kind].label) : '? ? ?'}</button>`;
+};
+function entryHTML() {
+  if (!reading) return '<p class="note">Choose a creature you have met to read about it. Anything you have not yet seen stays blank.</p>';
+  const D = CREATURES[reading], { where, lore } = BESTIARY.entries[reading];
+  return `<h3>${esc(D.label)}</h3><p>${esc(lore)}</p><p class="note">Found: ${esc(where)}</p><p class="note">${danger(D)}${D.hp > 1 && !D.sacred ? `, ${D.hp} health` : ''}</p>${D.loot ? `<p class="note">Drops: ${esc(D.loot.name)}</p>` : ''}`;
+}
+function renderBestiary() {
+  const all = BESTIARY.groups.flatMap(g => g.kinds), seen = all.filter(hasSeen).length;
+  fill(`Creatures, ${seen} of ${all.length}`, BESTIARY.groups.map(g => `<h3>${esc(g.name)}</h3><div class="bestlist">${g.kinds.map(beastHTML).join('')}</div>`).join(''), entryHTML());
+}
+definePage('bestiary', { tab: 'journal', render: renderBestiary, leave() { reading = null; } });
+$('pageleft').addEventListener('click', e => {
+  const b = e.target.closest('[data-beast]');
+  if (b) { reading = b.dataset.beast; renderBestiary(); }
 });
 
 // ---------- the controls, here and on the pause screen ----------

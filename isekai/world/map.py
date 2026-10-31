@@ -1,4 +1,4 @@
-"""The finite world: an 8 x 8 grid of 128 x 128-block lands, surrounded by the endless sea."""
+"""The finite world: a 10 x 10 grid of 128 x 128-block lands, surrounded by the endless sea."""
 from __future__ import annotations
 
 from ..content import REALMS as REALM_DATA, WORLD
@@ -6,20 +6,23 @@ from ..core.state import Land, Settlement
 from .layouts import make_layout
 
 LAND = WORLD["land"]
-# Realm letter: E elf, H human, B beastkin, P peaks, O ocean, D demon.
-# Feature letter: v village, C city, g grove, f forest, s spire, c demon castle, p mermaid palace, r ruins, . open land
+# Realm letter: E elf, H human, B beastkin, P peaks, O ocean, D demon, M mire.
+# Feature letter: v village, C city, g grove, f forest, s spire, c demon castle, p mermaid palace, r ruins, k the dragon's peak, . open land
+# New settlements go after the old ones in reading order, because a save knows its settlements by their place in this list.
 MAP_ROWS = [
-    "Ef Ev Eg Hv H. Ps D. Dc",
-    "Ev Ef E. H. Hv P. Ps D.",
-    "Eg EC H. HC H. H. P. P.",
-    "Ef E. Hv H. H. Bv B. B.",
-    "O. E. H. H. HC B. Bv B.",
-    "Op Hv H. H. B. Bv B. Bv",
-    "O. O. H. B. B. B. B. B.",
-    "O. Op O. B. Br B. B. B.",
+    "Ef Ev Eg Hv H. Ps D. Dc D. D.",
+    "Ev Ef E. H. Hv P. Ps D. D. D.",
+    "Eg EC H. HC H. H. P. P. P. P.",
+    "Ef E. Hv H. H. Bv B. B. P. P.",
+    "O. E. H. H. HC B. Bv B. Pk P.",
+    "Op Hv H. H. B. Bv B. Bv P. P.",
+    "O. O. H. B. B. B. B. B. B. Bv",
+    "O. Op O. B. Br B. B. B. M. M.",
+    "O. O. O. M. M. Mv M. Mr M. M.",
+    "O. O. O. O. M. M. M. M. O. O.",
 ]
 REALMS = {spec["letter"]: name for name, spec in REALM_DATA.items()}
-FEATURES = {"g": "treehouse_grove", "s": "crystal_spire", "c": "demon_castle", "p": "mermaid_palace", "r": "ruins"}
+FEATURES = {"g": "treehouse_grove", "s": "crystal_spire", "c": "demon_castle", "p": "mermaid_palace", "r": "ruins", "k": "dragon_peak"}
 SETTLEMENT_STRUCTURE = {"city": "city", "elfcity": "elf_city", "elf": "elf_village", "beast": "beast_village", "human": "village"}
 
 
@@ -43,6 +46,8 @@ def build_map() -> tuple[list[list[Land]], list[Settlement], tuple[int, int]]:
                 land.settlement = s.id
             if feat == "c":
                 demon_land = (lx, lz)
+            if feat == "k":
+                land.name = "The Wyrmcrown"
             out.append(land)
         lands.append(out)
     shore = {(-1, 0): "west", (1, 0): "east", (0, -1): "north", (0, 1): "south"}

@@ -106,6 +106,17 @@ export function demonCastle(x, y, z, set) {
   hint('demon_knight', x + 3, y, z + 3); hint('demon_knight', x - 3, y, z + 3);
 }
 export function magmaSpike(x, y, z, set, r) { const n = 2 + Math.floor(r() * 5); for (let i = 0; i < n; i++) set(x, y + i, z, i === n - 1 ? Magma : Obsidian); }
+// What the Wyrm sleeps on: older kills, older treasure, and the ribs of the last thing that came for it.
+export function hoard(x, y, z, set, r) {
+  const HEAP = 9.5, TREASURE = [BoneBlock, BoneBlock, Barrel, Sandstone, ManaCrystal];
+  for (let dx = -9; dx <= 9; dx++) for (let dz = -9; dz <= 9; dz++) {
+    const tall = Math.floor((HEAP - Math.hypot(dx, dz)) / 3 + r() * 1.4);
+    for (let k = 0; k < tall; k++) set(x + dx, y + k, z + dz, pick(TREASURE, r));
+  }
+  for (let i = -6; i <= 6; i += 3) for (const side of [-1, 1]) for (let k = 0; k <= 7; k++) set(x + i, y + 2 + k, z + side * Math.round(9 * Math.cos(k / 7 * Math.PI / 2)), BoneBlock);
+  for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2, px = x + Math.round(Math.cos(a) * 13), pz = z + Math.round(Math.sin(a) * 13), tall = 2 + Math.floor(r() * 3); for (let k = 0; k < tall; k++) set(px, y + k, pz, ManaCrystal); }
+  hint('dragon', x, y + 3, z);
+}
 
 // ===================== the sights of each realm =====================
 function watchtower(x, z, set, r) {
@@ -246,5 +257,6 @@ const SIGHTS = {
   [B.PEAKS]: [frozenTarn, crystalHeart, mineEntrance],
   [B.DEMON]: [boneSpire, obsidianArch, fireAltar],
   [B.OCEAN]: [seaStack, wreck, atoll],
+  [B.MIRE]: [mushroomRing, thornbrake, stoneCircle, skeleton],
 };
 export function raiseSight(b, x, z, set, r) { const list = SIGHTS[b]; if (list) pick(list, r)(x, z, set, r); }

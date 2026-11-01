@@ -2,6 +2,7 @@
 // fast (e.pace) and who it means to hit (e.aim), and sim/entities.js does the walking and the fighting. Which brain is `brain` in creatures.json.
 import { creative } from '../core/state.js';
 import { emit } from '../core/events.js';
+import { rule } from '../core/rules.js';
 import { Vec3 } from '../core/vec3.js';
 import { MAGMA, WATER, solid } from './blocks.js';
 import { getBlock } from './chunks.js';
@@ -80,9 +81,9 @@ function senses(e, c, dt) {
   if (!c.free) { e.alertT = 0; return false; }
   if (e.senseT <= 0) {
     e.senseT = SENSE_GAP + Math.random() * 0.15;
-    const sight = (e.def.sight ?? SIGHT) * (isNight() && !e.def.fly ? 0.8 : 1), level = Math.abs(c.dy) < FAR_FLOOR;
+    const keen = rule('notice'), sight = (e.def.sight ?? SIGHT) * (isNight() && !e.def.fly ? 0.8 : 1) * keen, level = Math.abs(c.dy) < FAR_FLOOR;
     e.sees = level && c.dist < sight && lineOfSight({ x: e.pos.x, y: e.pos.y + e.def.h * 0.8, z: e.pos.z }, eye());
-    if (e.sees || (level && c.dist < (player.sprinting ? HEARD_RUNNING : HEARD))) e.alertT = MEMORY;
+    if (e.sees || (level && c.dist < (player.sprinting ? HEARD_RUNNING : HEARD) * keen)) e.alertT = MEMORY;
   }
   return e.alertT > 0;
 }

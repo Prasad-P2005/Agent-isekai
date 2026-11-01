@@ -8,6 +8,7 @@
 //   which looks exactly like the player pausing. So a lock always waits for Esc to come up.
 import { G, controlsActive } from '../core/state.js';
 import { toast } from '../core/events.js';
+import { settings } from '../core/settings.js';
 import { player } from '../sim/player.js';
 import { renderer } from '../view/scene.js';
 
@@ -86,13 +87,16 @@ export function release() {
   releasing = true;
   document.exitPointerLock();
 }
-export function pause() {
+// The same card greets someone coming back to a saved world, so it says so, and what they were doing.
+export function pause(heading = 'Paused') {
   clearTimeout(retryTimer);
   wanting = requesting = false;
   G.focused = false;
   stopInput();
-  overlay.classList.add('in-world', 'paused');
+  overlay.classList.add('paused');
+  $('pausetitle').textContent = heading;
   $('pausename').textContent = G.world.name;
+  $('pausegoal').textContent = G.objective;
   overlay.style.display = 'flex';
   $('resume').focus({ preventScroll: true });
 }
@@ -140,7 +144,7 @@ document.addEventListener('mousemove', e => {
   if (skipMoves > 0) { skipMoves--; return; }
   if (Math.abs(e.movementX) > MAX_LOOK_STEP || Math.abs(e.movementY) > MAX_LOOK_STEP) return;
   player.yaw -= e.movementX * LOOK * mouse.speed;
-  player.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, player.pitch - e.movementY * LOOK * mouse.speed));
+  player.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, player.pitch - e.movementY * LOOK * mouse.speed * (settings.invertMouse ? -1 : 1)));
 });
 
 overlay.addEventListener('click', e => {

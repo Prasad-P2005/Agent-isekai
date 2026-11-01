@@ -1,5 +1,6 @@
 // The player: movement physics, health/mana and block raycasting.
-import { held } from '../core/bindings.js';
+import { held, sprintWanted } from '../core/bindings.js';
+import { rule } from '../core/rules.js';
 import { G, creative } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
@@ -92,14 +93,15 @@ export function updatePlayer(dt) {
   if (inWater && !player.wet && player.vel.y < -3) emit('player:splashed', { x: p.x, y: p.y, z: p.z, speed: -player.vel.y });
   player.wet = inWater;
   player.climbing = !player.fly && (BL[getBlock(Math.floor(p.x), Math.floor(p.y + 0.2), Math.floor(p.z))]?.climbable || BL[getBlock(Math.floor(p.x), Math.floor(p.y + 1.2), Math.floor(p.z))]?.climbable) === true;
-  const sprint = held('sprint'), jump = held('jump');
+  const sprint = sprintWanted(), jump = held('jump');
   player.sprinting = !!sprint && !player.fly && Math.hypot(player.vel.x, player.vel.z) > 5;
   let speed = player.fly ? (sprint ? 30 : 14) : (sprint ? 6.5 : 4.3);
+  speed *= rule('speed');
   if (has('swift')) speed *= 1.5;
   if (player.buffs.swift > 0) speed *= 1.3;
   if (player.drawing != null) speed *= 0.5;
-  if (inWater && !player.fly) speed *= player.buffs.water_breath > 0 ? 1 : 0.6;
-  if (player.fly && !creative()) { player.mana -= (sprint ? FLIGHT_SPRINT_COST : FLIGHT_COST) * dt; if (player.mana <= 0) { player.mana = 0; player.fly = false; toast('Your mana ran dry; flight fades.'); } }
+  if (inWater && !player.fly) speed *= (player.buffs.water_breath > 0 ? 1 : 0.6) * rule('swim');
+  if (player.fly && !creative()) { player.mana -= (sprint ? FLIGHT_SPRINT_COST : FLIGHT_COST) * rule('flight_cost') * dt; if (player.mana <= 0) { player.mana = 0; player.fly = false; toast('Your mana ran dry; flight fades.'); } }
   const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
   let mx = 0, mz = 0;
   if (held('forward')) { mx += fx; mz += fz; }
@@ -112,10 +114,10 @@ export function updatePlayer(dt) {
   const grip = 1 - Math.exp(-rate * dt);
   player.vel.x += (mx / l * speed - player.vel.x) * grip;
   player.vel.z += (mz / l * speed - player.vel.z) * grip;
-  if (player.fly) player.vel.y += (((jump ? 1 : 0) - (sprint ? 1 : 0)) * 12 - player.vel.y) * grip;
+  if (player.fly) player.vel.y += (((jump ? 1 : 0) - (held('sprint') ? 1 : 0)) * 12 - player.vel.y) * grip;
   else if (player.climbing) player.vel.y = jump || held('forward') ? CLIMB : held('back') ? -CLIMB : 0; // a rope, a ladder or a vine holds you, even with your hands doing nothing
   else if (inWater) player.vel.y = jump ? 4 : Math.max(player.vel.y - 12 * dt, -2.5);
-  else { player.vel.y = Math.max(player.vel.y - 28 * dt, -50); if (jump && player.onGround) player.vel.y = 9; }
+  else { player.vel.y = Math.max(player.vel.y - 28 * dt, -50); if (jump && player.onGround) player.vel.y = 9 * rule('jump'); }
   moveAxis('x', (player.vel.x + player.kb.x) * dt);
   moveAxis('z', (player.vel.z + player.kb.z) * dt);
   player.onGround = false;
@@ -124,7 +126,7 @@ export function updatePlayer(dt) {
   if (player.onGround) {
     player.dj = false;
     if (vy < -5) emit('player:landed', -vy);
-    if (vy < -17 && !inWater) damagePlayer(Math.round((-vy - 17) * 0.7), 'a fall');
+    if (vy < -17 && !inWater) damagePlayer(Math.round((-vy - 17) * 0.7 * rule('fall')), 'a fall');
   }
   player.stepRate -= (STEP_SPRING * STEP_SPRING * player.stepLag + 2 * STEP_SPRING * player.stepRate) * dt;
   player.stepLag += player.stepRate * dt;
@@ -168,6 +170,8 @@ export function inView(x, y, z) {
 // ---------- health ----------
 export function damagePlayer(n, src, killer = null) {
   if (n <= 0 || player.iframe > 0 || !player.ready || G.phase !== 'world' || creative()) return;
+  if (Math.random() < rule('dodge') - 1) return;
+  n *= rule('hurt');
   const shield = player.guarding ? offDef() : null;
   if (shield?.block) { wearShield(n); n *= 1 - shield.block; emit('player:blocked'); }
   const raw = n;
@@ -203,8 +207,8 @@ export function updateStats(dt) {
   for (const b of Object.keys(player.buffs)) if (player.buffs[b] > 0) player.buffs[b] -= dt;
   if (player.wardT > 0) { player.wardT -= dt; if (player.wardT <= 0) emit('ward:broken'); }
   // Holding flight up takes all you've got. The Spires give mana off freely, which is why the Law Stones stand at their feet.
-  if (!player.fly) player.mana = Math.min(maxMana(), player.mana + maxMana() * MANA_REGEN * manaRegenBonus() * (landOf(player.pos.x, player.pos.z).structure === 'crystal_spire' ? SPIRE_FLOW : 1) * dt);
-  if (player.lastHurt > 5) heal(0.25 * dt);
+  if (!player.fly) player.mana = Math.min(maxMana(), player.mana + maxMana() * MANA_REGEN * manaRegenBonus() * rule('mana_flow') * (landOf(player.pos.x, player.pos.z).structure === 'crystal_spire' ? SPIRE_FLOW : 1) * dt);
+  if (player.lastHurt > 5) heal(0.25 * rule('healing') * dt);
   if (player.hp > maxHp()) player.hp = maxHp();
   if (getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y - 0.1), Math.floor(player.pos.z)) === MAGMA && !(player.buffs.fireproof > 0)) damagePlayer(2, 'magma');
 }

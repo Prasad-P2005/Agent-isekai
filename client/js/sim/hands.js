@@ -2,8 +2,10 @@
 import { ITEMS } from '../core/content.js';
 import { G, creative } from '../core/state.js';
 import { emit, toast } from '../core/events.js';
+import { rule } from '../core/rules.js';
 import { ID } from './blocks.js';
 import { getBlock, setBlock } from './chunks.js';
+import { throwAway } from './drops.js';
 import { addItem, bag, heldDef, heldStack, offDef, spendHeld, takeItem, wearHeld } from './inventory.js';
 import { aim, placeBlock } from './mining.js';
 import { eye, heal, lookDir, maxMana, player } from './player.js';
@@ -14,24 +16,25 @@ const { Dirt, Grass, FaeGrass, SavannaGrass, Farmland, DirtPath } = ID;
 const SOIL = new Set([Dirt, Grass, FaeGrass, SavannaGrass]);
 const FULL_DRAW = 0.8, ARROW_SPEED = 44, ARROW_DROP = 7, ARROWS = ['mithril_arrow', 'iron_arrow', 'fire_arrow', 'arrow'];
 
+// What is left of a thing once used, such as a bottle. With the bag full it goes on the ground.
+function giveBack(id) { const over = addItem(id); if (over) throwAway(id, over); }
+const refresh = use => { if (use.heal) heal(use.heal * rule('tonic')); if (use.mana) player.mana = Math.min(maxMana(), player.mana + use.mana * rule('tonic')); };
 function useItem(stack, it) {
   const use = it.use;
-  if (use.heal) heal(use.heal);
-  if (use.mana) player.mana = Math.min(maxMana(), player.mana + use.mana);
+  refresh(use);
   if (use.buff) { player.buffs[use.buff] = use.time; toast(`✨ ${it.name}: ${use.time} seconds.`, 3); }
   emit('player:used', it.motion);
   const left = it.returns;
   spendHeld();
-  if (left && !creative() && addItem(left)) toast('Your bag is full.', 2);
+  if (left && !creative()) giveBack(left);
 }
-// Drinks the first of these found anywhere in the bag: the G and V keys, for when there is no time to pick a slot.
+// Drinks the first of these found anywhere in the bag: the H and V keys, for when there is no time to pick a slot.
 export function drinkBest(ids) {
   const id = ids.find(i => bag().some(s => s?.id === i));
   if (!id) return toast(ids[0] === 'potion' ? 'No health potions.' : 'No mana potions.', 2);
   const it = ITEMS[id];
-  if (it.use.heal) heal(it.use.heal);
-  if (it.use.mana) player.mana = Math.min(maxMana(), player.mana + it.use.mana);
-  if (!creative()) { takeItem(id); if (it.returns) addItem(it.returns); }
+  refresh(it.use);
+  if (!creative()) { takeItem(id); if (it.returns) giveBack(it.returns); }
   emit('player:used', it.motion);
 }
 function workGround(it, t) {
@@ -62,7 +65,7 @@ export function releaseUse() {
   const arrow = ARROWS.find(a => bag().some(s => s?.id === a)) ?? 'arrow';
   if (!creative()) takeItem(arrow);
   const d = lookDir(), from = eye().addScaledVector(d, 0.8), a = ITEMS[arrow];
-  spawnProjectile(from, d.multiplyScalar(ARROW_SPEED * pull + 8), { dmg: Math.round(it.dmg * pull + a.arrow), arrow: true, fall: ARROW_DROP, life: 4 });
+  spawnProjectile(from, d.multiplyScalar(ARROW_SPEED * pull + 8), { dmg: Math.round((it.dmg * pull + a.arrow) * rule('arrow')), arrow: true, fall: ARROW_DROP, life: 4 });
   wearHeld(1);
   emit('player:struck');
 }

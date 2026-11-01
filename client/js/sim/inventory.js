@@ -2,6 +2,7 @@
 // a round trip. It reports the whole thing to the server, and what the server gives or takes arrives as parcels (see systems/bag.py).
 import { ITEMS } from '../core/content.js';
 import { G, creative } from '../core/state.js';
+import { rule } from '../core/rules.js';
 import { emit, toast } from '../core/events.js';
 
 export const HOTBAR = 9, BAG_SIZE = 36;
@@ -37,7 +38,7 @@ export function addItem(id, n = 1, dur) {
   let left = n;
   if (!it.dur) for (const s of bag()) { if (left && s?.id === id && s.n < it.stack) { const room = Math.min(left, it.stack - s.n); s.n += room; left -= room; } }
   for (let i = 0; i < BAG_SIZE && left; i++) if (!bag()[i]) { const part = Math.min(left, it.stack); bag()[i] = makeStack(id, part, dur); left -= part; }
-  if (left < n) changed();
+  if (left < n) { changed(); if (!creative()) emit('item:gained', { id, n: n - left }); }
   return left;
 }
 export function takeItem(id, n = 1) {
@@ -81,11 +82,11 @@ function wear(holder, key, cost) {
   toast(`Your ${ITEMS[s.id].name} broke.`, 3);
   emit('item:broke', s.id);
 }
-export function wearHeld(cost = 1) { if (!creative() && cost > 0) { wear(bag(), hotbar.slot, cost); changed(); } }
+export function wearHeld(cost = 1) { if (!creative() && cost > 0) { wear(bag(), hotbar.slot, Math.floor(cost * rule('tool_wear') + Math.random())); changed(); } }
 
 // ---------- armour ----------
 export const armourPoints = () => WORN_SLOTS.reduce((sum, slot) => sum + (worn()[slot] ? ITEMS[worn()[slot].id].def ?? 0 : 0), 0);
-export const armourCut = () => Math.min(MOST_ARMOUR, armourPoints() / ARMOUR_POINTS);
+export const armourCut = () => Math.min(MOST_ARMOUR, armourPoints() / ARMOUR_POINTS * rule('armour'));
 export function wearArmour(health) {
   if (creative()) return;
   const cost = Math.max(1, Math.floor(health / WEAR_PER_HEALTH));
@@ -102,7 +103,7 @@ export function blockSummary() {
   return out;
 }
 let taken = 0; // the last parcel applied
-export const bagReport = stations => ({ bag: bag(), worn: worn(), seen: seen(), spells: G.profile.spells ?? ['', ''], taken, ...(stations ? { stations } : {}) });
+export const bagReport = (stations, ground) => ({ bag: bag(), worn: worn(), seen: seen(), spells: G.profile.spells ?? ['', ''], taken, ...(stations ? { stations } : {}), ...(ground ? { ground } : {}) });
 function takeAll(id, n) { takeItem(id, Math.min(n, countItem(id))); }
 // Each parcel once, in order. One that will not fit waits, with everything behind it, until there is room.
 export function applyParcels(parcels = []) {

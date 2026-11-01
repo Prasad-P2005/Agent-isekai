@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from ..content import ABILITIES, ITEMS, WORLD
 from ..core.state import World
-from ..systems import shop
+from ..systems import faith, shop
 from ..systems.people.jobs import POPULATION
 from ..systems.people.roster import rebalance_roster, rehome
 from ..systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
 from ..systems.story import BEATS, advance
-from ..world.genesis import first_spawn, found_settlement
+from ..world.genesis import first_spawn, found_settlement, place_echoes
 from ..world.layouts import make_layout
 from ..world.map import LAND, build_map
 
@@ -138,6 +138,7 @@ SLOT_SIZE = 36
 OLD_WEAPONS = ((7, "mithril_sword"), (3, "iron_sword"))
 OLD_TOOLS = ((5, "mithril_pickaxe"), (2.5, "iron_pickaxe"))
 OLD_ARMOUR = ((0.45, "knight"), (0.2, "leather"))
+EARNED_BEFORE = 600  # the most Faith an old save is credited with
 DEEPER = 64  # blocks added under the world: chunk layers are 16 x 16, and the height of a block is its index's top part
 
 
@@ -190,7 +191,15 @@ def _to_10(world: World) -> None:
         p.pos.y += DEEPER
 
 
-STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8, 9: _to_9, 10: _to_10}
+def _to_11(world: World) -> None:
+    """Faith arrived, along with the stones. What the hero has already done counts for something, and what they already hold has already been found."""
+    p = world.player
+    place_echoes(world)
+    p.found = list(p.seen)
+    faith.earn(world, min(EARNED_BEFORE, p.kills + 10 * p.guild_done + 5 * len(world.visited)))
+
+
+STEPS = {4: _to_4, 5: _to_5, 6: _to_6, 7: _to_7, 8: _to_8, 9: _to_9, 10: _to_10, 11: _to_11}
 CURRENT_VERSION = max(STEPS)
 
 

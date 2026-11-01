@@ -19,7 +19,8 @@ export const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xa9c8d0, 40, RD * 16 - 8);
 export const camera = new THREE.PerspectiveCamera(settings.fov, innerWidth / innerHeight, 0.1, 900);
 camera.rotation.order = 'YXZ';
-export const stillCamera = matchMedia('(prefers-reduced-motion: reduce)');
+const stillSystem = matchMedia('(prefers-reduced-motion: reduce)');
+export const stillCamera = { get matches() { return !!settings.reduceMotion || stillSystem.matches; } };
 
 // What is seen through rather than stood on is on its own layer, because with shaders it is drawn in a pass of its own, after the solid world.
 export const LATE_LAYER = 1, BODY_LAYER = 2;

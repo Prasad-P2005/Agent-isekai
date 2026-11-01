@@ -1,20 +1,17 @@
 """Trade: what merchants and blacksmiths sell, what loot is worth, and paid services (doctors, inns, priests, bounties)."""
 from __future__ import annotations
 
-import re
-
-from ..content import ABILITIES, CREATURES, ITEMS, SERVICES as SERVICE_DATA
+from ..content import ABILITIES, ITEMS, SERVICES as SERVICE_DATA
 from ..core.state import World
 from . import bag, magic
 from .chronicle import standing
+from .edicts import rule
 
 CATALOG = {
     **{k: {**v, "name": f"{v['name']} ({v['note']})"} for k, v in ITEMS.items() if "sold_by" in v},
     **{f"scroll_{a}": {"name": f"Skill Scroll: {a.replace('_', ' ')} ({spec['about']})", "base": spec["scroll"], "ability": a, "sold_by": ["trade"]}
        for a, spec in ABILITIES.items()},
 }
-slug = lambda name: re.sub(r"\W+", "_", name.lower()).strip("_")
-LOOT = {kind: slug(c["loot"]["name"]) for kind, c in CREATURES.items() if "loot" in c}
 PROSPERITY = {"poor": 0.75, "normal": 1.0, "rich": 1.4}
 WAR_CAP = 0.3  # however bad the war gets, prices never rise more than this
 STANDING_PRICE = {"famous": 0.95, "legend": 0.9, "infamous": 1.15, "feared": 1.3}  # traders charge what they think of you
@@ -23,7 +20,7 @@ STANDING_PRICE = {"famous": 0.95, "legend": 0.9, "infamous": 1.15, "feared": 1.3
 def price_multiplier(world: World) -> float:
     threat = 0 if world.demon_lord_dead else min(WAR_CAP, world.war_pressure)  # the war drives prices up, until things calm down
     festival = 0.8 if world.clock < world.festival_until else 1.0
-    return PROSPERITY.get(world.prosperity, 1.0) * (1 + threat) * festival * STANDING_PRICE.get(standing(world), 1.0)
+    return PROSPERITY.get(world.prosperity, 1.0) * (1 + threat) * festival * STANDING_PRICE.get(standing(world), 1.0) * rule(world, "prices")
 
 
 def price(world: World, item_id: str) -> int:
@@ -47,7 +44,7 @@ def catalog_for(world: World, service: str) -> dict:
 
 
 def sell_price(world: World, item: str) -> int:
-    return max(1, round(ITEMS[item].get("value", 1) * PROSPERITY.get(world.prosperity, 1.0)))
+    return max(1, round(ITEMS[item].get("value", 1) * PROSPERITY.get(world.prosperity, 1.0) * rule(world, "sale")))
 
 
 def buy(world: World, item_id: str) -> str:

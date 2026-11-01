@@ -10,7 +10,7 @@ import random
 
 from ..content import LAWS
 from ..core.state import Law, World
-from . import chronicle
+from . import chronicle, faith
 
 CRIME_TEXT = LAWS["crimes"]
 CRIMES = list(CRIME_TEXT)
@@ -23,8 +23,9 @@ RENOWN_LOST = 3
 
 
 def law_text(l: Law) -> str:
-    return (f"{l.name}: {l.crime.replace('_', ' ')} ({l.scope}) -> {l.punishment.replace('_', ' ')}"
-            f"{', only if witnessed' if l.needs_witness else ', the gods see all'}")
+    """Name, then what it covers, then what follows. The book splits a law at the arrow."""
+    seen = "and someone saw" if l.needs_witness else "and the gods always see"
+    return f"{l.name}: You {CRIME_TEXT[l.crime]} {LAWS['scope_words'][l.scope]}, {seen} -> {LAWS['punishment_words'][l.punishment]}"
 
 
 def in_scope(law: Law, in_city: bool, realm: str) -> bool:
@@ -61,6 +62,7 @@ def punish(world: World, law: Law, by: str) -> dict:
     p, sev = world.player, law.severity
     p.notoriety += 1
     chronicle.fame(world, -RENOWN_LOST)
+    faith.lose(world, faith.SIN)
     fx: dict = {"wanted": 50 * sev, "spawn": []}
     if law.punishment == "golem_hunters":
         n = min(4, sev)

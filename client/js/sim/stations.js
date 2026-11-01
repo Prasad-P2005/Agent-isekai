@@ -1,9 +1,10 @@
 // Furnaces, forges and chests: blocks that hold things. They are kept by position and saved with the bag, and a furnace goes on burning out of sight.
 import { ITEMS, RECIPES } from '../core/content.js';
-import { emit, toast } from '../core/events.js';
+import { emit } from '../core/events.js';
+import { rule } from '../core/rules.js';
 import { BL, ID } from './blocks.js';
 import { getBlock, setBlock } from './chunks.js';
-import { addItem, hasRoom } from './inventory.js';
+import { popOut } from './drops.js';
 import { hash3 } from './noise.js';
 
 const { Furnace, LitFurnace, Forge, LitForge } = ID;
@@ -31,15 +32,12 @@ export function stationAt(x, y, z, kind, placed = false) {
   if (!stations.has(k)) stations.set(k, kind === 'chest' && !placed ? stock(blank(kind), x, y, z) : blank(kind));
   return stations.get(k);
 }
-// Breaking one hands over what it held, or does not break at all, because a chest of treasure must not vanish for want of a free slot.
-export function emptyStation(x, y, z) {
-  const k = `${x},${y},${z}`, s = stations.get(k);
-  if (!s) return true;
-  const held = s.slots.filter(Boolean);
-  if (!held.every(i => hasRoom(i.id, i.n))) { toast('Your bag has no room for what is in there.', 3); return false; }
-  for (const i of held) addItem(i.id, i.n, i.dur);
+// Breaking one spills what it held onto the ground, and a chest nobody ever opened still holds what it was left with.
+export function emptyStation(x, y, z, kind) {
+  const k = `${x},${y},${z}`, s = kind === 'chest' ? stationAt(x, y, z, kind) : stations.get(k);
+  if (!s) return;
+  for (const i of s.slots) if (i) popOut(i.id, i.n, x + 0.5, y + 0.5, z + 0.5, i.dur);
   stations.delete(k);
-  return true;
 }
 function recipeFor(s) {
   const { inputs } = PARTS[s.kind], have = inputs.map(i => s.slots[i]?.id).filter(Boolean).sort();
@@ -56,7 +54,7 @@ function tick(k, s, dt) {
     emit('blocks:changed');
   }
   if (ready && s.burn > 0) {
-    s.cook += dt;
+    s.cook += dt * rule('smelt');
     if (s.cook >= r.time) {
       s.cook = 0;
       for (const i of parts.inputs) { const stack = s.slots[i]; if (stack && --stack.n <= 0) s.slots[i] = null; }

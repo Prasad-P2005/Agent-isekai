@@ -30,7 +30,7 @@ def create_app(game: Game | None = None) -> FastAPI:
         app.state.game.start()
         yield
 
-    app = FastAPI(title="Isekai Realms", lifespan=lifespan)
+    app = FastAPI(title="Crown Reborn", lifespan=lifespan)
     app.include_router(router)
     app.mount("/content", FreshFiles(directory=config.CONTENT_DIR), name="content")
     app.mount("/", FreshFiles(directory=config.CLIENT_DIR, html=True), name="client")

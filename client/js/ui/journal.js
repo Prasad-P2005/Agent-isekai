@@ -1,9 +1,11 @@
 // The journal in the book: the story so far, the laws, your powers, the creatures you have met and the controls.
 import { keyOf, spellKey } from '../core/bindings.js';
 import { G } from '../core/state.js';
-import { ABILITIES, BESTIARY, CREATURES } from '../core/content.js';
+import { ABILITIES, BESTIARY, BIOMES, CREATURES, REALMS } from '../core/content.js';
 import { hasSeen } from '../sim/bestiary.js';
-import { maxMana } from '../sim/player.js';
+import { maxMana, player } from '../sim/player.js';
+import { api } from '../net/api.js';
+import { landOf } from '../sim/terrain.js';
 import { esc, icon, power, rich } from './art.js';
 import { storyFeed } from './hud.js';
 import { definePage } from './panels.js';
@@ -49,11 +51,28 @@ function lawHTML(text) {
   const at = text.indexOf(': '), name = at > 0 ? text.slice(0, at) : '', [deed, outcome] = text.slice(at > 0 ? at + 2 : 0).split(' -> ');
   return `<article class="stitch law">${name ? `<h4>${esc(name)}</h4>` : ''}<p>${esc(deed)}${outcome ? `${icon('arrow')}${esc(outcome)}` : ''}</p></article>`;
 }
+// Two lines each, because that is what a Law is.
+const ROMAN = ['', '', ' II', ' III'];
+const twoLines = (name, gift, second, ink = '') => `<article class="stitch law"><h4>${esc(name)}</h4><p>${esc(gift)}</p>${second ? `<p class="second">${esc(second)}</p>` : ''}${ink ? `<p class="lawink">${esc(ink)}</p>` : ''}</article>`;
+function writtenHTML() {
+  const book = storyFeed()?.law_book ?? [];
+  return `<h3>${icon('scroll')}Written for you</h3>${book.map(l => twoLines(l.name + ROMAN[l.rank], l.gift, l.second, l.ink)).join('') || `<p class="note">Fill the Faith bar, then pray (${keyOf('pray')}), and she will write you one.</p>`}`;
+}
+function oldLawHTML() {
+  const law = REALMS[BIOMES[landOf(player.pos.x, player.pos.z).b].realm]?.law;
+  return law && !G.rules?.silent ? `<h3>${icon('scales')}The Old Law of this land</h3>${twoLines(law.name, law.gift, law.second)}` : '';
+}
+// Every Law ever offered, and how much of the book is still blank.
+function codexHTML({ codex, watching }) {
+  const rows = codex.seen.map(l => `<p class="codex"><b>${esc(l.name)}</b>${l.tier ? ` <small>${esc(l.tier)}</small>` : ''}<br>${esc(l.gift)} <span class="second">${esc(l.second)}</span></p>`).join('');
+  return `<h3>${icon('scroll')}Laws you have been shown: ${codex.seen.length} of ${codex.all}</h3>${watching ? `<p class="note">${esc(G.world.god_name)} has been watching you ${esc(watching)}, and what comes next will show it.</p>` : ''}${rows}`;
+}
 definePage('laws', {
   tab: 'journal',
   render() {
-    const laws = (storyFeed()?.law_texts ?? []).map(lawHTML), half = Math.floor(laws.length / 2);
-    fill('Laws of the world', laws.slice(0, half).join('') || '<p class="note">This world has no laws yet.</p>', laws.slice(half).join(''));
+    const laws = (storyFeed()?.law_texts ?? []).map(lawHTML);
+    fill('Laws of the world', writtenHTML() + oldLawHTML(), `<h3>${icon('scales')}What the world forbids</h3>${laws.join('') || '<p class="note">Nothing is forbidden any more.</p>'}<div class="lawcodex"></div>`);
+    api.rules().then(r => { const at = $('pageright').querySelector('.lawcodex'); if (at) at.innerHTML = codexHTML(r); }).catch(() => {});
   },
 });
 
@@ -96,7 +115,7 @@ $('pageleft').addEventListener('click', e => {
 
 // ---------- the controls, here and on the pause screen ----------
 const moving = () => [[['forward', 'left', 'back', 'right'].map(keyOf).join(' '), 'Move'], [keyOf('jump'), 'Jump or swim'], [keyOf('sprint'), 'Sprint'], [keyOf('fly'), 'Fly, once learned'], ['Left click', 'Attack, or hold to mine'], ['Right click', 'Use what is in your hand: place a block, eat, drink, draw a bow, raise a shield, open a station'], [`${keyOf('forward')} or ${keyOf('back')} on a rope`, 'Climb'], ['1 to 9', 'Pick a hotbar slot']];
-const doing = () => [[keyOf('talk'), 'Talk or trade'], [keyOf('pray'), 'Pray to the god'], [`${keyOf('spell1')} ${keyOf('spell2')}`, 'Cast the two spells you have chosen in the bag'], [keyOf('health'), 'Drink a health potion'], [keyOf('mana'), 'Drink a mana potion']];
+const doing = () => [[keyOf('talk'), 'Talk or trade'], [keyOf('pray'), 'Pray to the god'], [`${keyOf('spell1')} ${keyOf('spell2')}`, 'Cast the two spells you have chosen in the bag'], [keyOf('drop'), 'Throw one of what you hold, or the stack with Ctrl. It works over a slot in the bag too'], [keyOf('health'), 'Drink a health potion'], [keyOf('mana'), 'Drink a mana potion']];
 const menus = () => [[keyOf('bag'), 'Bag'], [keyOf('journal'), 'Journal'], [keyOf('laws'), 'Laws'], [keyOf('map'), 'Map'], [keyOf('settings'), 'Settings'], ['Esc', 'Close a menu, or pause'], [keyOf('debug'), 'Position and frame rate']];
 const keyList = rows => `<dl class="keylist">${rows.map(([k, what]) => `<dt><kbd>${k}</kbd></dt><dd>${what}</dd>`).join('')}</dl>`;
 export const movesHTML = () => `<h3>Moving</h3>${keyList(moving())}`;

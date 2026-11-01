@@ -10,6 +10,7 @@ import { updateCaveAir } from './caveair.js';
 import { syncArrows } from './arrows.js';
 import { syncBodies } from './bodies.js';
 import { cullChunks } from './chunkmesh.js';
+import { syncDrops } from './drops.js';
 import { syncFireballs } from './fireball.js';
 import { updateFish } from './fish.js';
 import { syncCracks } from './fx.js';
@@ -22,13 +23,16 @@ import './spells.js';
 
 export { sunHeight } from './sky.js';
 
+const KILL_KICK = 1;
 const TELEPORT = 4; // further than a step can carry the eye
 const BOB = 0.032, SWAY = 0.018, STRIDES_PER_BLOCK = 1.45, GAIT_EASE = 10, FULL_GAIT = 6.5, DIP_SPRING = 18, DIP_KICK = 0.14, MAX_IMPACT = 22;
 const SPRINT_FOV = 7, FLIGHT_FOV = 12, SWIM_FOV = -5, FOV_EASE = 7, LEAN = 0.0035, LEAN_EASE = 8, HURT_ROLL = 0.07, HURT_FADE = 9, SWIM_ROLL = 0.018, WATERLINE = 0.875;
 let stride = 0, gait = 0, dip = 0, dipRate = 0, fov = settings.fov, lean = 0, flinch = 0, clock = 0;
-on('player:landed', speed => { dipRate -= Math.min(speed, MAX_IMPACT) * DIP_KICK; });
-on('camera:kick', k => { dipRate -= k; });
-on('player:hurt', () => { flinch = Math.random() < 0.5 ? HURT_ROLL : -HURT_ROLL; });
+const jolt = () => settings.shake / 100;
+on('player:landed', speed => { dipRate -= Math.min(speed, MAX_IMPACT) * DIP_KICK * jolt(); });
+on('camera:kick', k => { dipRate -= k * jolt(); });
+on('entity:hit', ({ killed }) => { if (killed) dipRate -= KILL_KICK * jolt(); }); // only kills: a shake on every blow is one nobody feels
+on('player:hurt', () => { flinch = (Math.random() < 0.5 ? HURT_ROLL : -HURT_ROLL) * jolt(); });
 on('settings:changed', moved => { if (moved.includes('fov')) { fov = camera.fov = settings.fov; camera.updateProjectionMatrix(); } });
 
 // Drawn between the last two steps of the simulation, which is what keeps the view gliding at any refresh rate.
@@ -53,7 +57,7 @@ function walkCamera(dt, under) {
     camera.position.y += Math.cos(stride * 2) * BOB * gait + dip;
   }
   // The view opens up with speed, narrows underwater, leans into a sidestep and rolls with a blow.
-  const goal = settings.fov + (player.sprinting ? SPRINT_FOV : 0) + (player.fly && speed > 16 ? FLIGHT_FOV : 0) + (under ? SWIM_FOV : 0);
+  const goal = settings.fov + ((player.sprinting ? SPRINT_FOV : 0) + (player.fly && speed > 16 ? FLIGHT_FOV : 0) + (under ? SWIM_FOV : 0)) * settings.fovEffects / 100;
   fov += (goal - fov) * (1 - Math.exp(-FOV_EASE * dt));
   if (Math.abs(fov - camera.fov) > 0.02) { camera.fov = fov; camera.updateProjectionMatrix(); }
   const sideways = player.vel.x * Math.cos(player.yaw) - player.vel.z * Math.sin(player.yaw);
@@ -80,6 +84,7 @@ export function renderWorld(dt, blend) {
   updateAmbience(dt, under);
   updateFish(dt);
   syncBodies(dt, blend);
+  syncDrops(dt, blend);
   syncFireballs(dt);
   syncArrows();
   syncHand(dt, stride, gait);
@@ -89,7 +94,14 @@ export function renderWorld(dt, blend) {
   if (t) highlight.position.set(t.x + 0.5, t.y + 0.5, t.z + 0.5);
   placeChunks();
   drawScene();
-  drawHand();
+  if (settings.showHand) drawHand();
+}
+// The land from wherever view/vista.js has put the camera, for the title screen: no hero, no hand and nobody in it.
+export function drawVista(dt) {
+  updateSky(camera.position, dt, false);
+  updateAmbience(dt, false);
+  placeChunks();
+  drawScene();
 }
 // The last frame before this may still be heaven's scene on the canvas.
 export function paintFirstFrame() {

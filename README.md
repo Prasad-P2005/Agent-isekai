@@ -1,4 +1,4 @@
-# Isekai Realms
+# Crown Reborn
 
 You die on Earth, meet a god in heaven, and are reborn into a voxel fantasy world to slay the Demon Lord.
 The god **cannot touch the world directly**. Gods have no hands, only Laws, and the world enforces those whether anyone likes it or not.
@@ -31,18 +31,20 @@ Stop with `Ctrl+C`. These cover the rest:
 | See the logs | `docker compose logs -f` |
 | Stop and keep your world | `docker compose down` |
 | Update to the latest code | `git pull`, then `docker compose up -d --build` |
-| Back up your world while the game is up | `docker compose cp app:/data/world.json ./world-backup.json` |
+| Back up every world while the game is up | `docker compose cp app:/data ./world-backup` |
 | Delete your world for good | `docker compose down -v` |
 
-To load a backup, or a world you played outside Docker:
+To load a backup, or worlds you played outside Docker:
 
 ```bash
 docker compose stop
-docker compose cp ./world-backup.json app:/data/world.json
+docker compose cp ./world-backup/. app:/data/
 docker compose start
 ```
 
-Your world lives in the `game-saves` volume, so it survives rebuilds and `docker compose down`. Only `-v` deletes it. Once started, the game comes back whenever Docker starts, until you stop it.
+For a single world it is easier to use **Save a file** and **Bring in a world** on the Worlds page.
+
+Your worlds live in the `game-saves` volume, so it survives rebuilds and `docker compose down`. Only `-v` deletes it. Once started, the game comes back whenever Docker starts, until you stop it.
 
 Compose publishes the game on this machine only, because the game has no login. To use another port, change the first `8000` in `compose.yaml`, for example to `"127.0.0.1:9000:8000"`.
 
@@ -87,7 +89,7 @@ Settings are environment variables:
 |---|---|---|
 | `ISEKAI_PORT` | `8000` | The port the server listens on |
 | `ISEKAI_HOST` | `127.0.0.1` | The address the server binds to. The game has no login, so keep it on this machine unless you trust the network |
-| `ISEKAI_SAVE_DIR` | `saves/` | Where `world.json` is written |
+| `ISEKAI_SAVE_DIR` | `saves/` | The folder your worlds are kept in |
 | `ISEKAI_CLIENT_DIR` | `client/` | The browser client to serve |
 | `ISEKAI_CONTENT_DIR` | `content/` | The game data to load |
 
@@ -105,7 +107,9 @@ ISEKAI_PORT=9000 .venv/bin/python -m isekai                  # macOS and Linux
 
 ## Saves
 
-The world is saved to `saves/world.json` (`/data/world.json` in Docker) after every action, including the blocks you mine and place, where you stand and the time of day. **New World** on the title screen replaces it.
+Each world is a file in `saves/` (`/data` in Docker), saved after every action, including the blocks you mine and place, where you stand and the time of day. **Continue** on the title screen opens the world you played last, and **Worlds** lists them all.
+
+On the Worlds page you can rename a world, copy it, save it to a file and bring a file back in. **New World** makes a new file and leaves the others alone. **Delete** moves a world to `saves/trash/`, so a mistake can be undone by moving the file back.
 
 Saves from older versions upgrade themselves when they load. A save that cannot be read is never overwritten: it is moved aside as `world.unreadable-<time>.json`, and the game starts as if no world exists.
 
@@ -128,7 +132,9 @@ Saves from older versions upgrade themselves when they load. A save that cannot 
 | Genesis | `isekai/world/genesis.py` | Each seed draws its own world: names, rulers, economy, raid pace and two local laws |
 | Settlements | `isekai/systems/people/` | Everyone has a job, a workplace and a home. The dead are replaced, so towns live on |
 | Laws & crimes | `isekai/systems/laws.py`, `client/js/sim/people.js` | Crimes need a law covering the place; witnessed crimes are punished (golems, guards, bounty, fine, exile, curse); civilian witnesses run to report you, so silence them; adventurers and guards fight back |
-| The god | `isekai/systems/storyteller.py` | Narrates, decrees new laws as you earn them, and sets off the world events the rules allow (raids, caravans, festivals, hordes, travellers, named foes) |
+| The god | `isekai/systems/storyteller.py`, `isekai/systems/edicts.py` | Narrates what really happened, alternates pressure and relief by how you are doing, and writes Laws. Every Law you ask for has a second line |
+| Faith | `isekai/systems/faith.py`, `client/js/sim/momentum.js` | One bar every deed fills: a full bar is a level and a Law. Kill runs and nights survived are worth more, and dying costs none of it |
+| Sieges | `isekai/systems/siege.py` | The Throne marches on a settlement, and if you are not there, people die |
 | Story | `isekai/systems/story.py`, `content/story.json` | Chapters, oaths, scenes, and three endings |
 | Quest marks | `isekai/systems/marks.py`, `client/js/sim/marks.js` | The compass and both maps point at what you are after, and follow the person or creature behind it |
 | Dialogue | `isekai/systems/dialogue.py`, `content/lines/` | Thousands of combinations of hand-written lines, chosen by job, people, temperament, the hour and the war. Nothing repeats soon, and everyone has a life they will tell you about |
@@ -172,7 +178,7 @@ of its own. The Old Ways run through all of it: lit corridors, bridges and rope 
 
 ## Controls
 
-These are the defaults. Every key but Esc and the number row can be changed in Settings, under Keys.
+These are the defaults. Every key but Esc and the number row can be changed in Options, under Controls.
 
 | Action | Key |
 |---|---|
@@ -185,7 +191,8 @@ These are the defaults. Every key but Esc and the number row can be changed in S
 | Pray to the god | T |
 | Bag, journal, laws, map, settings | I, J, L, M, O |
 | Your two chosen spells (pick them in the bag) | Q, R |
-| Health and mana potions | G, V |
+| Throw what is in hand, or the whole stack | G, Ctrl+G |
+| Health and mana potions | H, V |
 | Flight | F |
 | Pause and resume | Esc to pause. Click, Enter or Space to resume |
 | Position, frame rate and draw calls | F3 |
@@ -194,13 +201,16 @@ These are the defaults. Every key but Esc and the number row can be changed in S
 
 You start with no spells. Scrolls at a market teach them, along with double jump, swift, giant strength and flight. Your maximum mana starts at 100 and grows three ways: attune to a Mana Crystal at a temple, keep casting, and swear the Oath of the Elves. A meteor costs 120, so it has to wait until you have grown it.
 
-## Graphics
+## Options
 
-Open Settings with O, or from the pause card. Everything is saved in your browser, and each page has presets.
+Open Options from the main menu, with O, or from the pause card. Everything is saved in your browser, and Graphics and Shaders have presets.
 
 - **Graphics** sets render distance (4 to 20 chunks), resolution, a frame rate limit, field of view, leaves, clouds, particles and more. Auto resolution lowers the picture by itself when the frame rate drops.
 - **Shaders** turns on sun shadows, soft light, bloom, god rays, colour grading and deep water with reflections. They need a good graphics card, and are off by default. If they will not run, the game goes back to the normal look and says so.
-- **Keys** rebinds the controls.
+- **Sound** has separate levels for everything, effects and menus, and can go quiet when another window has your attention.
+- **Controls** rebinds keys and sets mouse speed, inverted looking, the direction of the hotbar wheel, and hold or toggle sprint.
+- **Screen** sets the interface size and the crosshair, and can hide the compass, the minimap, the quest note or your hand.
+- **Access** reduces motion, turns down camera jolts and the red flash, sets brightness, and has colour help for weak red, green or blue vision and a plain font.
 
 Coloured light is part of the game with or without shaders: a torch is orange, a mana crystal blue, and the colours mix where they meet.
 

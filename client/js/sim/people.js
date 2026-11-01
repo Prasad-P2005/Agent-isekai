@@ -1,5 +1,6 @@
 // Residents (planned by the god on the server), crimes & witnesses, law enforcement and conversations.
 import { G, creative } from '../core/state.js';
+import { rule } from '../core/rules.js';
 import { BIOMES, SERVICES, WORLD } from '../core/content.js';
 import { emit, on, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
@@ -7,7 +8,7 @@ import { BUILT } from './blocks.js';
 import { chunkReady } from './chunks.js';
 import { applyEffects } from './effects.js';
 import { ents, spawnEntity, removeEntity, fitsAt, isNight, pickEntity } from './entities.js';
-import { player, lineOfSight } from './player.js';
+import { eye, player, lineOfSight } from './player.js';
 import { spawnNear } from './spawning.js';
 import { inCity, landOf, heightAt } from './terrain.js';
 
@@ -119,7 +120,7 @@ let hunterT = 30;
 export function updateLaw(dt) {
   if (player.wanted > 0) {
     const chased = ents.some(o => o.def.lawful && (o.angryT > 0 || !o.def.friendly) && o.pos.distanceTo(player.pos) < 30);
-    player.wanted -= dt * (chased ? 0.2 : 1); // hiding from the law makes the hunt end sooner
+    player.wanted -= dt * (chased ? 0.2 : 1) * rule('wanted'); // hiding from the law makes the hunt end sooner
     if (player.wanted <= 0) { player.wanted = 0; for (const o of ents) if (o.def.lawful) o.angryT = 0; toast('The hunt for you has ended… for now.', 3); }
   }
   hunterT -= dt;
@@ -130,11 +131,12 @@ export function updateLaw(dt) {
 }
 
 // ---------- talking ----------
-// Whoever is under the crosshair, or else the nearest person within reach.
+// Whoever is under the crosshair, or else the nearest person within reach, which is the same three blocks as a blow.
+const TALK_REACH = 3;
 export function nearestTalker() {
-  const aimed = pickEntity(6);
-  let best = aimed && aimed.e.def.friendly ? aimed.e : null, bd = 4.5;
-  if (!best) for (const e of ents) { const d = e.pos.distanceTo(player.pos); if (e.def.friendly && d < bd) { best = e; bd = d; } }
+  const aimed = pickEntity(TALK_REACH), inSight = e => lineOfSight(eye(), { x: e.pos.x, y: e.pos.y + e.def.h * 0.8, z: e.pos.z });
+  let best = aimed && aimed.e.def.friendly && inSight(aimed.e) ? aimed.e : null, bd = TALK_REACH;
+  if (!best) for (const e of ents) { const d = e.pos.distanceTo(player.pos); if (e.def.friendly && d < bd && inSight(e)) { best = e; bd = d; } }
   return best;
 }
 export function talkToNearest() {

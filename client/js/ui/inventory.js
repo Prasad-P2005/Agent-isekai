@@ -3,17 +3,21 @@
 // press splits or drops one, shift sends a stack across, a double click gathers, and keys 1 to 9 swap the slot under the mouse with the hotbar. A drag carries on
 // from the press: left from an empty slot shares the stack out as it goes, left from a stack collects more of that item, or sends it across with shift held,
 // shift alone sends across whatever it crosses, and right drops one on every slot it enters, as often as it enters. The wheel moves one item at a time: down out
-// of the stack under the mouse, up into it, and down on a crafting result makes one. A station swaps the crafting corner for its own panel.
-import { spellKey } from '../core/bindings.js';
+// of the stack under the mouse, up into it, and down on a crafting result makes one. A station swaps the crafting corner for its own panel. Whatever leaves the panel lands
+// in the world: a click outside it throws what the mouse carries, the whole of it on the left button and one on the right, letting go out there throws a stack dragged out,
+// and the G key throws from the slot under the mouse, one at a time, or the stack with Ctrl.
+import { pressed, spellKey } from '../core/bindings.js';
 import { G, creative } from '../core/state.js';
 import { ITEMS } from '../core/content.js';
 import { emit, on, toast } from '../core/events.js';
 import { castable } from '../sim/abilities.js';
+import { throwAway } from '../sim/drops.js';
 import { GRIDS, craftFromBag, isKnown, layOnGrid, matchGrid, needs, recipesAt, timesCanMake, useGrid } from '../sim/crafting.js';
 import { BAG_SIZE, HOTBAR, addItem, armourPoints, bag, changed, countItem, hasRoom, heldStack, hotbar, selectSlot, sortBag, worn } from '../sim/inventory.js';
 import { maxHp, player } from '../sim/player.js';
 import { stationAt, stationParts } from '../sim/stations.js';
 import { hidePortrait, showPortrait } from '../view/portrait.js';
+import { stillCamera } from '../view/scene.js';
 import { esc, icon, itemIcon, power } from './art.js';
 import { definePage, openPage } from './panels.js';
 
@@ -22,7 +26,6 @@ const GROUPS = [['all', 'All', 'star'], ['tools', 'Tools', 'pick'], ['weapons', 
 const STATION_NAMES = { hand: 'by hand', table: 'at a Crafting Table', anvil: 'at an Anvil', alchemy: 'at an Alchemy Table', furnace: 'in a Furnace', forge: 'at a Forge' };
 const NAME_SECONDS = 2000, DOUBLE_CLICK = 280, WHEEL_NOTCH = 40;
 const POP = [{ transform: 'scale(1.2222)' }, { transform: 'scale(1)' }], POP_TIME = { duration: 100, easing: 'steps(2)' }; // 22 art pixels, then 20, then the 18 it rests at
-const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let open = false, station = null, gridKind = 'hand', grid = Array(4).fill(null), cursor = null, side = 'recipes', group = 'all', search = '', onlyReady = false, picked = null, drag = null, lastDown = null, hover = null, under = null, nameTimer = 0, wheelRest = 0, popping = false;
 
 // The switch on the pause card. The mode is saved with the hero, so it changes when the server answers.
@@ -47,7 +50,7 @@ function paint(h, s) {
   const most = s && ITEMS[s.id].dur, share = most && s.dur && s.dur < most ? s.dur / most : 0;
   h.dur.hidden = !share;
   if (share) { h.bar.style.width = `${Math.round(share * 100)}%`; h.bar.classList.toggle('low', share < 0.25); }
-  if (s && popping && !STILL) h.img.animate(POP, POP_TIME);
+  if (s && popping && !stillCamera.matches) h.img.animate(POP, POP_TIME);
 }
 const write = (el, html) => { if (el.written !== html) { el.written = html; el.innerHTML = html; } };
 
@@ -184,9 +187,11 @@ function takeResult(intoBag, many) {
     if (!many) return;
   }
 }
+// Back into the bag, and what it has no room for goes on the ground.
+function putAway(s) { const left = addItem(s.id, s.n, s.dur); if (left) throwAway(s.id, left, s.dur); }
 function clearWorkbench() {
-  for (let i = 0; i < grid.length; i++) if (grid[i]) { addItem(grid[i].id, grid[i].n, grid[i].dur); grid[i] = null; }
-  if (cursor) { addItem(cursor.id, cursor.n, cursor.dur); cursor = null; }
+  for (let i = 0; i < grid.length; i++) if (grid[i]) { putAway(grid[i]); grid[i] = null; }
+  if (cursor) { putAway(cursor); cursor = null; }
 }
 
 // ---------- the panel ----------
@@ -252,18 +257,25 @@ function done() { popping = true; changed(); popping = false; }
 
 // ---------- the recipe book, and the spells ----------
 const usableHere = r => gridKind && GRIDS[gridKind].at.includes(r.at);
+const atHand = r => usableHere(r) || station?.kind === r.at;
+const readyNow = r => atHand(r) && timesCanMake(r) > 0;
+// What can be made right now comes first, and the rest follow in the book's own order.
 function listed() {
   const q = search.trim().toLowerCase(), seen = G.profile.seen ?? [];
-  return recipesAt('all').filter(r => isKnown(r, seen) && (group === 'all' || ITEMS[r.out].group === group) && (!q || ITEMS[r.out].name.toLowerCase().includes(q)) && (!onlyReady || timesCanMake(r) > 0));
+  const list = recipesAt('all').filter(r => isKnown(r, seen) && (group === 'all' || ITEMS[r.out].group === group) && (!q || ITEMS[r.out].name.toLowerCase().includes(q)));
+  const ready = list.filter(readyNow);
+  return onlyReady ? ready : [...ready, ...list.filter(r => !readyNow(r))];
 }
+const patternHTML = r => (r.shape ? `<div class="pattern" style="--cols:${r.shape[0].length}">${r.shape.flatMap(row => [...row]).map(c => `<i>${c === '.' ? '' : `<img src="${itemIcon(r.keys[c])}" alt="" title="${esc(ITEMS[r.keys[c]].name)}">`}</i>`).join('')}</div>` : '');
 function detailHTML(r) {
   if (!r) return '<p class="note">Pick something to see what it takes. Shift-click makes as many as you can.</p>';
   const parts = Object.entries(needs(r)).map(([id, n]) => { const have = creative() ? n : countItem(id); return `<span class="need${have < n ? ' short' : ''}"><img src="${itemIcon(id)}" alt="" title="${esc(ITEMS[id].name)}"><b>${have}/${n}</b></span>`; }).join('');
-  const can = usableHere(r) && timesCanMake(r) > 0;
-  return `<div class="detail"><div class="what">${esc(ITEMS[r.out].name)}${r.n > 1 ? ` ×${r.n}` : ''}<small>Made ${STATION_NAMES[r.at]}</small></div><div class="needs">${parts}</div>${r.in ? '' : `<button type="button" class="gold" data-make ${can ? '' : 'disabled'}>Make</button>`}</div>`;
+  const times = timesCanMake(r), can = usableHere(r) && times > 0;
+  const actions = r.in ? '' : `<div class="makes"><button type="button" class="gold" data-make ${can ? '' : 'disabled'}>Make</button>${can && times > 1 ? `<button type="button" class="gold" data-make-all>Make ${times}</button>` : ''}</div>`;
+  return `<div class="detail">${patternHTML(r)}<div class="what">${esc(ITEMS[r.out].name)}${r.n > 1 ? ` ×${r.n}` : ''}<small>Made ${STATION_NAMES[r.at]}${atHand(r) ? '' : '. Find one first'}</small></div><div class="needs">${parts}</div>${actions}</div>`;
 }
 function bookHTML() {
-  return `<div class="booktools"><input id="booksearch" type="search" placeholder="Search" value="${esc(search)}" aria-label="Search recipes"><button type="button" class="slatebutton${onlyReady ? ' on' : ''}" data-only title="Only what I can make">${icon('quest')}</button></div>`
+  return `<div class="booktools"><input id="booksearch" type="search" placeholder="Search" value="${esc(search)}" aria-label="Search recipes"><button type="button" class="slatebutton${onlyReady ? ' on' : ''}" data-only title="Only what I can make here">${icon('quest')}</button></div>`
     + `<div class="booktabs">${GROUPS.map(([id, name, art]) => `<button type="button" class="${group === id ? 'on' : ''}" data-group="${id}" title="${name}">${icon(art)}</button>`).join('')}</div>`
     + '<div class="booklist"></div><div class="bookdetail"></div>';
 }
@@ -287,11 +299,11 @@ function drawList() {
     listShown = shown;
     listBox.innerHTML = list.map(r => `<button type="button" class="slot" data-recipe="${esc(r.id)}"><img src="${itemIcon(r.out)}" alt="">${r.n > 1 ? `<b>${r.n}</b>` : ''}</button>`).join('') || '<p class="note">Nothing yet. Pick things up, and what they can make appears here.</p>';
   }
-  list.forEach((r, k) => { const b = listBox.children[k]; b?.classList.toggle('short', timesCanMake(r) <= 0); b?.classList.toggle('sel', r === picked); });
+  list.forEach((r, k) => { const b = listBox.children[k]; b?.classList.toggle('short', !readyNow(r)); b?.classList.toggle('sel', r === picked); });
 }
 function drawDetail() { if (detailBox) write(detailBox, detailHTML(picked)); }
 function drawSide() {
-  const body = $('sidebody'), book = side === 'recipes';
+  const body = $('bagbody'), book = side === 'recipes';
   $('sidetabs').innerHTML = `<button type="button" class="${book ? 'on' : ''}" data-side="recipes">${creative() ? 'Items' : 'Recipes'}</button><button type="button" class="${book ? '' : 'on'}" data-side="spells">Spells</button>`;
   body.innerHTML = !book ? spellListHTML() : creative() ? paletteHTML() : bookHTML();
   listBox = book ? body.querySelector('.booklist') : null;
@@ -407,17 +419,40 @@ function turnWheel(e) {
   if (c === 'out') { if (down) takeResult(true, false); } else if (down) pushOne(c, i); else pullOne(c, i);
   done();
 }
-function pointAt(b) {
+// A recipe or something on the creative shelf shows the same tooltip as a stack of it would.
+function onShelf(over) {
+  const s = over?.closest?.('[data-recipe], [data-give]');
+  const id = s?.dataset.give ?? (s?.dataset.recipe ? recipeById(s.dataset.recipe)?.out : null);
+  return id ? { id } : null;
+}
+function pointAt(b, over) {
   under = b;
   const c = b?.dataset.c;
   hover = BOXES[c] ? { c, i: indexOf(b) } : null;
-  const stack = !b ? null : c === 'out' ? made() : c === 'cbar' ? hotbarStack(Number(b.dataset.i)) : BOXES[c].get(indexOf(b));
+  const stack = !b ? onShelf(over) : c === 'out' ? made() : c === 'cbar' ? hotbarStack(Number(b.dataset.i)) : BOXES[c].get(indexOf(b));
   showTip(cursor ? null : stack);
+}
+// ---------- out of the bag ----------
+const beside = e => !!e.target?.closest && !e.target.closest('.bag-panel, #bagside, #tabs, #ribbons, #panelclose');
+function tossCursor(n) {
+  throwAway(cursor.id, n, cursor.dur);
+  cursor.n -= n;
+  if (cursor.n <= 0) cursor = null;
+  done();
+}
+function tossSlot(c, i, all) {
+  const box = BOXES[c], s = box.get(i);
+  if (!s) return;
+  const n = all ? s.n : 1;
+  throwAway(s.id, n, s.dur);
+  s.n -= n;
+  if (!s.n) box.set(i, null);
+  done();
 }
 const recipeById = id => recipesAt('all').find(r => r.id === id);
 function clickSide(e) {
   const t = e.target;
-  const pick = t.closest('[data-side]'), tab = t.closest('[data-group]'), only = t.closest('[data-only]'), rec = t.closest('[data-recipe]'), make = t.closest('[data-make]'), spell = t.closest('[data-spell]'), give = t.closest('[data-give]');
+  const pick = t.closest('[data-side]'), tab = t.closest('[data-group]'), only = t.closest('[data-only]'), rec = t.closest('[data-recipe]'), make = t.closest('[data-make]'), makeAll = t.closest('[data-make-all]'), spell = t.closest('[data-spell]'), give = t.closest('[data-give]');
   if (pick) { side = pick.dataset.side; drawSide(); }
   if (tab) { group = tab.dataset.group; drawSide(); }
   if (only) { onlyReady = !onlyReady; drawSide(); }
@@ -436,18 +471,26 @@ function clickSide(e) {
     drawList(); drawDetail();
   }
   if (make && picked && craftFromBag(picked, 1)) done();
+  if (makeAll && picked && craftFromBag(picked, timesCanMake(picked))) done();
 }
 $('bag').addEventListener('mousedown', e => { const b = slotOf(e); if (b) { e.preventDefault(); moveFloaters(e); downOnSlot(e, b); } });
-$('bag').addEventListener('mouseover', e => { const b = slotOf(e); if (drag) { if (b) overSlot(b, e); else drag.last = null; } pointAt(b); });
+$('bag').addEventListener('mouseover', e => { const b = slotOf(e); if (drag) { if (b) overSlot(b, e); else drag.last = null; } pointAt(b, e.target); });
 $('bag').addEventListener('mouseleave', () => { if (drag) drag.last = null; pointAt(null); });
 $('bag').addEventListener('wheel', turnWheel, { passive: false });
 $('bagsort').addEventListener('click', () => sortBag());
 $('bagside').addEventListener('click', clickSide);
 $('bagside').addEventListener('input', e => { if (e.target.id === 'booksearch') { search = e.target.value; drawList(); } });
-addEventListener('mouseup', () => { drag = null; });
+addEventListener('mousedown', e => { if (open && cursor && beside(e)) { e.preventDefault(); tossCursor(e.button === 2 ? 1 : cursor.n); } }, true); // first, so that the page knows this click was used
+addEventListener('mouseup', e => {
+  const out = open && cursor && (drag?.mode === 'collect' || drag?.mode === 'one') && beside(e);
+  drag = null;
+  if (out) tossCursor(cursor.n);
+});
 addEventListener('mousemove', e => { if (open) moveFloaters(e); });
 addEventListener('keydown', e => {
-  if (!open || !hover || !/^Digit[1-9]$/.test(e.code) || e.target.tagName === 'INPUT') return;
+  if (!open || !hover || e.target.tagName === 'INPUT') return;
+  if (pressed('drop', e.code)) { e.preventDefault(); tossSlot(hover.c, hover.i, e.ctrlKey); return; }
+  if (!/^Digit[1-9]$/.test(e.code)) return;
   const n = Number(e.code[5]) - 1, box = BOXES[hover.c], s = box.get(hover.i), there = bag()[n];
   if (there && !takes(box, hover.i, there)) return;
   bag()[n] = s; box.set(hover.i, there);

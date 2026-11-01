@@ -4,6 +4,12 @@
   "height": 224,
   "sea": 112,
   "resident_id_base": 1000,
+  "faith": { "first": 50, "step": 30, "head_start": 0.2, "most": 60 },
+  "difficulty": {
+    "gentle": { "label": "Gentle", "about": "For the story and the building. Blows land softer, wounds close faster, and the night sends fewer and weaker things.", "rules": { "hurt": 0.6, "healing": 1.6, "fall": 0.5, "monster_power": 0.8, "monster_cap": 0.75 } },
+    "fair": { "label": "Fair", "about": "The world as it was written. The Laws you choose will bend it from here.", "rules": {} },
+    "hard": { "label": "Hard", "about": "Blows land harder, wounds close slower, and more comes out of the dark, stronger than it should be. What they drop is richer for it.", "rules": { "hurt": 1.4, "healing": 0.7, "monster_power": 1.25, "monster_cap": 1.3, "loot": 1.25 } }
+  },
   "towns": {
     "human": { "reach": 44 },
     "city": { "reach": 62, "wall": 58 },

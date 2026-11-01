@@ -10,12 +10,19 @@
     { "key": "MIRE", "realm": "mire", "name": "The Mirefen", "kind": "Drowned Fen", "level": 1, "hills": 3, "grass": "#6d8a52", "leaves": "#4d6b45" }
   ],
   "realms": {
-    "ocean": { "letter": "O", "biome": "OCEAN", "label": "Open sea" },
-    "elf": { "letter": "E", "biome": "ELF", "label": "Elven forest" },
-    "human": { "letter": "H", "biome": "KINGDOM", "label": "Human lands" },
-    "beast": { "letter": "B", "biome": "BEAST", "label": "Beastkin wilds" },
-    "peaks": { "letter": "P", "biome": "PEAKS", "label": "Dragonspine Peaks" },
-    "demon": { "letter": "D", "biome": "DEMON", "label": "Demon wastes" },
-    "mire": { "letter": "M", "biome": "MIRE", "label": "The Mirefen" }
+    "ocean": { "letter": "O", "biome": "OCEAN", "label": "Open sea",
+      "law": { "name": "The Tide's Patience", "gift": "The sea breaks a fall.", "second": "It slows every step you take.", "effects": { "fall": 0.5, "speed": 0.92 } } },
+    "elf": { "letter": "E", "biome": "ELF", "label": "Elven forest",
+      "law": { "name": "The Green Hush", "gift": "Mana gathers under the old trees.", "second": "Blows land softly here, yours included.", "effects": { "mana_flow": 1.5, "blow": 0.9, "hurt": 0.9 } } },
+    "human": { "letter": "H", "biome": "KINGDOM", "label": "Human lands",
+      "law": { "name": "The King's Peace", "gift": "Wounds close faster on the Crown's land.", "second": "Nothing here comes easily out of the ground.", "effects": { "healing": 1.5, "ore_luck": 0.9 } } },
+    "beast": { "letter": "B", "biome": "BEAST", "label": "Beastkin wilds",
+      "law": { "name": "The Law of Tooth", "gift": "You hit harder here.", "second": "So does everything else.", "effects": { "blow": 1.2, "hurt": 1.2 } } },
+    "peaks": { "letter": "P", "biome": "PEAKS", "label": "Dragonspine Peaks",
+      "law": { "name": "The Stone's Due", "gift": "The mountains give up their ore more freely.", "second": "They do not catch you when you fall.", "effects": { "mining": 1.25, "ore_luck": 1.25, "fall": 1.5 } } },
+    "demon": { "letter": "D", "biome": "DEMON", "label": "Demon wastes",
+      "law": { "name": "The Throne's Hold", "gift": "Mana runs hot in the Wastes.", "second": "No wound closes here by itself.", "effects": { "mana_flow": 1.5, "healing": 0 } } },
+    "mire": { "letter": "M", "biome": "MIRE", "label": "The Mirefen",
+      "law": { "name": "The Drowned Rule", "gift": "The fen hides you, and fewer things find you.", "second": "It holds your boots.", "effects": { "monster_cap": 0.75, "speed": 0.9 } } }
   }
 }

@@ -3,7 +3,7 @@ import re
 
 import pytest
 
-from isekai.content import JOBS, LINES, STORY
+from isekai.content import EDICTS, JOBS, LINES, STORY
 from isekai.systems.dialogue import FACETS, TOPICS, TRAITS
 
 BLANK = re.compile(r"\{(\w+)\}")
@@ -18,8 +18,12 @@ EXTRA = {"tell:death": {"by"}, "tell:raid": {"wave"}, "tell:kills": {"kills"}, "
          "event:demon_raid": {"wave"}, "event:named_foe": {"foe", "title"}, "event:nemesis": {"foe", "title"},
          "about:": {"place"}, "tell:arrive:": {"place"}, "favor:": {"thing", "count", "pay", "giver", "target", "summary"} | SPEECH,
          "gossip:raid": {"wave"}, "gossip:festival": {"place"}, "gossip:arrival": {"place"}, "gossip:hero_fell": {"by"}, "gossip:favor": {"giver"},
-         "gossip:named_foe": {"foe"}, "gossip:nemesis": {"foe", "title"}, "gossip:murder": {"victim", "place"}}
-WRITTEN_BY_THE_GOD = ("tell:", "event:", "pray:", "stone:", "premise", "god_intro", "hero", "about:")
+         "gossip:named_foe": {"foe"}, "gossip:nemesis": {"foe", "title"}, "gossip:murder": {"victim", "place"},
+         "tell:death:again": {"by"}, "tell:death:nemesis": {"by"}, "tell:siege_arrival": {"place"}, "tell:siege_held": {"place"}, "tell:siege_lost": {"place"},
+         "tell:capital_held": {"place"}, "tell:capital_fell": {"place"}, "event:siege": {"place"}, "gossip:siege_held": {"place"}, "gossip:siege_lost": {"place"}, "gossip:law": {"edict"},
+         "pray:deeds:": {"kills", "deaths", "nights", "lands", "gold"}, "pray:leaning:": {"left"}, "pray:news:siege": {"place"}, "pray:news:nemesis": {"foe", "title"}, "pray:sins": {"bounty"},
+         "pray:offer": {"item"}, "pray:offer_dear": {"item"}, "pray:offer_junk": {"item"}}
+WRITTEN_BY_THE_GOD = ("tell:", "event:", "pray:", "stone:", "dream:", "premise", "god_intro", "hero", "about:")
 
 
 def allowed(pool: str) -> set[str]:
@@ -54,12 +58,21 @@ def needed_pools() -> list[str]:
     pools += [f"react:{r}" for r in ("crowned", "grudge", "bounty", "cursed", "infamous", "famous", "legend", "friend", "returning")]
     pools += [f"race:{r}" for r in ("human", "elf", "beastkin", "mermaid")] + [f"home:{t}" for t in ("human", "city", "elf", "elfcity", "beast")]
     pools += [f"time:{t}" for t in ("dawn", "day", "dusk", "night")] + [f"state:{s}" for s in ("raid", "festival", "war", "lord_dead")]
-    pools += [f"ending:{e}" for e in ("hero", "crown", "broken")]
+    pools += [f"ending:{e}" for e in ("hero", "crown", "broken", "named")]
+    pools += [f"edict:{law}" for law in EDICTS["laws"]] + [f"state:{s}" for s in ("blood_moon", "siege")]
+    pools += [f"tell:{t}" for t in ("law_ready", "echo:before", "echo:after", "death:fall", "death:again", "death:nemesis", "low_hp", "dusk", "siege_arrival", "siege_held", "siege_lost",
+                                    "capital_held", "capital_fell", "blood_moon_over", "star_found", "star_faded")]
+    pools += ["event:blood_moon", "event:star_fall", "event:siege", "pray:first_law", "pray:petition", "stone:echo", "stone:echo_unread"]
+    signs = ("blade", "flesh", "spell", "stone", "coin", "road", "dark", "none")
+    pools += [f"pray:deeds:{s}" for s in signs] + [f"pray:leaning:{s}" for s in (*signs, "ready")] + [f"pray:news:{n}" for n in ("siege", "blood_moon", "star", "nemesis", "quiet")]
+    pools += [f"pray:{p}" for p in ("more", "back", "stone", "self", "self_done", "joke", "thanks", "curse", "sins", "clean", "offer", "offer_dear", "offer_junk", "offer_soon", "offer_nothing", "other_words")]
+    pools += [f"dream:{d}" for d in ("open", "talk", "law", "hurt")] + [f"pray:hello:{m}" for m in ("blood_moon", "hurting", "wanted", "hunted", "war", "night")]
+    pools += ["pray:hand_fabled", "pray:hand_ink", "pray:offer_soup", "tell:threw"]
     pools += [f"act:{n}" for n in range(1, 7)] + [f"rumor:act{n}" for n in range(1, 7)] + [f"pray:act{n}" for n in range(1, 7)] + [f"tell:idle:{n}" for n in range(1, 7)]
     pools += [f"rumor:{t}" for t in ("general", "human", "city", "elf", "elfcity", "beast", "wild")]
     pools += [f"place:{t}" for t in ("human", "city", "elf", "elfcity", "beast", "wild")] + [f"about:{t}" for t in ("human", "city", "elf", "elfcity", "beast")]
     pools += [f"mission:{c}" for c in chapters] + [f"pray:{c}" for c in chapters] + [f"tell:chapter:{c}" for c in chapters[1:]]
-    pools += [f"gossip:{g}" for g in ("raid", "festival", "arrival", "hero_fell", "favor", "named_foe", "nemesis", "dragon", "murder", "demon_lord", "oath", "amended", "ending_hero", "ending_crown", "ending_broken")]
+    pools += [f"gossip:{g}" for g in ("raid", "festival", "arrival", "hero_fell", "favor", "named_foe", "nemesis", "dragon", "murder", "demon_lord", "oath", "amended", "ending_hero", "ending_crown", "ending_broken", "ending_named", "siege_held", "siege_lost", "law", "star", "blood_moon")]
     pools += [f"beckon:{s}" for s in ("king", "queen", "elf", "chief", "mermaid_queen")] + ["stone:cairn", "stone:law_stone", "premise", "hero", "god_intro"]
     pools += [f"you_{s}" for s in ("legend", "famous", "known", "stranger", "infamous", "feared")]
     pools += [f"favor:{f}" for f in ("fetch", "hunt", "deliver", "visit", "accepted", "declined", "waiting", "thanks", "delivered")]

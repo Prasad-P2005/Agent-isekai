@@ -28,4 +28,5 @@ STILL TO CHECK
 The Wyrm, with an adventurer for scale: https://raw.githubusercontent.com/Prasad-P2005/Agent-isekai/main/gallery/dragon.png
 
 Code: https://github.com/Prasad-P2005/Agent-isekai
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}
 Sent from a no-reply address, so replies are not read.

@@ -1,16 +1,18 @@
-// The book and everything else that takes over the mouse: menus, shops, the guild, conversations and prayer.
+// The book and everything else that takes over the mouse. Menus are pages of the book. Conversations, prayer and scenes are one small box low on the screen, with the
+// world still in view behind it, and anything to buy or choose sits in a panel at the side.
 import { G } from '../core/state.js';
 import { SERVICES } from '../core/content.js';
-import { on, toast } from '../core/events.js';
+import { emit, on, toast } from '../core/events.js';
 import { api } from '../net/api.js';
+import { packReport } from '../net/sync.js';
 import { applyEffects, applyState } from '../sim/effects.js';
-import { bagReport, blockSummary } from '../sim/inventory.js';
-import { stationReport } from '../sim/stations.js';
+import { blockSummary, heldStack } from '../sim/inventory.js';
+import { player } from '../sim/player.js';
 import { esc, goodArt, icon, itemIcon, rich } from './art.js';
 import { capture, release } from './pointer.js';
 
 const $ = id => document.getElementById(id);
-const book = $('book'), scrim = $('scrim');
+const book = $('book'), scrim = $('scrim'), talk = $('talk'), side = $('side'), sideBody = $('sidebody');
 const pages = {};
 let page = null, current = null, convo = null, scene = null;
 const queuedScenes = [];
@@ -27,15 +29,18 @@ function takeMouse() {
   G.uiOpen = true;
   release();
   $('overlay').style.display = 'none';
-  scrim.style.display = 'flex';
 }
+function hideSide() { side.style.display = 'none'; sideBody.innerHTML = ''; document.body.classList.remove('aside'); }
+function showSide() { side.style.display = 'flex'; document.body.classList.add('aside'); }
+function hideTalk() { talk.style.display = 'none'; hideSide(); document.body.classList.remove('talking'); }
 function openBook(view) {
   leavePage();
   takeMouse();
+  hideTalk();
   current = null; convo = null; scene = null;
+  scrim.style.display = 'flex';
   book.dataset.view = view;
   book.style.display = 'block';
-  $('chat').style.display = 'none';
   for (const id of ['paneltitle', 'panelline', 'pageleft', 'pageright']) $(id).textContent = '';
 }
 export function openPage(name) {
@@ -58,6 +63,8 @@ export function closePanel() {
   current = null; convo = null; scene = null;
   G.uiOpen = false;
   scrim.style.display = 'none'; book.style.display = 'none';
+  hideTalk();
+  if (G.phase === 'title') { emit('title:back'); return; } // the same book opens over the main menu, and there is no game to go back to
   if (queuedScenes.length) return playScene(queuedScenes.shift());
   capture();
 }
@@ -66,7 +73,7 @@ for (const nav of ['tabs', 'ribbons']) $(nav).addEventListener('click', e => { c
 document.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) togglePage(b.dataset.open); });
 // A click beside the book closes it. A drag let go there does not, though the browser calls that a click on the scrim too.
 let pressedBeside = false;
-scrim.addEventListener('mousedown', e => { pressedBeside = e.target === scrim; });
+scrim.addEventListener('mousedown', e => { pressedBeside = e.target === scrim && !e.defaultPrevented; }); // a press that threw something from the bag was not a click beside the book
 scrim.addEventListener('click', e => { if (e.target === scrim && pressedBeside) closePanel(); });
 
 // ---------- services ----------
@@ -109,26 +116,27 @@ async function renderPanel() {
   if (!c) return;
   const d = await api.service(c.type, c.settlement);
   if (c !== current) return;
-  const body = $('pageright'), scroll = body.scrollTop;
-  body.innerHTML = serviceHTML(c.type, d);
-  body.scrollTop = scroll;
+  const scroll = sideBody.scrollTop;
+  sideBody.innerHTML = serviceHTML(c.type, d);
+  sideBody.scrollTop = scroll;
 }
 async function openService({ type, npc, settlement, line = '' }) {
-  openBook('npc');
+  openTalk(npc.name, npc.title);
+  turnTo(npc);
   current = { type, npc, settlement };
-  $('paneltitle').textContent = npc.name;
-  $('panelline').textContent = npc.title || '';
-  if (line) $('pageleft').innerHTML = `<div class="stitch">${esc(line)}</div>`;
-  $('pageright').innerHTML = '<p class="note">…</p>';
+  showLine({ who: npc.name, text: line });
+  showTopics([LEAVE]);
+  sideBody.innerHTML = '<p class="note">…</p>';
+  showSide();
   await renderPanel();
 }
 on('service:opened', openService);
 let acting = false; // one purchase per click, however fast the clicks come
 document.addEventListener('click', async e => {
-  const b = e.target.closest('#pageright button[data-a]');
+  const b = e.target.closest('#sidebody button[data-a]');
   if (!b || !current || acting) return;
   const a = b.dataset.a, i = b.dataset.i, { type, settlement, npc } = current;
-  const body = { type, settlement, npc: npc.res?.id ?? null, pack: bagReport(stationReport()) };
+  const body = { type, settlement, npc: npc.res?.id ?? null, pack: packReport() };
   if (a === 'buy') Object.assign(body, { action: 'buy', item: i });
   else if (a === 'sell' || a === 'sellall') Object.assign(body, { action: 'sell', item: i, all: a === 'sellall' });
   else if (a === 'accept') Object.assign(body, { action: 'accept', index: +i });
@@ -145,88 +153,128 @@ document.addEventListener('click', async e => {
   acting = false;
 });
 
-// ---------- conversations: pick what to say ----------
+// ---------- conversations: one line at a time, then what to say back ----------
 const LEAVE = { id: 'leave', label: 'Leave' }, CONTINUE = { id: 'continue', label: 'Continue' };
-function addLine(who, text, cls) {
-  const d = document.createElement('div'); d.className = cls;
-  d.innerHTML = who ? `<b>${esc(who)}</b> ${esc(text)}` : rich(text);
-  $('chatlog').appendChild(d); $('chatlog').scrollTop = 1e9;
-  return d;
-}
 const showTopics = topics => {
-  $('chattopics').innerHTML = topics.map((t, i) => `<button type="button" data-topic="${esc(t.id)}"${t.story ? ' class="gold"' : ''}><kbd>${i + 1}</kbd><span>${esc(t.label)}</span></button>`).join('');
+  $('talktopics').innerHTML = topics.map((t, i) => `<button type="button" data-topic="${esc(t.id)}"${t.story ? ' class="gold"' : ''}><kbd>${i + 1}</kbd><span>${esc(t.label)}</span></button>`).join('');
 };
-// Someone with nothing to sell: the facing page keeps what the player is here for in view.
-const talkAside = () => `<h3>Your objective</h3><div class="stitch">${icon('flag')}${esc(G.objective)}</div><p class="note">Anyone here will talk to you. Ask them about it.</p>`;
-function openConversation({ npc, settlement, service, prayer = false }) {
-  openBook('npc');
-  convo = { npc, settlement, prayer };
-  $('paneltitle').textContent = npc.name;
-  $('panelline').textContent = npc.title || '';
-  $('chat').style.display = 'flex';
-  $('chatlog').innerHTML = '';
-  if (service) { current = { type: service, npc, settlement }; $('pageright').innerHTML = '<p class="note">…</p>'; renderPanel(); }
-  else $('pageright').innerHTML = talkAside();
+function openTalk(name, role = '') {
+  leavePage();
+  takeMouse();
+  scrim.style.display = 'none'; book.style.display = 'none';
+  current = null; convo = null; scene = null;
+  hideSide();
+  document.body.classList.add('talking');
+  talk.style.display = 'flex';
+  $('talkname').textContent = name;
+  $('talkrole').textContent = role;
+  $('talkline').textContent = '';
+  showTopics([]);
+}
+function showLine({ who, text, gift = false }) {
+  if (who !== undefined) $('talkname').textContent = who;
+  $('talkline').className = `talkline${gift ? ' gift' : who === '' ? ' aside' : ''}`;
+  $('talkline').innerHTML = rich(text);
+  $('talkline').scrollTop = 0;
+}
+// Whatever is left to say, a line at a time, and then the choices.
+function nextLine() {
+  const at = convo ?? scene;
+  if (!at?.queue.length) return;
+  showLine(at.queue.shift());
+  showTopics(at.queue.length ? [CONTINUE] : at.topics);
+}
+// The head comes round to whoever is talking, a little high, so that they stand above the box.
+const TURN_TIME = 280, LOOK_LOW = 0.14;
+function turnTo(npc) {
+  if (!npc.pos) return;
+  const dx = npc.pos.x - player.pos.x, dz = npc.pos.z - player.pos.z, up = npc.pos.y + npc.def.h * 0.85 - player.pos.y - 1.62;
+  const yaw0 = player.yaw, pitch0 = player.pitch, pitch = Math.atan2(up, Math.hypot(dx, dz)) - LOOK_LOW, turn = Math.atan2(-dx, -dz) - yaw0;
+  const shortest = Math.atan2(Math.sin(turn), Math.cos(turn)), from = performance.now();
+  const step = now => {
+    if (!G.uiOpen) return;
+    const t = Math.min(1, (now - from) / TURN_TIME), eased = t * (2 - t);
+    player.yaw = yaw0 + shortest * eased;
+    player.pitch = pitch0 + (pitch - pitch0) * eased;
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function openConversation({ npc, settlement, service, prayer = false, near = '' }) {
+  openTalk(npc.name, npc.title);
+  turnTo(npc);
+  convo = { npc, settlement, prayer, near, queue: [], topics: [] };
+  if (service) { current = { type: service, npc, settlement }; sideBody.innerHTML = '<p class="note">…</p>'; showSide(); renderPanel(); }
   say('hello');
 }
 on('talk:opened', openConversation);
-async function say(topic, label = '') {
+// A stone says which stone it is, and a traveller who they are. Everyone else is what they are.
+const creatureOf = npc => (npc.kind === 'echo' ? npc.role : npc.role ? `traveller:${npc.role}` : npc.kind);
+async function say(topic) {
   if (!convo || convo.busy) return;
   const c = convo, { npc } = c;
-  if (label) addLine('You', label, 'me');
   showTopics([]);
-  const wait = addLine(npc.name, '…', 'npc');
+  $('talkline').textContent = '…';
   c.busy = npc.talking = true;
   try {
-    const res = c.prayer ? await api.pray(topic) : await api.talk({
-      settlement: npc.res ? c.settlement : null, resident: npc.res?.id ?? null, creature: npc.role ? `traveller:${npc.role}` : npc.kind, name: npc.name, topic, blocks: blockSummary(), pack: bagReport(stationReport()),
+    const res = c.prayer ? await api.pray({ topic, near: c.near, held: heldStack() ?? null, pack: packReport() }) : await api.talk({
+      settlement: npc.res ? c.settlement : null, resident: npc.res?.id ?? null, creature: creatureOf(npc), name: npc.name, topic, blocks: blockSummary(), pack: packReport(),
     });
     applyState(res); applyEffects(res.effects);
-    if (res.gift) toast(`🎁 ${res.gift}`, 5);
     if (convo === c) {
-      wait.remove();
-      for (const line of res.lines) addLine(npc.name, line, 'npc');
-      if (res.gift) addLine('', `🎁 ${res.gift}`, 'gift');
+      c.queue = [...res.lines.map(text => ({ who: npc.name, text })), ...(res.gift ? [{ who: npc.name, text: `🎁 ${res.gift}`, gift: true }] : [])];
+      c.topics = topic === 'bye' ? [LEAVE] : res.topics;
+      if (res.petition?.length) showPetition(res.petition, res.redraw);
+      else if (c.prayer) hideSide();
       if (current) renderPanel();
-      showTopics(topic === 'bye' ? [LEAVE] : res.topics);
+      nextLine();
     }
   } catch {
-    if (convo === c) { wait.textContent = `${npc.name} doesn't answer.`; showTopics([LEAVE]); }
+    if (convo === c) { showLine({ who: npc.name, text: `${npc.name} doesn't answer.` }); showTopics([LEAVE]); }
   }
   c.busy = npc.talking = false;
 }
-$('chattopics').addEventListener('click', e => {
+$('talktopics').addEventListener('click', e => {
   const b = e.target.closest('button[data-topic]');
   if (!b) return;
   const topic = b.dataset.topic;
   if (topic === 'leave') closePanel();
-  else if (topic === 'continue') nextSceneLine();
-  else say(topic, b.lastElementChild.textContent);
+  else if (topic === 'stone_pray') openPrayer('stone');
+  else if (topic === 'continue') nextLine();
+  else say(topic);
 });
 addEventListener('keydown', e => {
   if (!convo && !scene) return;
-  const pick = /^Digit([1-9])$/.exec(e.code)?.[1] ?? (e.code === 'Enter' && $('chattopics').children.length === 1 ? 1 : 0);
-  if (pick) $('chattopics').children[pick - 1]?.click();
+  const lone = (e.code === 'Enter' || e.code === 'Space') && $('talktopics').children.length === 1;
+  const pick = /^Digit([1-9])$/.exec(e.code)?.[1] ?? (lone ? 1 : 0);
+  if (pick) $('talktopics').children[pick - 1]?.click();
+});
+
+// ---------- the Laws she can write ----------
+const ROMAN = ['', 'I', 'II', 'III'];
+const lawCard = l => `<article class="stitch lawcard ${esc(l.tier)}${l.ink ? ` ink-${esc(l.ink)}` : ''}"><h4>${esc(l.name)}${l.deepens ? ` ${ROMAN[l.rank]}` : ''}</h4>${l.tier_label ? `<small class="lawtier">${esc(l.tier_label)}</small>` : ''}<p>${esc(l.gift)}</p><p class="second">${esc(l.second)}</p>`
+  + `${l.ink_label ? `<p class="lawink">${esc(l.ink_label)}</p>` : ''}<p class="lawwhy">${esc(l.why)}${l.deepens ? ' Its gift grows. Its price does not.' : ''}</p><button type="button" class="gold" data-law="${esc(l.id)}">${l.deepens ? 'Deepen this Law' : 'Write this Law'}</button></article>`;
+function showPetition(cards, again) {
+  sideBody.innerHTML = `<h3>What can be written</h3>${cards.map(lawCard).join('')}${again ? '<button type="button" data-law-again>Ask for other words</button>' : ''}<p class="note">The world holds three of these Laws. A fourth pushes out the oldest.</p>`;
+  showSide();
+}
+sideBody.addEventListener('click', e => {
+  const b = e.target.closest('button[data-law], button[data-law-again]');
+  if (!b) return;
+  hideSide();
+  say(b.dataset.law ? `law:${b.dataset.law}` : 'law_again');
 });
 
 // ---------- scenes: the story takes the stage for a moment ----------
-function nextSceneLine() {
-  const { who, text } = scene.lines[scene.at++];
-  addLine(who, text, who ? 'npc' : 'gift');
-  showTopics([scene.at < scene.lines.length ? CONTINUE : LEAVE]);
-}
 function playScene(s) {
   if (G.uiOpen) { queuedScenes.push(s); return; } // it waits for the shop or the conversation to end
-  openBook('npc');
-  scene = { ...s, at: 0 };
-  $('paneltitle').textContent = s.title;
-  $('chat').style.display = 'flex';
-  $('chatlog').innerHTML = '';
-  nextSceneLine();
+  openTalk(s.title);
+  scene = { queue: s.lines.map(({ who, text }) => ({ who, text })), topics: [LEAVE] };
+  nextLine();
 }
 on('scene:opened', playScene);
 
 // ---------- prayer: a conversation with someone who can't do much ----------
-export function openPrayer() {
-  openConversation({ npc: { name: G.world.god_name, title: 'A voice only you can hear' }, settlement: -1, service: null, prayer: true });
+export function openPrayer(near = '') {
+  openConversation({ npc: { name: G.world.god_name, title: near === 'stone' ? 'Almost close enough to touch' : 'A voice only you can hear' }, settlement: -1, service: null, prayer: true, near });
 }

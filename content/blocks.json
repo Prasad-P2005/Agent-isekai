@@ -71,7 +71,7 @@
   { "id": 70, "name": "Cactus", "top": "#3f8a4a", "hardness": 0.5, "tex": ["cactus_top", "cactus_side", "cactus_top"], "tool": "axe" },
   { "id": 71, "name": "Sea Grass", "top": "#2f8f5f", "wet": true, "hardness": 0.05, "drop": 0, "tex": "sea_grass", "shape": "cross", "passable": true, "cutout": true, "sway": "kelp" },
   { "id": 72, "name": "Lily Pad", "top": "#3f9a4f", "hardness": 0.05, "drop": 0, "tex": "lily_pad", "shape": "carpet", "passable": true, "cutout": true },
-  { "id": 73, "name": "Moss", "top": "#4f8f4a", "hardness": 0.6, "ground": true, "drop": 2, "tex": "moss", "spin": true, "tool": "shovel" },
+  { "id": 73, "name": "Moss", "top": "#4f8f4a", "hardness": 0.6, "ground": true, "tex": "moss", "spin": true, "tool": "shovel" },
   { "id": 74, "name": "Bone Block", "top": "#e4dcc4", "hardness": 2, "tex": ["bone_top", "bone_side", "bone_top"], "tool": "pick", "level": 0 },
   { "id": 75, "name": "Basalt", "top": "#4a4650", "hardness": 3, "ground": true, "tex": ["basalt_top", "basalt_side", "basalt_top"], "tool": "pick", "level": 0 },
   { "id": 76, "name": "Torch", "top": "#ffc860", "glow": 1, "emit": 13, "light": "#ffb060", "hardness": 0.05, "tex": "torch", "shape": "torch", "passable": true, "cutout": true },

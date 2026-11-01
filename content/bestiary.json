@@ -5,7 +5,7 @@
     { "name": "Monsters", "kinds": ["slime", "goblin", "wolf", "bandit", "skeleton", "spider", "orc", "troll", "wraith"] },
     { "name": "The law", "kinds": ["golem", "bounty_hunter"] },
     { "name": "The Ashen Throne", "kinds": ["imp", "demon_knight", "demon_lord"] },
-    { "name": "Things that should not move", "kinds": ["cairn", "law_stone", "mermaid_queen"] },
+    { "name": "Things that should not move", "kinds": ["echo", "cairn", "law_stone", "mermaid_queen"] },
     { "name": "The one you were warned about", "kinds": ["dragon"] }
   ],
   "entries": {
@@ -38,6 +38,7 @@
     "imp": { "where": "The Demon Wastes and on raids", "lore": "Darts in, bites, and is gone before you have turned around. Comes back for more." },
     "demon_knight": { "where": "The Demon Wastes", "lore": "Armour with an old grudge inside it." },
     "demon_lord": { "where": "The Ashen Throne", "lore": "The First Law keeps every blade from him. Almost every blade." },
+    "echo": { "where": "Scattered across the world, one to a land", "lore": "Eleven of them, each cut by a different hand in a language nobody here has ever spoken. You can read every one." },
     "cairn": { "where": "The ruins in the far south", "lore": "Someone stacked these stones carefully, a long time ago, and left a note." },
     "law_stone": { "where": "The feet of the Crystal Spires", "lore": "The rules of the world, written where anyone could read them, if they got this far." },
     "mermaid_queen": { "where": "A palace under the southwestern sea", "lore": "She has been listening to the sea for a very long time. She has heard about you." },

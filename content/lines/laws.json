@@ -1,0 +1,185 @@
+{
+  "tell:law_ready": [
+    "You've done enough that I can write something for you. Press T when you've got a minute. No rush. I'm here. I'm always here.",
+    "Ooh. I think that's another Law, if you want one. Come and talk to me.",
+    "People are saying your name. That's what I run on. I can write you a Law now, if you'd like. Press T.",
+    "That's enough Faith for another Law. Come and pick. Read the second line this time.",
+    "I've got one for you, whenever you're ready. Press T. Ask me nicely. Or don't, I'm not proud."
+  ],
+
+  "tell:echo:before": [
+    "What was that? What did you just read? ...Nothing. It's nothing, it's an old stone. There are lots of old stones. Look, a bird!",
+    "Hey! Hi. What are you looking at? Is it interesting? It's probably not interesting. Let's go and see the King.",
+    "I can't read that one. I mean, I can. I mean, why would you want to? Ehehe. Anyway!",
+    "You keep stopping at those. You don't have to stop at those.",
+    "...Who taught you to read that? Oh. Right. Nobody did. That's the thing, isn't it."
+  ],
+  "tell:echo:after": [
+    "I know that handwriting. I know all of them. I can't stop knowing them.",
+    "You're reading the rest of them. Okay. Good. Somebody should.",
+    "I used to go and look at those. Then I stopped, and that was worse.",
+    "I remember the day that one was cut. Nobody else does. That's what you're doing, isn't it? Remembering them.",
+    "Every one of them asked me if they could go home. You're the only one who's ever gone looking for them."
+  ],
+
+  "tell:death:fall": [
+    "That was the ground. I'd like to apologise for the ground. I've spoken to it.",
+    "Gravity is one of the old ones. I can't do anything about Gravity. Believe me, I've asked.",
+    "You know the bit where you stop falling? That's the bit that does it."
+  ],
+  "tell:death:again": [
+    "{by} again. Hi. Back so soon. I've kept your seat warm. I don't have a seat.",
+    "Twice. That's {by} twice. You might try coming at it from a different direction.",
+    "Back already? It's okay. Have a breath. It'll still be there."
+  ],
+  "tell:death:nemesis": [
+    "It knew you were coming. It's been telling the others about you. Take it personally. I do.",
+    "Again. That thing has your number. You're going to have to go back and take it off the list.",
+    "It's getting worse every time it gets you. So. Maybe stop letting it?"
+  ],
+  "tell:low_hp": [
+    "You're hurt. Eat something! Drink something! Run! I don't know, I don't have a body!",
+    "That's a lot of red. Please step back from whatever that is.",
+    "Hey. Hey. You're nearly out. I'd really like you not to be.",
+    "I can see your bones from here. Metaphorically. I think. Potion. Potion now."
+  ],
+  "tell:dusk": [
+    "The sun's going. That's when they come out. A roof helps. A lamp helps more.",
+    "Getting dark. Things that hate the light are about to have a very good evening. Light something.",
+    "Dusk! If you're still standing at sunrise, I'll be so proud I'll make it count for something."
+  ],
+  "tell:siege_arrival": [
+    "There they are. Every one you drop is a door that stays shut tonight. Go!",
+    "This is {place}. These are real people. Please win.",
+    "They've reached {place}. It's you or nothing. No pressure. Some pressure."
+  ],
+  "tell:siege_held": [
+    "{place} is still there! There's a woman there who'll never know your name, and she's going to have supper tonight.",
+    "You held {place}. Oh, that was good. Do you know how rare that is?",
+    "{place} stands. I keep looking at it. I just like looking at it."
+  ],
+  "tell:siege_lost": [
+    "{place} burned. Nobody came. I'm not saying that to hurt you. I'm saying it because somebody should say it.",
+    "We lost people in {place}. I know all their names. It's a very bad thing to be good at.",
+    "It's over in {place}. The prices will go up. So will the graves. There'll be another one. Please be there for it."
+  ],
+  "tell:capital_held": [
+    "{place} held! The banners are still up! Go and see the King, he's pretending he isn't crying.",
+    "They broke on the walls. They broke on you. I've watched that city for a very long time, and I have never seen that."
+  ],
+  "tell:capital_fell": [
+    "{place}'s gates are open, and the bells have stopped. The King's alive. He'll want to see you. I'm so sorry.",
+    "They got in. It's quiet in {place} now. I don't like it when it's quiet down there."
+  ],
+  "tell:blood_moon_over": [
+    "It's morning! You saw the whole thing. Nobody stays out for all of it. Nobody!",
+    "The moon's gone back to being a moon. You're still here. I'll take it."
+  ],
+  "tell:star_found": [
+    "You found it! I can't say I had anything to do with that. I can say I'm very pleased with the sky today.",
+    "There it is. Nothing in any Law says a star can't fall exactly there. I checked. Twice."
+  ],
+  "tell:star_faded": [
+    "That star's gone dark. They don't last. There'll be others.",
+    "You missed that one. It's fine. The sky's got plenty."
+  ],
+
+  "tell:found:oak_log": ["Wood! Everything starts with wood. Open your bag with I, and make some planks."],
+  "tell:found:wood_pickaxe": ["A pickaxe! Stone's next. A stone one gets you into the things I'm not supposed to tell you about yet."],
+  "tell:found:coal": ["Coal! That's torches. Monsters won't come near a lamp. I don't know why that works. I didn't write that one."],
+  "tell:found:raw_iron": ["Iron! It needs a furnace. Put it in, put coal under it, go and do something else. I'm told that's called cooking."],
+  "tell:found:iron_ingot": ["Real metal! The smiths are going to start being polite to you."],
+  "tell:found:iron_pickaxe": ["Iron pick! The world just got a lot bigger, downwards."],
+  "tell:found:mana_crystal": ["That hum you can feel in your teeth? That's a Mana Crystal. A temple can put that in you. Try not to let it go to your head."],
+
+  "event:blood_moon": [
+    "🌑 The moon has gone the colour of an old wound. Everything out there is hungrier tonight, and every deed counts double until dawn.",
+    "🌑 Red moon. Lock your doors, or don't, and earn what the brave earn: twice the Faith until the sun comes up.",
+    "🌑 Something's wrong with the moon. They're pouring out of the dark. Survive it, and it'll be worth twice as much."
+  ],
+  "event:star_fall": [
+    "✨ A star comes down, close enough to hear. Something's burning out there. It's on your compass.",
+    "✨ A line of fire crosses the sky and ends beyond the next rise. It's on your compass, and it won't stay lit for long.",
+    "✨ The whole sky blinks. A star has fallen nearby, and it's marked on your compass."
+  ],
+  "event:siege": [
+    "🔥 The Throne's army is marching on {place}! Get there in time, or it falls. It's on your compass.",
+    "🔥 Horns over {place}! The gates won't hold for long without you. It's on your compass.",
+    "🔥 Runners on the road: {place} is under attack, and it can't last. It's on your compass."
+  ],
+
+  "pray:first_law": [
+    "A Law for you? Okay! I can do that. It's the one thing I can do. Just one small note: every Law has two lines. People only ever remember the first one. Read them both, and pick."
+  ],
+  "pray:petition": [
+    "Here's what I've got. Read the second line. Please actually read the second line.",
+    "Okay. Three I can get past the world. You choose, it's your life.",
+    "I've got these. Nobody's ever asked me to write that many for one person.",
+    "Pick one. The world can only hold three of mine at a time, so a fourth pushes out the oldest."
+  ],
+
+  "state:blood_moon": [
+    "Look at that moon. My grandmother said it means the gods are looking away. Get inside, {you}.",
+    "You can't be out in this. Nobody's out in this. Are you out in this?"
+  ],
+  "state:siege": [
+    "They say the Throne's whole army is on the road. I've packed a bag. I don't know where I'd go.",
+    "If you can hold a sword, they're asking for you. If you can hold a bucket, they're asking for you."
+  ],
+
+  "edict:open_hands": ["Since that new Law, the hunters come home heavy. Nobody's walking home after dark, mind.", "More pelts at market than I've seen in years. More funerals, too."],
+  "edict:deep_wells": ["The priests say the mana's running high. My knee's not getting any better, though. Nothing's closing up right.", "A cut I had in spring still hasn't healed. They say it's the new Law. They say it's worth it."],
+  "edict:soft_ground": ["I fell off the barn on Tuesday and got straight back up. It's the oddest thing. I can't quite get over the fence, though.", "The children have stopped being careful on ladders. Nobody can jump a ditch any more, either."],
+  "edict:long_day": ["The evenings go on for ever now. We get twice the work done. But you should hear what the night sounds like when it finally comes.", "Longest days I've ever seen. Shortest tempers after dark. The things out there are in a hurry."],
+  "edict:honest_stone": ["The miners are rich and the smiths are richer. You can't keep an edge on anything these days.", "Twice the ore out of the same hill. Twice the broken picks in the same week."],
+  "edict:fair_measure": ["Everything's cheaper, and I can't afford any of it, because nobody will pay me for anything.", "A Law for fair prices. Fair for who? I'd like to meet whoever asked for that."],
+  "edict:swift_feet": ["Everyone's in such a hurry since that Law. A boy ran into a wall last week. Broke the wall.", "My cart's never been quicker. Nor has anything that hits it."],
+  "edict:red_hand": ["There's a harder edge on people lately. Fights end quicker. They don't end better.", "My husband took a split lip a month ago and it's still open. The Red Hand, they call it."],
+  "edict:iron_skin": ["The guards say it takes two good swings now to do what one used to. Same for them, mind.", "I dropped an anvil on my foot and barely noticed. I also can't open a jar."],
+  "edict:quick_stone": ["Three days to dig a well that used to take a month. I've never been so tired in the legs.", "The quarry's never been faster. The quarrymen walk home like old men."],
+  "edict:hungry_night": ["The nights have grown so long. People are praying again. That's the idea, I suppose.", "Longest night I can remember, and I'm old enough to remember a few. The temple's never been so full."],
+  "edict:rich_road": ["Good money in hunting these days. Not that it buys what it used to.", "Everyone's got coin and nothing costs what it should. Someone's been very clever and I'd like a word with them."],
+  "edict:mercy": ["My boy's arm mended in a week. A week! The priests aren't so happy, I'll tell you. They say it's costing something.", "Everything heals now. It feels like a kindness. I wonder what it's for."],
+
+  "gossip:siege_held": [
+    "{place} held! Someone stood in the gate and wouldn't move. They're saying it was you, {you}.",
+    "You hear about {place}? Walls still up, banners still flying. I'd buy a drink for whoever did that."
+  ],
+  "gossip:siege_lost": [
+    "{place}'s gone. Nobody came. My cousin was there. Nobody's heard from my cousin.",
+    "They hit {place} and no one stood in the way. No one at all. Where were you, {you}?"
+  ],
+  "gossip:law": [
+    "There's a new Law on the world, they say: {edict}. Nobody voted. Nobody ever does.",
+    "{edict}. It came down this week. It's the second line that worries me. It's always the second line."
+  ],
+  "gossip:star": [
+    "A star came down out past the hills. Someone got there first, and I hear it's the richest they've ever been.",
+    "Burned a hole in the ground the size of a barn, that star. They say you walked right into it, {you}."
+  ],
+  "gossip:blood_moon": [
+    "Did you see the moon the other night? I kept the shutters closed and I'm not ashamed of it.",
+    "Red moon again. My mother used to say the Throne was drinking it."
+  ],
+
+  "ending:named": [
+    "My sister says she can hear twelve names when the wind drops. I've stopped telling her that's ridiculous.",
+    "Nobody's been sent for. Nobody's going to be. I don't know how I know that, but I do.",
+    "Everything the Laws give, they still give. They've just stopped asking. I keep waiting for the catch."
+  ],
+  "gossip:ending_named": [
+    "They say someone stood at the Stone and read twelve names, and the world stopped asking for things.",
+    "No more borrowed heroes. That's what the stone says now, if you can reach it. I went. It does."
+  ],
+
+  "stone:echo_unread": [
+    "Letters have been cut into this stone, by hand, a long time ago. They shift when you look at them, and then they hold still.",
+    "A worn stone, alone in the grass. Somebody stood here for a very long time, cutting these letters.",
+    "There's writing on it. Nobody here would be able to read it. You can tell that from the look of it, and you can tell you can."
+  ],
+  "stone:echo": [
+    "You've read this one. The letters hold still for you now.",
+    "Somebody cut this by hand. It took them a very long time. You stand here for a moment anyway.",
+    "It has nothing more to say. It said all it had."
+  ]
+}

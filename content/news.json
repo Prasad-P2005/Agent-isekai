@@ -1,0 +1,222 @@
+[
+ {
+  "date": "1 November 2026",
+  "build": "Beta 1",
+  "summary": "The game has a new name, and a real front door: the world itself behind the main menu, room for as many worlds as you like, and far more of the game in your hands.",
+  "sections": [
+   {
+    "kind": "new",
+    "items": [
+     {
+      "head": "Crown Reborn.",
+      "text": "This is the game's name from now on."
+     },
+     {
+      "head": "A living title screen.",
+      "text": "The menu stands in front of your own world, drifting round the capital at dusk."
+     },
+     {
+      "head": "Many worlds.",
+      "text": "Each world has its own save. Rename them, copy them, save them to a file, bring them back in, and delete them to a trash folder you can still reach."
+     },
+     {
+      "head": "New World choices.",
+      "text": "Name your world, use any word as a seed, pick Gentle, Fair or Hard, start in Story or Creative, choose who waits for you, and skip heaven on a second life."
+     },
+     {
+      "head": "Sound, Controls, Screen and Access pages.",
+      "text": "Separate volumes, invert mouse, toggle sprint, interface size, crosshair styles, a tidier screen, full screen, brightness, colour help, a plain font and less camera shake."
+     },
+     {
+      "head": "How to Play.",
+      "text": "A short guide that always shows your own keys, on the title screen and on the pause card."
+     }
+    ]
+   },
+   {
+    "kind": "changed",
+    "items": [
+     {
+      "head": "Save and quit.",
+      "text": "The pause card can take you back to the title, and it comes back with a welcome and what you were doing."
+     },
+     {
+      "head": "Loading.",
+      "text": "A real progress bar, with a tip to read."
+     }
+    ]
+   },
+   {
+    "kind": "fixed",
+    "items": [
+     {
+      "head": "New World no longer replaces your world.",
+      "text": "It used to write over the only save without asking."
+     },
+     {
+      "head": "Two tabs cannot mix up saves.",
+      "text": "A tab left open on one world can no longer write into another."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "date": "31 October 2026",
+  "build": "Beta 1",
+  "summary": "The world is bigger, its creatures think for themselves, and something very old now sleeps under a black mountain in the east.",
+  "sections": [
+   {
+    "kind": "new",
+    "items": [
+     {
+      "head": "The Wyrm.",
+      "text": "One dragon in all the world, asleep in a cave under the Wyrmcrown. No blade can mark it until the endgame. Wake it and it chases you off the mountain, breathing fire, and it remembers you."
+     },
+     {
+      "head": "A bigger world.",
+      "text": "10 by 10 lands, up from 8 by 8, with the drowned Mirefen in the south and two new villages."
+     },
+     {
+      "head": "Ten new creatures.",
+      "text": "Deer, boars, crabs, bats, bandits, skeleton archers, cave spiders, mountain trolls and ashen wraiths, with shoals of fish in the water."
+     },
+     {
+      "head": "A bestiary.",
+      "text": "The journal has an entry for every creature, unlocked the first time you get a good look at it."
+     },
+     {
+      "head": "More to do.",
+      "text": "Five new guild quests, a longer board as your rank rises, more favors, and a final hunt the King offers once you are Oathbound."
+     }
+    ]
+   },
+   {
+    "kind": "changed",
+    "items": [
+     {
+      "head": "Spawning like Minecraft.",
+      "text": "Packs by biome and by light, caves with their own monsters, and lanterns that truly keep the dark things away. Nothing appears where you are looking."
+     },
+     {
+      "head": "Despawning that makes sense.",
+      "text": "Creatures leave when they are far off and idle, never in front of you. Named foes track you down again."
+     },
+     {
+      "head": "Real pathfinding.",
+      "text": "A shared flow field for the hunt and A* for errands, so creatures go round walls and through doors."
+     },
+     {
+      "head": "Smarter by nature.",
+      "text": "Wolves encircle you, goblins run when hurt, skeletons keep their range, spiders pounce, deer bolt as a herd and guards call for help."
+     },
+     {
+      "head": "Grand town buildings.",
+      "text": "The guild hall, smithy, hospital, inn, church and keep are rebuilt from the ground up, with real interiors."
+     }
+    ]
+   },
+   {
+    "kind": "fixed",
+    "items": [
+     {
+      "head": "Empty shops.",
+      "text": "Blacksmiths, guild masters and doctors now keep their posts day and night, even in the middle of a big city."
+     },
+     {
+      "head": "Wall hopping.",
+      "text": "Characters only jump at a one-block step, not at every wall they meet."
+     },
+     {
+      "head": "Lost events.",
+      "text": "Raids, caravans and the law wait for somewhere to stand instead of quietly failing."
+     }
+    ]
+   },
+   {
+    "kind": "check",
+    "items": [
+     {
+      "head": "Not played yet.",
+      "text": "This build has not been run through the automated tests or played in a browser, so expect rough edges, especially in the new art and the dragon fight. Old saves upgrade themselves, but the far east and south coasts will change shape."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "date": "31 October 2026",
+  "build": "Build 0925d97",
+  "summary": "Everything that has changed since the last update on 24 October is now on main. The biggest change is how the whole world looks and moves.",
+  "sections": [
+   {
+    "kind": "new",
+    "items": [
+     {
+      "head": "New character art.",
+      "text": "Every person and creature is redrawn as a chunky Minecraft-style skin, with mixed body types, cute elf girls, majestic kings and mermaids with long tails."
+     },
+     {
+      "head": "A really big dragon.",
+      "text": "About 25 blocks across the wings. One lives in each open land of the Dragonspine Peaks and circles its lair, well away from the Law Stones."
+     },
+     {
+      "head": "More magic.",
+      "text": "Frost Nova, Chain Lightning, Blink, Mana Ward and Meteor. Your mana well deepens at a temple with Mana Crystals, and slowly with every spell."
+     },
+     {
+      "head": "A compass.",
+      "text": "It runs along the top of the screen and shows which way you face and where everything you are after lies."
+     },
+     {
+      "head": "A first-person hand.",
+      "text": "It stays in the corner of the view and does the work: mining, punching, placing blocks and throwing spells."
+     }
+    ]
+   },
+   {
+    "kind": "changed",
+    "items": [
+     {
+      "head": "Movement feels smoother.",
+      "text": "You now speed up and slow down instead of starting and stopping dead, and the camera and creatures glide at any refresh rate."
+     },
+     {
+      "head": "No AI service needed.",
+      "text": "The story, the people and every line of dialogue are written and shipped with the game, so it runs without a key."
+     },
+     {
+      "head": "A new interface.",
+      "text": "Menus are now pages of one book, with a slate dock and bag for what your hands use."
+     },
+     {
+      "head": "Easier setup.",
+      "text": "The README has copy-paste steps for Docker, Windows and macOS or Linux."
+     }
+    ]
+   },
+   {
+    "kind": "fixed",
+    "items": [
+     {
+      "head": "Ledges.",
+      "text": "Walking up onto a one-block ledge no longer snaps you to the top instantly. The view now rises smoothly."
+     },
+     {
+      "head": "Flickering.",
+      "text": "Faces and joints no longer shimmer where two surfaces overlapped."
+     }
+    ]
+   },
+   {
+    "kind": "check",
+    "items": [
+     {
+      "head": "Not tested yet.",
+      "text": "The automated tests and a full play-through have not been run on this build, so expect some rough edges."
+     }
+    ]
+   }
+  ]
+ }
+]

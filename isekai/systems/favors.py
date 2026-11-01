@@ -5,10 +5,12 @@ import random
 
 from ..content import BLOCK_NAMES, CREATURES, FAVORS
 from ..core.state import Favor, Resident, Settlement, World
-from . import chronicle
+from . import chronicle, faith
+from .edicts import rule
 from .lines import say
 
 FRESH_EVERY = 900  # seconds of play before someone has a new favor in mind
+FAVOR_WORTH = 15
 
 
 def offer(world: World, s: Settlement, who: Resident) -> Favor:
@@ -78,10 +80,11 @@ def finish(world: World) -> tuple[str, dict]:
     if f.kind == "fetch":
         p.blocks[f.target] -= f.count
         fx["take_blocks"] = {f.target: f.count}
-    p.gold += f.reward
+    p.gold += round(f.reward * rule(world, "bounty"))
     p.favors_done += 1
     p.favor = None
     chronicle.fame(world, 1)
+    faith.earn(world, FAVOR_WORTH)
     chronicle.record(world, "favor", giver=f.giver_name)
     return say(world, f"favor:{'delivered' if f.kind == 'deliver' else 'thanks'}", **_blanks(f)), fx
 

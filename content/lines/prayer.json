@@ -1,0 +1,276 @@
+{
+  "pray:more": [
+    "Ooh, a real conversation! Okay. What do you want to know? I've got all the time there is. I've got all of it. Nobody else uses it.",
+    "Sure! I've cleared my schedule. It was clear before. I cleared it again.",
+    "What else is on your mind? Take your time. I'll just be here, being a {godkind}.",
+    "You want to chat? You want to chat with me? On purpose? Okay. Okay! Be cool. Hi."
+  ],
+  "pray:back": [
+    "Right, back to business. What do you need?",
+    "Okay, serious face. This is my serious face. You can't see it, but it's very good.",
+    "Back to the important things, then."
+  ],
+  "pray:hello:blood_moon": [
+    "Have you seen the moon? Of course you have. Are you somewhere safe? Don't answer that, I can see where you are.",
+    "Not now! I mean, yes, hi. But the moon. Stay near a light, and talk fast."
+  ],
+  "pray:hello:hurting": [
+    "You look terrible. I mean that lovingly. Sit down. Do you have a potion? Do you have anything?",
+    "I saw that. I've been waiting for you to call. Are you all right? That's a stupid question. Are you more all right than you were?",
+    "Oh, there you are. Still in one piece? Mostly? I'll take mostly."
+  ],
+  "pray:hello:wanted": [
+    "So there are people with swords looking for you. I heard. Everyone's heard. Keep your voice down.",
+    "You know they can't see you praying, right? It's the one place you can hide. Hi."
+  ],
+  "pray:hello:hunted": [
+    "It's still out there, you know. The one with the name. I'm keeping an eye on it for you.",
+    "Hello! Before you ask, yes, it's still looking for you. No, I can't do anything about that. Hi, though."
+  ],
+  "pray:hello:war": [
+    "There's an army on the road, and you're talking to me. I'm flattered. I'm also worried. Mostly worried.",
+    "I can hear the horns from up here. What do you need? Quickly, if you can."
+  ],
+  "pray:hello:night": [
+    "It's late. I like it when you call at night. Everything's quiet and nobody else is asking for anything.",
+    "Can't sleep? Me neither. I don't sleep. But still.",
+    "Hi. It's dark where you are. It's never dark where I am. I think I'd like it."
+  ],
+  "pray:hand_fabled": [
+    "Oh. I don't usually show people that one. Read it carefully. I mean it this time.",
+    "Hm. I found something at the back of the drawer. I'm not sure I should be showing you. Here.",
+    "One of these is very old, and very strong, and I've seen what happens. Don't say I didn't tell you. I'm telling you now."
+  ],
+  "pray:hand_ink": [
+    "Ooh, one of these came out darker than the others. My hand slipped. Or it didn't. You decide.",
+    "See that one? The ink's different. It happens sometimes, when I mean it more than usual."
+  ],
+  "pray:stone": [
+    "Oh! You came all the way here. The world's thin by these stones. I can almost see your face. You look tired.",
+    "Hi! You're at a stone. I can hear you so much better here. It's like you took your hand off the speaking tube.",
+    "This is one of the places my words actually land. Careful what you ask for here. I can get a little more past the world."
+  ],
+
+  "pray:self": [
+    "Me? Okay. I started out doing greetings. That's it. A soul turns up, somebody has to say hello. I was very good at hello.",
+    "There were more of us, once. There was a {godkind} of rivers who only ever talked about rivers. I miss being bored by that.",
+    "I've never eaten anything. I keep a list of food I'd like to try. It's a long list. Soup is at the top. I don't know why. People just sound so relieved.",
+    "The snacks in heaven are for visitors. I've never had one. I just like having them out. It makes the place look like someone lives here.",
+    "A Law feels like shouting across a canyon. You say it, and it goes, and you can't take it back, and it keeps on echoing for ever. I've got a bit of a sore throat from all this.",
+    "I watch people sleep, sometimes. Not in a strange way! It's just the only time they're not asking for something. Mostly they look very young.",
+    "The first Law I ever wrote was about bread. It said bread should rise. It turned out bread was already doing that. I was so embarrassed.",
+    "Do you know what the worst part of not having hands is? I can't wave back. I do it anyway. Nobody's ever seen it.",
+    "I've got a favourite person in every town. I'm not allowed to do anything about it. I just like knowing how their day went.",
+    "I used to go and sit by the edge of the world and look at the sea. I can't really sit. I hover in a sitting sort of way.",
+    "Sometimes I practise what I'd say to someone who could actually hear me properly. I've been doing it less, lately. I wonder why that is."
+  ],
+  "pray:self_done": [
+    "That's all of it, really. That's the whole {godkind}. There isn't a lot to me when you lay it out flat.",
+    "You've heard all my stories now. Nobody's ever heard all of them. I don't know what happens next. Do you want to hear the one about the bread again?",
+    "I'm out of stories. Go and do something, and then come back and tell me one of yours."
+  ],
+
+  "pray:deeds:blade": [
+    "{kills} kills. You've got a very direct way of solving things. I've started a chart. The chart's going up.",
+    "I saw that last fight. And the one before. And the {kills} before that. I'm not judging, I'm just counting, out loud, near you.",
+    "Mostly I see you hitting things. {kills} things, so far. You're very thorough."
+  ],
+  "pray:deeds:flesh": [
+    "You've died {deaths} times. I was there for all of them. I've got a chair for it now. I don't need a chair.",
+    "Honestly? Mostly I see you bleeding. You're very generous with it. {deaths} falls. You keep getting up, though. I do notice that.",
+    "You get hurt a lot, and then you go right back. People would call that brave. I'd call it brave too, but with my hands over my eyes."
+  ],
+  "pray:deeds:spell": [
+    "You burn through mana like it's going out of fashion. The whole world hums a little when you cast. I can feel it from here.",
+    "All that casting! You've got that look people get, right before they start talking about how the stars are arranged.",
+    "I see you with your hands full of light. It's very pretty. It's also on fire, a lot of the time."
+  ],
+  "pray:deeds:stone": [
+    "You dig. You dig so much. Have you found what you're looking for? Do you know what you're looking for?",
+    "You've moved more rock than the river has. The river's a bit put out about it.",
+    "I look down, and there you are, further down. Then I look again, and you're further down still. Please come up for air."
+  ],
+  "pray:deeds:coin": [
+    "You've got {gold} {currency}, and you know exactly what everything costs. The merchants are starting to whisper your name, and they aren't praying.",
+    "You spend a lot of time in shops for someone with a world to save. I'm not complaining. I like watching you haggle. You make the same face as a fish.",
+    "Buying, selling, counting. {gold} {currency}. I can't touch money. It looks very nice, though."
+  ],
+  "pray:deeds:road": [
+    "You've been to {lands} lands. You just keep walking! I love it. Most people pick one hill and die on it.",
+    "All I see is the back of your head, getting smaller, in {lands} different places. It's a very good back of a head.",
+    "You wander. {lands} lands, and you still look over every hill as if something good is on the other side. Sometimes it is!"
+  ],
+  "pray:deeds:dark": [
+    "You keep the strangest hours. {nights} nights in a row at your best. I like the company. Everyone else is asleep.",
+    "You're out in the dark a lot. Most people try to avoid that. You seem to go looking. I'd like you to know that I've noticed, and that I'm worried.",
+    "Nights are when I can hear you best. Everything else goes quiet. So. Hi. I've been meaning to say hi."
+  ],
+  "pray:deeds:none": [
+    "Not much yet! You've only just got here. Go and do something. I'm dying to see what you do. Not dying. Bad word. Sorry.",
+    "So far I've mostly seen you standing around looking confused. It's a great start. Everyone starts there.",
+    "Hard to say. Do a few more things and I'll have an opinion. I've always got an opinion. I've got nothing else to do."
+  ],
+
+  "pray:leaning:ready": [
+    "You've already got a Law waiting! Ask me for it. I've been holding it and my arms are tired. I don't have arms.",
+    "Stop chatting and ask me for your Law! I mean, keep chatting. But also ask."
+  ],
+  "pray:leaning:blade": [
+    "Something with teeth in it, I think. You've been fighting, and I write what I see. {left} more Faith and it's yours.",
+    "I keep drafting Laws about swords. I wonder why that is. {left} Faith to go."
+  ],
+  "pray:leaning:flesh": [
+    "Something to keep you in one piece, if I can. You worry me. {left} more Faith.",
+    "I've been thinking about wounds. Yours. Specifically yours. {left} Faith and I can do something about that."
+  ],
+  "pray:leaning:spell": [
+    "Something for that well of yours. It's been ringing like a bell. {left} more Faith.",
+    "Mana, I think. You use so much of it that I can't stop thinking about it. {left} Faith to go."
+  ],
+  "pray:leaning:stone": [
+    "Something about rock, probably. You've got me thinking about rock. Nobody's ever got me thinking about rock. {left} more Faith.",
+    "I've got a little draft here about digging. It's quite good. {left} Faith and you can see it."
+  ],
+  "pray:leaning:coin": [
+    "Something about money, I expect. I don't understand money, but you seem to. {left} more Faith.",
+    "I keep writing numbers in the margins. That's you, that is. {left} Faith to go."
+  ],
+  "pray:leaning:road": [
+    "Something for the road. You're always on it. {left} more Faith.",
+    "I've been thinking about feet. Is that strange? I think that's strange. {left} Faith and I'll stop."
+  ],
+  "pray:leaning:dark": [
+    "Something from the dark end of the drawer. You've been keeping late hours. {left} more Faith.",
+    "There's a Law I keep at the back, for people like you. I'm not sure I should be saying that. {left} Faith to go."
+  ],
+  "pray:leaning:none": [
+    "I haven't made up my mind. Show me what you do, and I'll write to that. {left} more Faith.",
+    "Honestly, it depends on you. What I write is what I see. {left} Faith from here."
+  ],
+
+  "pray:news:siege": [
+    "{place} is under attack, right now, and I can hear it. Why are you talking to me? Go!",
+    "There's an army at {place}. I'd really like you to be there. It's on your compass."
+  ],
+  "pray:news:blood_moon": [
+    "Have you looked up? Don't look up. It's the moon. It's red. Stay near a light, and everything you do tonight counts double.",
+    "The moon's gone wrong, and everything's awake. I'd say be careful, but you don't, so: be quick."
+  ],
+  "pray:news:star": [
+    "A star came down near you! It won't stay lit for long. It's on your compass. Go on, I want to see what's in it.",
+    "Something fell out of the sky, and I'd like to point out that it wasn't me. Go and have a look before it fades."
+  ],
+  "pray:news:nemesis": [
+    "{foe} {title} is still out there, telling everyone about you. I don't love how the story's going. You could fix that.",
+    "You've got a fan: {foe} {title}. It's looking for you. It won't stop, either. They never do."
+  ],
+  "pray:news:quiet": [
+    "Quiet, for once. Nobody's on fire. I don't trust it, but I'm enjoying it.",
+    "Nothing much! A goat got onto a roof in the east. That's the whole of the news. I watched for an hour.",
+    "All calm. Which means something's about to happen. It's like that down there. Enjoy your sandwich.",
+    "Nothing to report. I checked twice. I checked three times. I've got nothing else to do."
+  ],
+
+  "pray:joke": [
+    "Why don't gods play hide and seek? Because good luck hiding from me. And I've got nobody to play with. Ehehe. That's two reasons, and one of them's sad.",
+    "What do you call a Demon Lord with no armies? Unemployed! Please go and do that. It'd make my whole century.",
+    "A mage, a priest and a merchant walk into an inn. The merchant owns the inn now. That's the joke. That's every joke down there.",
+    "How many Laws does it take to change a lantern? One, but it has a second line, and now the dark is angry.",
+    "Why did the slime cross the road? It didn't. It's a slime. It's been on that road since the spring.",
+    "Knock knock. You're supposed to say who's there. Oh, I can't hear you properly from here. Never mind, I'll do both parts. Who's there? Me. Me who? Just me. It's always just me. Ehehe.",
+    "I told the dragon a joke once. It didn't laugh. It's the only reason I know how far it can breathe.",
+    "What's the difference between a guard and a wall? You can reason with a wall.",
+    "I'd tell you a joke about the First Law, but you wouldn't get past the first line. Nobody ever does.",
+    "A skeleton walks into a tavern. It orders a drink and a mop."
+  ],
+  "pray:thanks": [
+    "Oh! You're welcome. Nobody says that. Say it again. No, don't, it'd spoil it.",
+    "You don't have to thank me. Everything I do has a second line. But I'm keeping that. I'm keeping that one for later.",
+    "That's the nicest thing anyone's said to me since, um. Since the last time you came up here, probably.",
+    "I'm writing that down. I've got a very small book for things like that. It's got a lot of room in it."
+  ],
+  "pray:curse": [
+    "Rude! Accurate, but rude.",
+    "You can shout at me. People do. It goes up, and I catch it, and I keep it with all the others. I've got a whole room.",
+    "That's fair. I'd be cross too. Do you feel better? Did it help? You can have another go if you like.",
+    "Ooh, that's a new one. I'm going to use that on the weather.",
+    "I know. I know. I can't do anything about it, and that's the worst bit, and I know. Go on, get it out.",
+    "Is this about the Laws? It's about the Laws, isn't it. I did tell you to read the second line."
+  ],
+  "pray:sins": [
+    "Your bounty's at {bounty}. I saw all of it. I can't take it off you, but I can listen, and I'm not going to pretend it didn't happen.",
+    "You've done things. I watched you do them. You can stop carrying it for a moment. I'll hold it. Pay the guards, though. I can't do that part.",
+    "Okay. I heard you. It doesn't fix anything. It just means somebody else knows. That's most of what I've got to give."
+  ],
+  "pray:clean": [
+    "Confess what? You're doing fine. You stepped on a snail on the way up the hill, but I think the snail's going to let it go.",
+    "You've got nothing to confess. Well. Nothing anyone saw. I'm joking. Mostly."
+  ],
+
+  "pray:offer": [
+    "{item}! For me? I can't use it. Nobody's ever given me anything I could use. But you gave it, and that's the part that counts.",
+    "I've put {item} on the shelf. There's nothing else on the shelf. It looks very nice.",
+    "A gift! I felt that. It's not the thing, it's that you could've kept it. Thank you.",
+    "{item}. I'm going to hold on to this for as long as I can hold on to things."
+  ],
+  "pray:offer_dear": [
+    "{item}?! That was worth a lot! You know that, right? I can hear people praying harder just from watching you do that.",
+    "You're really giving that up? {item}? I don't know what to say. I always know what to say. It's the only thing I do.",
+    "Nobody gives up {item}. Nobody. That's going in the good part of the shelf."
+  ],
+  "pray:offer_junk": [
+    "It's the thought that counts, and I've thought about it, and it's {item}. Thank you. I'm being sincere. I think.",
+    "{item}. Ah. Lovely. I'll put it with the others. There aren't any others. Nobody else has sunk this low.",
+    "Are you clearing out your bag? You can tell me. I don't mind being the bin. It's more attention than I usually get."
+  ],
+  "pray:offer_soup": [
+    "Is that... Is that SOUP? You brought me soup? I can't eat it. I can't even hold it. I'm going to look at it for a hundred years. Thank you. Thank you. Oh, it's got little mushrooms in it.",
+    "Soup. Someone listened. In all this time, someone actually listened. I don't know what to do. I'm going to put it somewhere safe. There's nowhere safe. I'll hold it. I can't hold it. Thank you."
+  ],
+  "pray:offer_soon": [
+    "One gift at a time! I've still got my hands full with the last one, and I don't have hands.",
+    "You've only just given me something. Go and do something else, and I'll be ready for another by then.",
+    "Hold on to that for now. Faith doesn't work if you do it all at once. I've checked. I was very disappointed."
+  ],
+  "pray:offer_nothing": [
+    "Your hands are empty. It's a lovely gesture, but there's nothing in it. Hold up what you want to give me.",
+    "I can't see anything there. Is it an invisible gift? I love it. Hold something real next time."
+  ],
+  "pray:other_words": [
+    "Fine, fine. I can try saying it another way. Just this once. The world doesn't like being asked twice.",
+    "Not those? Okay. Let me see what else will get past. Don't ask me again for this one, it makes my head ring.",
+    "You're very picky for someone who's about to be given a Law. Here. Different words. These are all I've got for now."
+  ],
+
+  "tell:threw": [
+    "Did you just throw that on my world? I saw that. It's fine. It's just that I can't pick it up.",
+    "Things you drop stay there for a while, you know. The ground's very patient. I'm less patient. That's littering.",
+    "Throw something at one of the old stones sometime, and I might catch it. That's a hint. That's me hinting."
+  ],
+
+  "dream:open": [
+    "You sleep. Somewhere in it, there's a smell of bread that nobody's baking.",
+    "The room goes away. You're standing on something soft, and someone's nearby, trying very hard to look casual.",
+    "You dream of a long white room, with a table of snacks that nobody has touched.",
+    "It's quiet here. It's the kind of quiet that's been waiting up for you."
+  ],
+  "dream:talk": [
+    "Oh, good, you're asleep. I can talk without you moving about. I just wanted to see how you were.",
+    "This isn't really me. Well, it is. But I'm not touching anything! You came to me. That's allowed. I've checked.",
+    "You look so different when nothing's trying to eat you. Rest. I'll keep an eye on things. It's mostly what I do.",
+    "Do you dream about before? About home? You don't have to tell me. I just wondered.",
+    "I'm not supposed to be here, but nobody's written a Law about it, so.",
+    "You snore. I thought you should hear it from a friend.",
+    "If I had hands, I'd tuck you in. I think that's what people do. I've watched a lot of it.",
+    "You're doing all right, you know. I don't say it enough. I don't say it at all. It feels strange. There. I said it."
+  ],
+  "dream:law": [
+    "While you're here: you've got a Law waiting. Wake up and ask me for it. I've been dying to show you. Not dying. Sorry.",
+    "I've got something for you, when you wake up. I'd give it to you now, but you'd only forget. Press T when you're up."
+  ],
+  "dream:hurt": [
+    "I saw what happened. You don't have to talk about it. Sleep. It'll still be there in the morning, and so will you.",
+    "That was a bad day. They're not all like that. Some of them are worse, but they're not all like that. Sleep.",
+    "You've been hurt a lot lately. I can't fix it. I've been sitting here not fixing it all evening."
+  ]
+}

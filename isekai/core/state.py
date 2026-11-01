@@ -117,6 +117,35 @@ class Deed(BaseModel):
     blanks: dict[str, str] = Field(default_factory=dict)
 
 
+class Edict(BaseModel):
+    """A Law the god wrote at the hero's asking. Every one has a second line. See content/edicts.json."""
+    id: str
+    rank: int = 1
+    ink: str = ""  # gold or red, for a Law that came out stronger than most
+
+
+class Echo(BaseModel):
+    """A stone left by someone who came before."""
+    x: float
+    z: float
+
+
+class Siege(BaseModel):
+    """A settlement the Throne's armies have marched on. It falls when `due` comes, unless the hero breaks the assault."""
+    settlement: int
+    due: float
+    needed: int
+    slain: int = 0
+    begun: bool = False  # the hero has arrived and the fighting has started
+    story: bool = False  # the one the story calls for, which changes what comes after
+
+
+class Star(BaseModel):
+    """Something that fell. It stays until it is found or the timer runs out."""
+    x: float
+    z: float
+
+
 class Parcel(BaseModel):
     """Something the server gives or takes (n below zero). The client owns the bag, so this waits until the client has applied it."""
     seq: int
@@ -137,6 +166,21 @@ class Player(BaseModel):
     bounty: int = 0
     notoriety: int = 0
     renown: int = 0  # how the world sees the hero; crimes lower it
+    level: int = 1  # how much the god has to go on. Each one is worth a little health and a Law
+    faith: int = 10  # towards the next level, which starts with a head start
+    petitions: int = 0  # Laws the hero has earned and not asked for yet
+    written: int = 0  # Laws asked for so far
+    deeds: dict[str, float] = Field(default_factory=dict)  # sign -> how much of it she has seen lately, which is the first card she deals
+    deal: dict = Field(default_factory=dict)  # the hand she has dealt, kept until a Law is written
+    shown: list[str] = Field(default_factory=list)  # the Laws she has offered lately, which come round less often
+    dry: int = 0  # hands in a row with nothing rare in them, which makes the next one likelier
+    redraws: int = 0  # times the hero has asked for other words
+    redrawn: bool = False  # has done so for this Law
+    god_told: int = 0  # how much of her own story she has told
+    laws_seen: list[str] = Field(default_factory=list)  # every Law she has ever offered, for the book
+    found: list[str] = Field(default_factory=list)  # items the hero has already been credited for finding
+    nights: int = 0  # nights survived in a row
+    best_nights: int = 0
     # the bag: 36 slots of {id, n, dur}, the first nine the hotbar. The client owns these, for the same reason it owns the world's blocks.
     bag: list[dict | None] = Field(default_factory=_first_bag)
     worn: dict[str, dict | None] = Field(default_factory=_bare_body)  # head, body, legs, feet and the off hand
@@ -189,7 +233,7 @@ class Story(BaseModel):
 
 class FeedItem(BaseModel):
     id: int
-    type: str  # narration | decree | event | settlement | toast | scene | act
+    type: str  # narration | decree | event | settlement | toast | scene | act | law
     text: str = ""
     data: dict = Field(default_factory=dict)
 
@@ -197,7 +241,7 @@ class FeedItem(BaseModel):
 class Timer(BaseModel):
     """Something due later on the game clock. Saved with the world, so a restart cannot lose it."""
     due: float
-    kind: str  # successor | omen | nemesis
+    kind: str  # successor | omen | nemesis | siege_end | star_fades
     data: dict = Field(default_factory=dict)
 
 
@@ -205,6 +249,8 @@ class World(BaseModel):
     seed: int
     save_version: int = Field(default=0, validation_alias=AliasChoices("save_version", "society_version"))
     genesis_done: bool = False
+    difficulty: str = "fair"  # a name from `difficulty` in content/world.json, whose rules feed effects() for as long as the world lasts
+    brief: bool = False  # chosen when the world was made: skip the talk in heaven and start on the ground
     name: str = "Aldervale"
     premise: str = ""
     hero: str = "a reincarnated hero"
@@ -221,7 +267,7 @@ class World(BaseModel):
     boss_hp: float | None = None  # the Demon Lord's wounds; None until he has been hurt
     dragon_dead: bool = False
     dragon_hp: float | None = None  # the Wyrm's, the same way
-    ending: str | None = None  # hero | crown | broken
+    ending: str | None = None  # hero | crown | broken | named
     raid_every: float = 480
     raid_level: int = 0
     war_pressure: float = 0  # how hard the war presses on prices; rises with each raid and eases in quiet times
@@ -235,6 +281,11 @@ class World(BaseModel):
     player: Player = Field(default_factory=Player)
     story: Story = Field(default_factory=Story)
     nemesis: Nemesis | None = None
+    edicts: list[Edict] = Field(default_factory=list)  # the Laws written for the hero, oldest first
+    echoes: list[Echo] = Field(default_factory=list)
+    siege: Siege | None = None
+    star: Star | None = None
+    blood_moon: bool = False
     chronicle: list[Deed] = Field(default_factory=list)
     said: dict[str, list[int]] = Field(default_factory=dict)  # line pool -> what was said lately, so that nothing repeats soon
     visited: list[str] = Field(default_factory=list)
@@ -245,6 +296,7 @@ class World(BaseModel):
     festival_until: float = 0
     block_edits: dict[str, dict[str, int]] = Field(default_factory=dict)  # chunk key -> block index -> block id
     stations: dict[str, dict] = Field(default_factory=dict)  # 'x,y,z' -> what a furnace or a chest holds
+    ground: list[dict] = Field(default_factory=list)  # what lies in the world: {id, n, dur, x, y, z, age, wait, thrown}
     feed: list[FeedItem] = Field(default_factory=list)
     feed_next: int = 1
 

@@ -27,7 +27,7 @@ const noop = () => {}, ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : k
 const elements = new Map();
 function el(id = '') {
   const listeners = {}, e = {
-    id, style: {}, dataset: {}, listeners, children: [], classList: { add: noop, remove: noop, toggle: noop, contains: () => false }, textContent: '', innerHTML: '', value: '', className: '', scrollTop: 0, clientWidth: 800, clientHeight: 600, width: 96, height: 120,
+    id, style: { setProperty: noop, removeProperty: noop }, dataset: {}, listeners, children: [], classList: { add: noop, remove: noop, toggle: noop, contains: () => false }, textContent: '', innerHTML: '', value: '', className: '', scrollTop: 0, clientWidth: 800, clientHeight: 600, width: 96, height: 120,
     addEventListener(t, f) { (listeners[t] ??= []).push(f); }, removeEventListener: noop, append: noop, appendChild: c => c, prepend: noop, remove: noop, focus: noop, blur: noop, setAttribute: noop, getContext: () => ctx2d, getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600 }),
     querySelector: () => el(), querySelectorAll: () => [], closest: () => null, requestPointerLock: () => Promise.resolve(), setSelectionRange: noop, toDataURL: () => 'data:,', contains: () => false, setPointerCapture: noop, animate: noop,
   };
@@ -77,6 +77,17 @@ for (let i = 0; i < 30; i++) stepWorld(1 / 60);
 updateHUD(1 / 60);
 renderWorld(1 / 60, 1);
 console.log('world step, HUD and a frame ran');
+
+// ---------- every creature ----------
+// Spawning is random, so a kind that cannot be drawn only shows up when someone walks into it.
+const { CREATURES } = await import(js('core/content.js')), { removeEntity, spawnEntity } = await import(js('sim/entities.js'));
+for (const kind of Object.keys(CREATURES)) {
+  const e = spawnEntity(kind, x + 3.5, player.pos.y, z + 3.5, { natural: true, name: kind }); // the stand-in world has no Demon Lord's name to give him
+  if (e && !e.view) throw new Error(`a ${kind} has no body`);
+  renderWorld(1 / 60, 1);
+  if (e) removeEntity(e);
+}
+console.log('every creature has a body');
 
 // ---------- the bag ----------
 const $ = id => document.getElementById(id), fire = (element, type, e) => { for (const f of element.listeners[type] ?? []) f(e); };

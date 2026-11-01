@@ -2,6 +2,7 @@
 import { G, creative } from '../core/state.js';
 import { ABILITIES } from '../core/content.js';
 import { emit, toast } from '../core/events.js';
+import { rule } from '../core/rules.js';
 import { Vec3 } from '../core/vec3.js';
 import { ents, hurtEntity, isFoe } from './entities.js';
 import { heldDef } from './inventory.js';
@@ -15,12 +16,13 @@ const BLINK_RANGE = 14, BLINK_MIN = 2, BLINK_STEP = 0.5, BLINK_LIFTS = [0.1, 1.1
 const WARD_TIME = 10;
 const METEOR_RANGE = 40, METEOR_HEIGHT = 34, METEOR_SPEED = 42, METEOR_DMG = 60, METEOR_BLAST = 7, METEOR_SIZE = 2.4;
 const UP = new Vec3(0, 1, 0), FIREBALL_DMG = 14, HEAL = 8;
-const power = () => heldDef()?.spell ?? 1; // a staff in the hand strengthens whatever is cast
+const power = () => (heldDef()?.spell ?? 1) * rule('spell_power'); // a staff in the hand strengthens whatever is cast
+const manaCost = id => Math.ceil(ABILITIES[id].mana * rule('spell_cost'));
 
 const spellName = id => ABILITIES[id].label.replace(/^[A-Z] /, '');
 function ready(id) {
   if (creative()) return true;
-  const cost = ABILITIES[id].mana;
+  const cost = manaCost(id);
   if (!has(id)) { toast(`You do not know ${spellName(id)}. (Buy a scroll from a merchant)`); return false; }
   if (cost > maxMana()) { toast(`${spellName(id)} takes ${cost} mana, and your well only holds ${maxMana()}. Attune to a Mana Crystal at a temple, or keep casting.`); return false; }
   if (player.mana < cost) { toast('Not enough mana.', 2); return false; }
@@ -28,8 +30,9 @@ function ready(id) {
 }
 function spend(id) {
   if (creative()) return; // nothing spent is nothing practised, so free spells cannot deepen the well
-  player.mana -= ABILITIES[id].mana;
-  emit('mana:spent', ABILITIES[id].mana);
+  const cost = manaCost(id);
+  player.mana -= cost;
+  emit('mana:spent', cost);
 }
 function pay(id) {
   if (!ready(id)) return false;

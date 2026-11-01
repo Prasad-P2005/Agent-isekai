@@ -1,8 +1,11 @@
 """Fills the changelog email: python tools/make_changelog.py emails/changelogs/2026-10-31.json
 
-Writes the entry's .html and .txt beside it, ready to send. Attach emails/title.png with the content id "title".
+Writes the entry's .html and .txt beside it, ready to send as a Resend broadcast. Resend fills in the unsubscribe
+link, and only in a broadcast. The title and the pictures load from GitHub, so they have to be pushed first.
+It also writes content/news.json from the newest entries, which is the What's New page in the game. With no entry it does only that.
 Standard library only.
 """
+import datetime
 import html
 import json
 import pathlib
@@ -11,6 +14,9 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "emails" / "changelog.html"
+ENTRIES = ROOT / "emails" / "changelogs"
+NEWS = ROOT / "content" / "news.json"
+NEWS_KEPT = 5
 REPO = "https://github.com/Prasad-P2005/Agent-isekai"
 RAW = "https://raw.githubusercontent.com/Prasad-P2005/Agent-isekai/main/"
 # The ribbons of the interface: (label, ribbon, ink on it)
@@ -46,7 +52,7 @@ def render(entry):
         sections += fill(section, label=label, color=color, ink=ink).replace("{{items}}", items)
     pictures = "".join(fill(picture, link=RAW + p["file"], image=RAW + p["file"], caption=html.escape(p["caption"])) for p in entry["pictures"])
     page = page.replace(section_whole.replace("{{items}}", item_whole), sections).replace(picture_whole, pictures)
-    return fill(page, subject=html.escape(entry["subject"]), date=entry["date"], build=entry["build"], summary=html.escape(entry["summary"]), repo=REPO)
+    return fill(page, subject=html.escape(entry["subject"]), date=entry["date"], build=entry["build"], summary=html.escape(entry["summary"]), repo=REPO, title=RAW + "emails/title.png")
 
 
 def plain(entry):
@@ -56,15 +62,25 @@ def plain(entry):
         lines += [f"- {i['head']} {i['text']}" for i in s["items"]]
         lines.append("")
     lines += [f"{p['caption'].rstrip('.')}: {RAW + p['file']}" for p in entry["pictures"]]
-    lines += ["", f"Code: {REPO}", "Sent from a no-reply address, so replies are not read."]
+    lines += ["", f"Code: {REPO}", "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}", "Sent from a no-reply address, so replies are not read."]
     return "\n".join(lines) + "\n"
 
 
+def write_news():
+    """The game cannot read emails/, which the Docker image leaves out, so what it shows is copied into content/."""
+    entries = [json.loads(p.read_text(encoding="utf-8")) | {"file": p.stem} for p in ENTRIES.glob("*.json")]
+    entries.sort(key=lambda e: (datetime.datetime.strptime(e["date"], "%d %B %Y"), e["file"]), reverse=True)
+    news = [{k: e[k] for k in ("date", "build", "summary", "sections")} for e in entries[:NEWS_KEPT]]
+    NEWS.write_text(json.dumps(news, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
 def main():
-    path = pathlib.Path(sys.argv[1])
-    entry = json.loads(path.read_text(encoding="utf-8"))
-    path.with_suffix(".html").write_text(render(entry), encoding="utf-8")
-    path.with_suffix(".txt").write_text(plain(entry), encoding="utf-8")
+    if len(sys.argv) > 1:
+        path = pathlib.Path(sys.argv[1])
+        entry = json.loads(path.read_text(encoding="utf-8"))
+        path.with_suffix(".html").write_text(render(entry), encoding="utf-8")
+        path.with_suffix(".txt").write_text(plain(entry), encoding="utf-8")
+    write_news()
 
 
 if __name__ == "__main__":

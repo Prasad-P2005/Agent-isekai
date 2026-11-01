@@ -15,6 +15,8 @@
     "beastkin_savanna": "beast"
   },
   "punishments": ["golem_hunters", "guards", "bounty", "fine", "exile", "curse"],
+  "scope_words": { "everywhere": "anywhere", "cities": "inside a city", "human_kingdom": "in the Kingdom", "elven_forest": "in the elven forest", "beastkin_savanna": "in the Wilds" },
+  "punishment_words": { "golem_hunters": "iron golems hunt you down", "guards": "the guards come for you", "bounty": "a price on your head", "fine": "a fine", "exile": "exile to a distant land", "curse": "a curse" },
   "default_laws": [
     { "name": "Law of the Crown", "crime": "kill_human", "scope": "everywhere", "needs_witness": true, "punishment": "golem_hunters", "severity": 3 },
     { "name": "Peace of the Market", "crime": "attack_civilian", "scope": "cities", "needs_witness": true, "punishment": "guards", "severity": 2 },

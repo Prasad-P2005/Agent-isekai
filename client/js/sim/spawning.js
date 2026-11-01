@@ -4,6 +4,7 @@
 // Three other things come through here too: beings that live in structures, foes the story sends, and the law.
 import { BIOMES, CREATURES, SPAWNS } from '../core/content.js';
 import { G } from '../core/state.js';
+import { rule } from '../core/rules.js';
 import { on } from '../core/events.js';
 import { ents, isMonsterKind, isNight } from './beings.js';
 import { BUILT, GROUND, WATER, solid } from './blocks.js';
@@ -105,9 +106,9 @@ function structureSpawning(dt) {
     if (h.due > 0) { h.due -= HINT_GAP; continue; }
     if (h.kind in DEAD && G.world[DEAD[h.kind]]) { hintQueue.splice(i, 1); continue; }
     if (!inReach(h)) continue;
-    let y = h.y; while (!fitsAt(h.x + 0.5, y, h.z + 0.5) && y < H - 2) y++;
+    let y = h.y ?? heightAt(h.x, h.z) + 1; while (!fitsAt(h.x + 0.5, y, h.z + 0.5) && y < H - 2) y++;
     const hp = h.hp ?? G.world[WOUNDS[h.kind]] ?? undefined; // wounds outlast a reload
-    if (spawnEntity(h.kind, h.x + 0.5, y, h.z + 0.5, { home: h, hp })) hintQueue.splice(i, 1); // no room right now: try again next time
+    if (spawnEntity(h.kind, h.x + 0.5, y, h.z + 0.5, { home: h, hp, role: h.role })) hintQueue.splice(i, 1); // no room right now: try again next time
   }
 }
 function retryArrivals(dt) {
@@ -125,15 +126,15 @@ export function updateArrivals(dt) { structureSpawning(dt); retryArrivals(dt); }
 
 // ---------- nature ----------
 const timers = Object.fromEntries(Object.keys(SPAWNS.categories).map((k, i) => [k, 3 + i]));
-function spawnPack(rule, cat, x, y, z) {
+function spawnPack(table, cat, x, y, z) {
   let made = 0;
-  const count = between(rule.pack), D = CREATURES[rule.kind], nocturnal = rule.light == null && isMonsterKind(D);
+  const count = between(table.pack), D = CREATURES[table.kind], nocturnal = table.light == null && isMonsterKind(D), power = isMonsterKind(D) ? rule('monster_power') : 1;
   for (let i = 0; i < count * 2 && made < count; i++) {
     const px = i ? x + Math.floor(Math.random() * (PACK_SPREAD * 2 + 1)) - PACK_SPREAD : x, pz = i ? z + Math.floor(Math.random() * (PACK_SPREAD * 2 + 1)) - PACK_SPREAD : z;
     const py = D.fly || D.swim ? y : i ? floorBelow(px, y + 2, pz, 5) : y;
     if (py == null || !chunkReady(px, pz) || !bodyFits(D, px, py, pz) || (!D.fly && !D.swim && !wildFloor(px, py, pz))) continue;
-    if (inView(px + 0.5, py + 1, pz + 0.5) || !suits(rule, cat, px, py, pz)) continue;
-    if (spawnEntity(rule.kind, px + 0.5, py, pz + 0.5, { natural: true, cat, nocturnal, name: D.friendly ? FIRST[Math.floor(Math.random() * FIRST.length)] : undefined })) made++;
+    if (inView(px + 0.5, py + 1, pz + 0.5) || !suits(table, cat, px, py, pz)) continue;
+    if (spawnEntity(table.kind, px + 0.5, py, pz + 0.5, { natural: true, cat, nocturnal, name: D.friendly ? FIRST[Math.floor(Math.random() * FIRST.length)] : undefined, ...(power !== 1 ? { power } : {}) })) made++;
   }
   return made;
 }
@@ -155,8 +156,8 @@ function tryCategory(cat, ring) {
   }
   const list = surfaceRules(x, z, top, cat), y = floorBelow(x, top + 3, z, 8);
   if (!list.length || y == null || y <= SEA) return 0;
-  const rule = pickRule(list), D = CREATURES[rule.kind];
-  return spawnPack(rule, cat, x, D.fly ? y + 4 : y, z);
+  const table = pickRule(list), D = CREATURES[table.kind];
+  return spawnPack(table, cat, x, D.fly ? y + 4 : y, z);
 }
 function naturalSpawning(dt) {
   const night = isNight(), deep = underground();
@@ -166,7 +167,7 @@ function naturalSpawning(dt) {
     timers[cat] = C.every;
     if (cat === 'cave' && !deep) continue;
     if (cat !== 'cave' && deep) continue; // the surface can wait: nothing up there can reach you
-    const cap = cat === 'monster' && !night ? C.day_cap : C.cap, range = C.ring[1] + COUNT_BEYOND;
+    const hostile = cat === 'monster' || cat === 'cave', cap = (cat === 'monster' && !night ? C.day_cap : C.cap) * (hostile ? rule('monster_cap') : rule('beast_cap')), range = C.ring[1] + COUNT_BEYOND;
     // Only what is around the hero counts, or a crowd left behind would keep new ones from appearing, Minecraft's own trick.
     let local = 0;
     for (const e of ents) if (e.cat === cat && e.pos.distanceTo(player.pos) < range) local++;

@@ -29,4 +29,5 @@ The girls of the realm, with elves and mermaids: https://raw.githubusercontent.c
 Monsters, stones and the Demon Lord: https://raw.githubusercontent.com/Prasad-P2005/Agent-isekai/main/gallery/creatures.png
 
 Code: https://github.com/Prasad-P2005/Agent-isekai
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}
 Sent from a no-reply address, so replies are not read.

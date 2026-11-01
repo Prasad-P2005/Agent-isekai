@@ -68,11 +68,13 @@ export function lookFor(kind, job, seed, def) {
   const bearded = r() < 0.4; // drawn whatever the outfit, so that one job's beard does not shift the next person's hair
   const outfit = OUTFITS[L.job] || OUTFITS[kind] || OUTFITS.villager;
   outfit(L, r, bearded);
-  if (def.body != null && OUTFITS[L.job] === undefined && OUTFITS[kind] === undefined) L.top = parseInt(def.body.slice(1), 16);
+  if (def.body != null && OUTFITS[L.job] === undefined && OUTFITS[kind] === undefined) L.top = def.body; // a number by now: core/content.js reads the colours
   if (L.female) girlish(L, r);
   L.build = buildFor(L, name, r);
   return L;
 }
+// The player's own character, seen in the bag and in the hand at the corner of the view.
+export const heroLook = () => lookFor('villager', 'adventurer', 23, { race: 'human' });
 // A floor-length robe, an ermine mantle and a cape to the ground: nobody else in the world dresses like this.
 function royal(L, robe, cape) { L.top = robe; L.bottom = robe; L.gown = true; L.cape = cape; L.mantle = true; L.trim = GOLD; L.belt = GOLD; L.crown = 'crown'; L.shoes = robe; }
 

@@ -17,10 +17,11 @@ import { ents, hurtEntity, isFoe, isNight, meleeHit, removeEntity, spawnEntity, 
 import { addBlock, addItem, applyParcels, armourCut, count, heldBlock, hotbar, takeBlock, wearHeld } from '../../client/js/sim/inventory.js';
 import { craftFromBag, matchGrid, timesCanMake } from '../../client/js/sim/crafting.js';
 import { drinkBest } from '../../client/js/sim/hands.js';
-import { loadStations, stationAt, updateStations } from '../../client/js/sim/stations.js';
+import { emptyStation, loadStations, stationAt, updateStations } from '../../client/js/sim/stations.js';
 import { RECIPES } from '../../client/js/core/content.js';
 import { questMarks } from '../../client/js/sim/marks.js';
-import { aim, miningBar, placeBlock, stopAiming, updateMining } from '../../client/js/sim/mining.js';
+import { aim, digging, placeBlock, stopAiming, updateMining } from '../../client/js/sim/mining.js';
+import { dropReport, drops, loadDrops, popOut, spawnDrop, tossHeld, updateDrops } from '../../client/js/sim/drops.js';
 import { lampLight, skyLight } from '../../client/js/sim/light.js';
 import { initNoise } from '../../client/js/sim/noise.js';
 import { crimeJudged, replaceSettlement, talkToNearest, updateLaw, updateResidents } from '../../client/js/sim/people.js';
@@ -75,7 +76,7 @@ function findClearGround() {
 let groundFound = false;
 
 beforeEach(() => {
-  ents.length = 0; hintQueue.length = 0; projectiles.length = 0; chunks.clear(); edits.clear(); takeUnsentEdits(); clearArrivals();
+  ents.length = 0; hintQueue.length = 0; projectiles.length = 0; drops.length = 0; chunks.clear(); edits.clear(); takeUnsentEdits(); clearArrivals();
   crimes.length = 0; kills.length = 0; deaths.length = 0; hotbar.creative.fill(null); hotbar.slot = 0;
   G.world = worldData(); G.profile = G.world.player; G.phase = 'world'; G.locked = true; G.uiOpen = false; G.keys = {}; G.mouseDown = false; G.dayTime = 0.1;
   initNoise(fixture.seed); setWorldData(G.world);
@@ -273,10 +274,121 @@ test('mining takes as long as the block is hard', () => {
   G.mouseDown = true;
   updateMining(need / 2);
   assert.equal(getBlock(t.x, t.y, t.z), id);
-  assert.ok(miningBar.progress > 0.4 && miningBar.progress < 0.6);
+  assert.ok(digging.progress > 0.4 && digging.progress < 0.6);
   updateMining(need);
   assert.equal(getBlock(t.x, t.y, t.z), AIR);
+  assert.equal(drops.length, 1);
+});
+
+// ---------- what lies in the world ----------
+const settle = (seconds = 1.5) => { for (let t = 0; t < seconds; t += STEP) updateDrops(STEP); };
+const beside = (d = 6) => [player.pos.x + d, player.pos.y + 1, player.pos.z];
+
+test('what a block gives lands on the ground, and walking over it takes it', () => {
+  const t = aimAtGround(), id = getBlock(t.x, t.y, t.z);
+  G.mouseDown = true;
+  updateMining(hardness(id) + 0.01);
+  assert.equal(count(dropOf(id)), 0);
+  player.pos.y = t.y + 0.01; // the hero drops into the hole it left
+  settle();
   assert.equal(count(dropOf(id)), 1);
+  assert.equal(drops.length, 0);
+});
+
+test('a creature leaves its loot where it fell, and nobody else leaves any', () => {
+  const orc = spawnEntity('orc', ...beside());
+  hurtEntity(orc, 9999, 0, 0);
+  assert.equal(drops.find(d => d.id === 'orc_tusk')?.n, 1);
+  drops.length = 0;
+  const other = spawnEntity('orc', ...beside());
+  hurtEntity(other, 9999, 0, 0, spawnEntity('orc', ...beside(8)));
+  assert.equal(drops.length, 0);
+});
+
+test('a creature can leave more than its one sure thing', () => {
+  const was = Math.random;
+  Math.random = () => 0;
+  hurtEntity(spawnEntity('skeleton', ...beside()), 9999, 0, 0);
+  Math.random = was;
+  assert.deepEqual(drops.map(d => d.id).sort(), ['arrow', 'old_bone', 'old_bone']);
+});
+
+test('the Law of Open Hands doubles what falls', () => {
+  G.rules = { loot: 2 };
+  hurtEntity(spawnEntity('orc', ...beside()), 9999, 0, 0);
+  assert.equal(drops.find(d => d.id === 'orc_tusk').n, 2);
+});
+
+test('G throws one and Ctrl+G throws the stack', () => {
+  G.profile.bag[0] = { id: 'bread', n: 3 };
+  assert.ok(tossHeld(false));
+  assert.equal(G.profile.bag[0].n, 2);
+  assert.ok(tossHeld(true));
+  assert.equal(G.profile.bag[0], null);
+  assert.deepEqual(drops.map(d => d.n), [1, 2]);
+  assert.ok(!tossHeld(false));
+});
+
+test('what is thrown cannot be taken back the moment it leaves the hand', () => {
+  G.profile.bag[0] = { id: 'bread', n: 1 };
+  tossHeld(false);
+  settle(1);
+  assert.equal(count('bread'), 0);
+});
+
+test('a worn tool lands as worn as it was', () => {
+  G.profile.bag[0] = { id: 'iron_sword', n: 1, dur: 40 };
+  tossHeld(false);
+  assert.equal(drops[0].dur, 40);
+});
+
+test('alike things lying together become one stack, and worn things do not', () => {
+  spawnDrop('stick', 3, ...beside());
+  spawnDrop('stick', 4, ...beside());
+  spawnDrop('iron_sword', 1, ...beside());
+  spawnDrop('iron_sword', 1, ...beside());
+  settle(3);
+  assert.deepEqual(drops.map(d => [d.id, d.n]).sort(), [['iron_sword', 1], ['iron_sword', 1], ['stick', 7]]);
+});
+
+test('a full bag leaves a thing where it lies', () => {
+  G.profile.bag = Array.from({ length: 36 }, () => ({ id: 'iron_sword', n: 1, dur: 250 }));
+  spawnDrop('stick', 1, player.pos.x, player.pos.y + 0.5, player.pos.z, { wait: 0 });
+  settle();
+  assert.equal(drops.length, 1);
+});
+
+test('what is left for five minutes of play is gone', () => {
+  spawnDrop('stick', 1, ...beside());
+  settle(2);
+  drops[0].age = 299.9;
+  settle(1);
+  assert.equal(drops.length, 0);
+});
+
+test('a chest that is broken spills what it held', () => {
+  const [x, y, z] = beside().map(Math.floor);
+  stationAt(x, y, z, 'chest', true).slots[3] = { id: 'ruby', n: 2 };
+  emptyStation(x, y, z, 'chest');
+  assert.equal(drops.find(d => d.id === 'ruby').n, 2);
+});
+
+test('creative mode takes nothing, and what it throws can never reach the bag', () => {
+  G.profile.creative = true;
+  hotbar.creative[0] = 'bread';
+  tossHeld(false);
+  spawnDrop('stick', 1, player.pos.x, player.pos.y + 0.5, player.pos.z, { wait: 0 });
+  settle(3);
+  assert.equal(count('bread') + count('stick'), 0);
+  G.profile.creative = false;
+  assert.deepEqual(dropReport().map(d => d.id), ['stick']);
+});
+
+test('what lay on the ground comes back as it was', () => {
+  popOut('stick', 5, ...beside());
+  const saved = JSON.parse(JSON.stringify(dropReport()));
+  loadDrops(saved);
+  assert.deepEqual(drops.map(d => [d.id, d.n]), [['stick', 5]]);
 });
 
 test('the right tool mines faster', () => {

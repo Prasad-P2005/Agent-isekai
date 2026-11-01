@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import random
 
-from ..content import LINES, NAMES
-from ..core.state import Pos, Settlement, World
+from ..content import LINES, NAMES, WORLD
+from ..core.state import Echo, Pos, Settlement, World
 from ..systems.laws import DEFAULT_LAWS, LOCAL_LAWS
 from ..systems.lines import fill
 from ..systems.people.roster import make_roster
@@ -13,6 +13,8 @@ from .layouts import TOWNS
 from .map import build_map
 
 RAID_MINUTES = (5.0, 11.0)
+STONES = 11  # one for each who came before the one who left the cairn
+FIRST_STONE = (7.0, 6.0)  # from where the hero lands, so that the first thing they find is a question
 
 
 def ruler_of(world: World, s: Settlement) -> tuple[str | None, str | None]:
@@ -32,6 +34,17 @@ def first_spawn(world: World) -> Pos:
     return Pos(x=village.cx + 5.5, z=village.cz + TOWNS["human"]["reach"] + 3.5)
 
 
+def place_echoes(world: World) -> None:
+    """The first stone is beside where the hero lands. The rest spread out across open land, nearest first, so that following them is a way of seeing the world."""
+    rng, land = random.Random(f"{world.seed}/echoes"), WORLD["land"]
+    spawn_x, spawn_z = world.spawn.x, world.spawn.z
+    around = sorted(((lx, lz) for lz, row in enumerate(world.lands) for lx, l in enumerate(row) if l.realm != "ocean" and l.structure == "none" and l.settlement is None),
+                    key=lambda spot: ((spot[0] + 0.5) * land - spawn_x) ** 2 + ((spot[1] + 0.5) * land - spawn_z) ** 2)
+    gap = (len(around) - 1) / max(1, STONES - 2)
+    chosen = [around[round(i * gap)] for i in range(STONES - 1)] if around else []
+    world.echoes =[Echo(x=spawn_x + FIRST_STONE[0], z=spawn_z + FIRST_STONE[1]), *(Echo(x=(lx + rng.uniform(0.3, 0.7)) * land, z=(lz + rng.uniform(0.3, 0.7)) * land) for lx, lz in chosen)]
+
+
 def _name_places(world: World, rng: random.Random) -> None:
     pools = {t: rng.sample(NAMES[f"{t}_places"], len(NAMES[f"{t}_places"])) for t in ("human", "city", "elf", "elfcity", "beast")}
     for s in world.settlements:
@@ -49,11 +62,13 @@ def found_settlement(world: World, s: Settlement) -> None:
     world.settlements.append(s)
 
 
-def run_genesis(world: World) -> None:
+def run_genesis(world: World, name: str = "", god_is: str = "") -> None:
+    """The seed chooses everything, unless the player asked for a name for the world or for a god or a goddess. The draws stay in order, so that a seed keeps its world."""
     rng = random.Random(world.seed)
     world.lands, world.settlements, world.demon_land = build_map()
-    world.name = rng.choice(NAMES["worlds"])
-    god = rng.choice(NAMES["gods"])
+    drawn = rng.choice(NAMES["worlds"])
+    world.name = name or drawn
+    god = rng.choice([g for g in NAMES["gods"] if g["is"] == god_is] or NAMES["gods"])
     world.god_name, world.god_is = god["name"], god["is"]
     world.kingdom = rng.choice(NAMES["kingdoms"])
     world.king_name = rng.choice(NAMES["kings"])
@@ -75,4 +90,5 @@ def run_genesis(world: World) -> None:
         job, name = ruler_of(world, s)
         make_roster(s, world.seed, job, name)
     world.spawn = first_spawn(world)
+    place_echoes(world)
     world.genesis_done = True

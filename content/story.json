@@ -58,13 +58,184 @@
     "dragon": { "structure": "dragon_peak", "creature": "dragon", "label": "The Wyrm" }
   },
 
-  "side_marks": [{ "at": "dragon", "needs": ["wyrm_quest"], "not": ["wyrm_slain"] }],
+  "side_marks": [
+    { "at": "dragon", "needs": ["wyrm_quest"], "not": ["wyrm_slain"] },
+    { "at": "echo", "needs": ["echo_trail"], "counts_below": { "echoes": 11 } }
+  ],
 
   "hunts": [
     { "kind": "orc", "flag": "tribe_trial", "count": "orcs", "needed": 3, "progress": "The chief's hunt: {done}/{needed} Orcs" }
   ],
 
   "beats": {
+    "echo_0": {
+      "speaker": "echo:0", "not": ["echo_0"], "label": "Read the stone.",
+      "lines": [
+        "The stone is worn nearly smooth. The letters are Latin. You have never read Latin. You read it anyway.",
+        "\"I am Decimus, of the Ninth, a measurer of roads. I drowned in a river in Britain, and a kind voice told me I had been chosen.\"",
+        "\"I have paced this land from the sea to the mountains. Every mile of it is exactly one mile. Nothing in nature is so honest. Somebody made this place. Count your steps, whoever you are. Count everything.\""
+      ],
+      "sets": ["echo_0", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Decimus"
+    },
+    "echo_1": {
+      "speaker": "echo:1", "not": ["echo_1"], "label": "Read the stone.",
+      "lines": [
+        "Brushstrokes, cut deep into the rock. They should mean nothing to you.",
+        "\"Moon over a strange river. The same moon. Who taught it to follow me?\"",
+        "\"I am Yun, and I wrote poems on the walls of a city that had never seen ink. She read every one. She said they were lovely. In nine hundred days, she is the only one who has looked up.\""
+      ],
+      "sets": ["echo_1", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Yun"
+    },
+    "echo_2": {
+      "speaker": "echo:2", "not": ["echo_2"], "label": "Read the stone.",
+      "lines": [
+        "Runes, hacked into the stone by someone angry, or someone young.",
+        "\"Asa cut this. I died of a fever with no blade in my hand, so nobody came for me but the small goddess.\"",
+        "\"She cried when she told me what I was for. I have asked every old woman in this land why a god would cry at a welcome. None of them know. Find out. Then hit her for me.\""
+      ],
+      "sets": ["echo_2", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Asa"
+    },
+    "echo_3": {
+      "speaker": "echo:3", "not": ["echo_3"], "label": "Read the stone.",
+      "lines": [
+        "Neat, flowing Arabic, with a tiny map scratched beneath it.",
+        "\"I am Bashir, a maker of maps. I have drawn this world three times, and the third matches the first to the width of a hair. No land lies that still.\"",
+        "\"In the far northeast I found a chart older than the Crown, and someone had already marked the Throne on it. The hand was mine. I have not drawn it yet.\""
+      ],
+      "sets": ["echo_3", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Bashir"
+    },
+    "echo_4": {
+      "speaker": "echo:4", "not": ["echo_4"], "label": "Read the stone.",
+      "lines": [
+        "The marks are small and careful, like a list kept by someone running out of time.",
+        "\"Nomvula. I was a healer where I come from, and I am one here. I have set eleven hundred bones. I kept count so that I would know I was still me.\"",
+        "\"This morning I could not read my own list. Something has begun to wear my hands.\""
+      ],
+      "sets": ["echo_4", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Nomvula"
+    },
+    "echo_5": {
+      "speaker": "echo:5", "not": ["echo_5"], "label": "Read the stone.",
+      "lines": [
+        "Square black letters, as even as type.",
+        "\"Tomas, a printer's boy of Prague. I took a rubbing from a Law Stone and set it in lead, to see it whole.\"",
+        "\"Everyone will tell you the First Law is one sentence. There are two. Every Law has two. People remember the first, and that is how a Law works.\""
+      ],
+      "sets": ["echo_5", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Tomas"
+    },
+    "echo_6": {
+      "speaker": "echo:6", "not": ["echo_6"], "label": "Read the stone.",
+      "lines": [
+        "The letters are Portuguese. The stone smells faintly of salt, though the sea is nowhere near.",
+        "\"Inês, of a ship that went down off the Cape. I asked the Voice of the Deep how to get home.\"",
+        "\"She said that home is the name for a place that has stopped waiting for you. I stayed down there a long time. I would be there still, if the Oaths had not needed me. They did not need me for long.\""
+      ],
+      "sets": ["echo_6", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Inês"
+    },
+    "echo_7": {
+      "speaker": "echo:7", "not": ["echo_7"], "label": "Read the stone.",
+      "lines": [
+        "Clean Japanese script, cut with great patience and a very good chisel.",
+        "\"I am Kenji, a smith's son. I folded one blade for three hundred days to cut the Throne. It touched him, and forgot what it was for.\"",
+        "\"There is a way around that Law. I will not write it here. I found it, and I used it, and I would give back every day of my life to have been a worse smith.\""
+      ],
+      "sets": ["echo_7", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Kenji"
+    },
+    "echo_8": {
+      "speaker": "echo:8", "not": ["echo_8"], "label": "Read the stone.",
+      "lines": [
+        "Dots and dashes, hammered into the stone in long careful rows.",
+        "\"Ada, of the Central Telegraph Office, London. I found that a Mana Crystal will hold a charge and carry it. I built a key. I tapped out home, home, home, for a year.\"",
+        "\"Last night something answered. It was very slow. It said: I AM SO SORRY. PLEASE STOP. I CANNOT BEAR TO WATCH YOU ASK.\""
+      ],
+      "sets": ["echo_8", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Ada"
+    },
+    "echo_9": {
+      "speaker": "echo:9", "not": ["echo_9"], "label": "Read the stone.",
+      "lines": [
+        "Plain capitals, in the neat hand of someone who has filled in a lot of forms.",
+        "\"Sam Whitlock, United States Army. Last thing I remember is a beach in Normandy.\"",
+        "\"I made it to the top of the mountain, and the fellow on the Throne stood up and saluted. He knew what I was. He said: son, don't. Those were the last words he had left in him.\"",
+        "\"I did. I would like whoever reads this to know that I was told.\""
+      ],
+      "sets": ["echo_9", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Sam"
+    },
+    "echo_10": {
+      "speaker": "echo:10", "not": ["echo_10"], "label": "Read the stone.",
+      "lines": [
+        "The letters are round and friendly, and one of them has been dotted with a small heart, then scratched out.",
+        "\"Hi! Priya, Bangalore, 1998. Are you from after me? Did the internet work out? I had shares.\"",
+        "\"She told me there would only be one more. She sounded so tired. If you are reading these, you know what we are. There are twelve of us, counting the one at the cairn. She remembers every name and nobody else ever will. Learn them. I think it matters. I think a name is the only thing here that isn't a Law.\""
+      ],
+      "sets": ["echo_10", "echo_trail"], "tally": "echoes", "faith": 25, "tell": "echo", "gift": "A name remembered: Priya"
+    },
+
+    "confide_1": {
+      "speaker": "god", "level": 3, "open_ending": true, "not": ["confide_1"], "label": "You said you're the youngest. How young?",
+      "lines": ["I don't really know! Time's strange up here. I remember the day the others left, though. They said 'you'll be fine', and then they didn't come back.", "Do you want to hear about bread? I've been reading about bread."],
+      "sets": ["confide_1"], "faith": 10
+    },
+    "confide_2": {
+      "speaker": "god", "level": 5, "open_ending": true, "needs": ["confide_1"], "not": ["confide_2"], "label": "What do you do all day?",
+      "lines": ["I watch. There's a woman in {capital} who sets out two cups every morning, and has done since her husband died. I've seen eleven thousand of those mornings.", "I'd like to sit down in the other chair. I can't. Sorry, that got sad. Ehehe."],
+      "sets": ["confide_2"], "faith": 10
+    },
+    "confide_3": {
+      "speaker": "god", "level": 8, "open_ending": true, "needs": ["confide_2"], "not": ["confide_3"], "label": "Why do you laugh like that?",
+      "lines": ["The little laugh? I practised it. Someone I used to talk to told me it helped. I say 'ehehe', and the person relaxes, and then I can tell them the next thing.", "It's a technique. I'm sorry. Was that too honest? I don't know why I told you that."],
+      "sets": ["confide_3"], "faith": 10
+    },
+    "confide_4": {
+      "speaker": "god", "level": 11, "open_ending": true, "needs": ["confide_3"], "not": ["confide_4"], "label": "What happened to the other gods?",
+      "lines": ["They wrote the Laws, and then they couldn't stand to watch. So they went wherever you go. There's a door up here. It's very plain.", "I've been standing near it for a while. I don't go in. Who'd do the greetings?"],
+      "sets": ["confide_4"], "faith": 10
+    },
+    "confide_5": {
+      "speaker": "god", "level": 15, "open_ending": true, "needs": ["confide_4"], "not": ["confide_5"], "label": "Do you ever wish you could touch something?",
+      "lines": ["One thing. One time. I'd like to pick up something warm, and be surprised by how heavy it is.", "That's all. That's the whole wish. You pick things up all day, and you don't even notice."],
+      "sets": ["confide_5"], "faith": 10
+    },
+    "confide_6": {
+      "speaker": "god", "level": 20, "open_ending": true, "needs": ["confide_5"], "not": ["confide_6"], "label": "What happens to you, at the end of all this?",
+      "lines": ["If it all goes right, I think I stop being needed. That's the goal, isn't it? A god nobody needs is just someone with a lot of free time.", "I'd be terrible at it. I want to be terrible at it."],
+      "sets": ["confide_6"], "faith": 10
+    },
+    "god_forgive": {
+      "speaker": "god", "needs": ["god_confessed"], "not": ["forgave"], "open_ending": true, "label": "I forgive you.",
+      "lines": ["...You can't just say that.", "I sent twelve people to that chair. I did the little laugh. I picked out the nice voice.", "Okay. Okay. I'm not crying, I don't have eyes. Thank you. I don't know what to do with that. I think I'd like to keep it."],
+      "sets": ["forgave"], "faith": 40, "gift": "Every Law you hold asks for half as much"
+    },
+    "god_refuse": {
+      "speaker": "god", "needs": ["god_confessed"], "not": ["forgave", "refused"], "open_ending": true, "label": "I can't forgive that.",
+      "lines": ["No. I know.", "I wasn't asking. I mean, I was. But I know.", "I'll keep writing your Laws. That isn't a bribe. It's just all I've got."],
+      "sets": ["refused"]
+    },
+    "god_fifth": {
+      "speaker": "god", "has": ["has_crown"], "needs": ["forgave"], "counts": { "echoes": 11 }, "not": ["fifth_told"], "open_ending": true, "label": "There's another way. Isn't there?",
+      "lines": ["You went and found all of them. All eleven. You've got the cairn as well.", "There's a line on the Stone that nobody ever finished. Everyone who tried had a sword and no hope. Nobody ever had the names.", "I don't know what happens. I've never known less. Go and see."],
+      "sets": ["fifth_told"]
+    },
+    "stone_fifth": {
+      "speaker": "law_stone", "has": ["has_crown"], "open_ending": true, "all_oaths": true, "needs": ["forgave"], "counts": { "echoes": 11 }, "label": "Speak the twelve names.",
+      "lines": [
+        "The fifth line has been scratched at for three hundred years. You don't scratch. You put the crown down at the foot of the stone, and you read the names.",
+        "Decimus. Yun. Asa. Bashir. Nomvula. Tomas. Inês. Kenji. Ada. Sam. Priya. {old_hero}.",
+        "One by one the letters rise out of the rock, in twelve different hands, and the last of them is terrible. It says: None shall be borrowed again.",
+        "The crown doesn't scream. It just stops being a crown. Somewhere high above you, someone very young says 'oh', and starts to cry, and it sounds like being let out.",
+        "The first lines of the Laws stay where they are. The second lines go quiet. For the first time since the world was built, what it gives, it gives for free."
+      ],
+      "sets": ["ended"], "renown": 50, "faith": 200, "ending": "named", "deed": "ending_named", "gift": "The fifth line is written. No Law asks a price now"
+    },
+    "king_held": {
+      "speaker": "king", "needs": ["capital_held"], "not": ["king_thanked"], "label": "The walls held, Your Majesty.",
+      "lines": ["I was on the wall. I saw you. I have sat on this chair for thirty years, and I had forgotten what it looks like when someone comes.", "Take this. It is not enough. My family has a long history of saying that to people like you, and I have recently started to wonder what became of them."],
+      "sets": ["king_thanked"], "gold": 250, "renown": 6, "faith": 30, "gift": "+250 {currency} and the King's thanks"
+    },
+    "king_fell": {
+      "speaker": "king", "needs": ["capital_fell"], "not": ["king_thanked"], "label": "I came as fast as I could.",
+      "lines": ["No. You didn't. But you came, and that's more than the gods did, and I have a kingdom to bury.", "Finish it. That's all I ask of you now. Whatever you were doing that was more important than this, finish it."],
+      "sets": ["king_thanked"]
+    },
+
     "wyrm_tale": {
       "speaker": "king", "needs": ["law_amended"], "not": ["wyrm_quest"],
       "label": "Is there anything left in this world I can't fight?",
@@ -199,7 +370,7 @@
       "lines": [
         "...Ah. You found the note. He always did have terrible handwriting.",
         "Okay. Okay okay okay. No jokes for a minute. I'm really bad at this part.",
-        "The First Law has two lines, and everyone remembers the first one. No mortal hand shall wound the Throne. The second line is: whoever unseats the Throne shall sit upon it. The world must have a Demon Lord. The gods who wrote it thought a shared enemy would stop the peoples from killing each other. And it worked. That's the horrible thing. It worked.",
+        "Every Law has a second line. I told you that in heaven, and I laughed, and I watched you not ask. The First Law has two, and everyone remembers the first. No mortal hand shall wound the Throne. The second is: whoever unseats the Throne shall sit upon it. The world must have a Demon Lord. The gods who wrote it thought a shared enemy would stop the peoples from killing each other. And it worked. That's the horrible thing. It worked.",
         "When a Demon Lord falls, the crown takes whoever beat them. People here stopped trying, after the first few. So we started borrowing heroes from Earth, where nobody had heard the story. You. {old_hero}. Eleven before him. I was the youngest, so I got the job of saying 'congratulations, you've been reborn!' in a nice voice.",
         "I can't unsay a Law. I've tried, I've tried for so long. But the Oaths can amend it, and you're the first one who's ever gotten this close. Go to a Law Stone in the Dragonspine.",
         "I should have told you in heaven. I was scared you'd say no."
@@ -249,6 +420,22 @@
   },
 
   "scenes": {
+    "lord_envoy": {
+      "auto": true, "oaths": 2, "not": ["lord_slain"], "title": "A Letter on the Road",
+      "lines": [
+        ["", "A burnt letter lies on the road in front of you, as if it had been waiting. It's still warm. The handwriting is terrible."],
+        ["{demon_lord}", "Two Oaths already. You're faster than I was. I'd tell you to stop, but the thing wearing me says I should be pleased, so I'm telling you that I'm pleased."],
+        ["{demon_lord}", "My armies march on {capital} next. That isn't a threat. I have tried to make it not happen. It happens. Be there."]
+      ]
+    },
+    "horns_over_the_capital": {
+      "auto": true, "oaths": 3, "not": ["lord_slain"], "siege": "capital", "title": "Horns over {capital}",
+      "lines": [
+        ["", "Every bell in {kingdom} is ringing, and none of them in time."],
+        ["{king}", "They've crossed the river. All of them. Whoever you are and wherever you are, if you ever meant those Oaths, get to {capital}. Now."],
+        ["{god}", "I can't stop this. I can't do anything. But the rule says an assault can be broken if someone stands in front of it. That's you. Go."]
+      ]
+    },
     "lord_voice_early": {
       "lacks": ["oathbound"], "title": "A Voice from the Throne",
       "lines": [
@@ -281,6 +468,7 @@
   },
 
   "topics": {
+    "petition": ["Write me a Law.", "I've earned a Law.", "I need the world to change a little."],
     "chat": ["How are things?", "What's on your mind?", "How's life around here?", "Anything happening today?", "You look like you've got a story."],
     "rumor": ["Heard any news?", "What are people saying?", "Any rumours lately?", "Anything I should know about?"],
     "self": ["Tell me about yourself.", "How did you end up here?", "What's your story?"],
@@ -294,6 +482,18 @@
     "pray_guide": ["What should I do next?", "Guide me.", "Where do I go from here?"],
     "pray_talk": ["Just talk to me for a bit.", "Are you there?", "How's heaven?"],
     "pray_aid": ["Can you help me?", "I need something. Anything.", "Send help, please."],
+    "pray_offer": ["Take what I'm holding.", "I have something for you.", "This is for you."],
+    "pray_more": ["Can we just talk?", "I'd like to ask you something.", "Stay a while."],
+    "pray_back": ["Back to business.", "There was something else.", "Let's get serious."],
+    "pray_self": ["Tell me about yourself.", "What were you like, before?", "What's it like, being you?"],
+    "pray_deeds": ["What have you seen me do?", "How am I doing?", "What do you make of me?"],
+    "pray_leaning": ["What would you write for me?", "What Law are you thinking of?", "How close is my next Law?"],
+    "pray_news": ["What's happening out there?", "Any news from up there?", "Is anything coming?"],
+    "pray_joke": ["Tell me a joke.", "Cheer me up.", "Make me laugh."],
+    "pray_thanks": ["Thank you.", "I'm grateful, you know.", "Thanks for all of it."],
+    "pray_curse": ["This is all your fault.", "I hate this.", "You could do more, you know."],
+    "pray_sins": ["I have something to confess.", "I've done things.", "I need to tell you something."],
+    "stone_pray": ["Speak to the god here.", "Pray at the stone.", "Say something to the stone."],
     "bye": ["Goodbye.", "I should go.", "Take care.", "Until next time."]
   },
 
@@ -302,7 +502,7 @@
       "Sooo, you'll be reborn as {hero}! Little problem though: {demon_lord} of {demon_realm} is giving {kingdom} a really hard time, and I'm not allowed to meddle down there myself. That's where you come in!"
     ],
     "nothing_more": ["Ehehe, that's everything I've got on that one. Anything else, or are you ready?"],
-    "first": ["what_happened", "who_are_you", "where", "go_home"],
+    "first": ["what_happened", "who_are_you", "where", "go_home", "up_here"],
     "topics": {
       "what_happened": {
         "label": "Wait. What happened to me?", "opens": ["hurt"],
@@ -324,7 +524,8 @@
         "label": "What do these Laws actually do?",
         "lines": [
           "Golems wake up. Curses land. People who would've gotten away with it, don't. Some Laws only bite if someone sees you, and some see everything. Check your book, and don't hit the locals where the guards can watch.",
-          "The world really does run on them. There's one very old one in particular you'll hear about. The King can explain it better than I can."
+          "The world really does run on them. There's one very old one in particular you'll hear about. The King can explain it better than I can.",
+          "Oh, and every Law has a second line. Ehehe. It's nothing! It's just how they're written."
         ]
       },
       "why_me": {
@@ -342,6 +543,18 @@
       "world_map": {
         "label": "What should I do first when I get there?",
         "lines": ["Go and see King {king}! You'll land right near {capital}. Oh, and if you get hurt or lost, press T and talk to me. I can't do much, but I'm a very good listener and I know where all the loopholes are."]
+      },
+      "up_here": {
+        "label": "What is this place?", "opens": ["alone"],
+        "lines": ["This is heaven! Well, it's the front room. There are clouds, some very nice pillars, and a table of snacks. I keep meaning to get a second chair."]
+      },
+      "alone": {
+        "label": "Are you up here all by yourself?", "opens": ["still_there"],
+        "lines": ["Me? No! Ehehe. I've got the clouds. And you, right now. Look, you're very good company, you know. You've been here for ages. Most people scream more."]
+      },
+      "still_there": {
+        "label": "Will I still be able to talk to you down there?",
+        "lines": ["Yes! Please! Press T, any time, wherever you are. I can't do much, but I can talk, and I'll know what you've been up to. Bring me things, if you like. The old stones carry your voice the best. And if you sleep somewhere nice, I might drop by. In a dream. Not in a strange way!"]
       },
       "go_home": {
         "label": "Can I go home?",

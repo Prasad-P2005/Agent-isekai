@@ -28,6 +28,8 @@ def _landmarks(world: World, place: str) -> list[dict]:
 
 
 def _at(world: World, place: str) -> list[dict]:
+    if place == "echo":  # any stone will do, so the compass takes the nearest unread
+        return [{"id": "echo", "sort": "story", "label": "A worn stone", "x": e.x, "z": e.z} for i, e in enumerate(world.echoes) if not world.story.flags.get(f"echo_{i}")]
     if place in PLACES:
         return _landmarks(world, place)
     if place == "guild":
@@ -63,7 +65,18 @@ def _favor(world: World) -> list[dict]:
     return _resident(world, "favor", "favor", f.giver, f.giver_name)
 
 
+def _omens(world: World) -> list[dict]:
+    """What the world has just done, which will not wait."""
+    out = []
+    if world.siege:
+        s = world.settlements[world.siege.settlement]
+        out.append({"id": "siege", "sort": "story", "label": f"Defend {s.name}", "x": s.cx, "z": s.cz})
+    if world.star:
+        out.append({"id": "star", "sort": "story", "label": "A fallen star", "x": world.star.x, "z": world.star.z})
+    return out
+
+
 def quest_marks(world: World) -> list[dict]:
     """Everything the hero is after right now: the story, the guild quest and the favor."""
     story = [m for rule in wanted(world) for m in ([_hunt(rule["hunt"])] if "hunt" in rule else _at(world, rule["at"]))]
-    return story + _guild(world) + _favor(world)
+    return story + _guild(world) + _favor(world) + _omens(world)

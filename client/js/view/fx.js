@@ -1,10 +1,10 @@
 // What the world does when it is touched: cracks in a block being mined, chips when it goes, dust, and splashes.
-// All of it uses the fireball's cubes, so it adds no draw calls. Chips are 7 cubes a block (3 for a plant), a landing 5 and a splash 9.
+// All of it uses the fireball's cubes, so it adds no draw calls. Chips are 7 cubes a block (3 for a plant), a landing 5, a splash 9, a thing burnt 5 and a gift 8.
 import * as THREE from 'three';
 import { on } from '../core/events.js';
 import { BL, solid } from '../sim/blocks.js';
 import { getBlock } from '../sim/chunks.js';
-import { aim, miningBar } from '../sim/mining.js';
+import { aim, digging } from '../sim/mining.js';
 import { player } from '../sim/player.js';
 import { CRACK_STAGES, TILE, crackPixels } from './blocktex.js';
 import { spray } from './fireball.js';
@@ -12,6 +12,9 @@ import { late, scene } from './scene.js';
 
 const CHIPS = 7, PLANT_CHIPS = 3, PLACE_PUFF = 3, LANDING_DUST = 5, DUSTY_LANDING = 9, SPLASH = 9;
 const WATER_SPRAY = { palette: [0xe8f6ff, 0xbfe4f4, 0x8cc8e0].map(c => new THREE.Color(c)), life: [0.3, 0.6], size: [0.08, 0.17], speed: [1.5, 4], spread: 0.5, drag: 1, lift: 0, fall: 15 };
+const EMBERS = { palette: [0xffc04a, 0xff7a2a, 0x7a2a1a].map(c => new THREE.Color(c)), life: [0.3, 0.6], size: [0.07, 0.14], speed: [0.8, 2], spread: 0.15, drag: 2, lift: 1.5, fall: 0 };
+const GOLD_DUST = { palette: [0xfff3b0, 0xffd36b, 0xfac13c].map(c => new THREE.Color(c)), life: [0.5, 1], size: [0.06, 0.12], speed: [0.5, 1.5], spread: 0.3, drag: 2, lift: 1.5, fall: 0 };
+const BURNT = 5, OFFERED = 8; // cubes, as above
 const here = new THREE.Vector3(), up = new THREE.Vector3();
 
 const painted = (colour, f = 1) => new THREE.Color().setRGB(colour[0] * f, colour[1] * f, colour[2] * f, THREE.SRGBColorSpace);
@@ -31,6 +34,9 @@ on('player:landed', speed => {
 });
 on('player:splashed', ({ x, y, z, speed }) => spray(WATER_SPRAY, here.set(x, y + 0.5, z), SPLASH, up.set(0, 2 + Math.min(speed, 16) * 0.25, 0)));
 
+on('drop:burnt', ({ pos }) => spray(EMBERS, here.set(pos.x, pos.y + 0.2, pos.z), BURNT));
+on('item:offered', ({ x, y, z }) => spray(GOLD_DUST, here.set(x, y + 0.3, z), OFFERED));
+
 // ---------- cracks ----------
 const strip = new THREE.DataTexture(crackPixels(), TILE, TILE * CRACK_STAGES);
 strip.magFilter = strip.minFilter = THREE.NearestFilter;
@@ -41,8 +47,8 @@ cracks.visible = false;
 scene.add(cracks);
 export function syncCracks() {
   const t = aim.block;
-  cracks.visible = !!t && miningBar.shown && miningBar.progress > 0;
+  cracks.visible = !!t && digging.on && digging.progress > 0;
   if (!cracks.visible) return;
   cracks.position.set(t.x + 0.5, t.y + 0.5, t.z + 0.5);
-  strip.offset.y = Math.min(CRACK_STAGES - 1, Math.floor(miningBar.progress * CRACK_STAGES)) / CRACK_STAGES;
+  strip.offset.y = Math.min(CRACK_STAGES - 1, Math.floor(digging.progress * CRACK_STAGES)) / CRACK_STAGES;
 }

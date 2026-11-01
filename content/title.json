@@ -1,0 +1,121 @@
+{
+  "version": "Beta 1",
+  "studio": "A Solithix game",
+  "splashes": [
+    "She is watching you read this.",
+    "Gods have no hands, only Laws.",
+    "Every gift has a second line.",
+    "You died. It went quite well.",
+    "The Demon Lord cannot be hurt. Yet.",
+    "Eleven came before you.",
+    "One dragon. Only one. Please do not wake it.",
+    "The King remembers.",
+    "Now with fewer gods touching things.",
+    "Read the small print on your Laws.",
+    "There is a stone with your name on it, nearly.",
+    "Dying drops nothing, on purpose.",
+    "Nobody can make you pray. She can only ask.",
+    "A crown is only a heavy hat with a Law on it."
+  ],
+  "tips": [
+    "A lamp keeps the dark things from rising near it. Light your door before you sleep.",
+    "You can fall five blocks unhurt, and any distance at all into water.",
+    "The right tool cuts the time a block takes. A block above your tool's level takes far longer and gives you nothing.",
+    "Recipes open by themselves once you have held what goes into them.",
+    "Press {pray} anywhere to pray. A full Faith bar is a Law she owes you.",
+    "Every Law has a gift and a price. Which you take is how you choose how hard the world is.",
+    "You may ask her for other words once for each Law.",
+    "A Law Stone adds a fourth card to what she offers.",
+    "Dying drops nothing. It only costs you your run of nights.",
+    "A staff in the hand strengthens every spell you cast.",
+    "Pick your two spells in the bag. {spell1} and {spell2} cast them.",
+    "Throw things with {drop}, and the whole stack with Ctrl. Anything thrown near a Law Stone is an offering.",
+    "Whatever the bag has no room for stays on the ground. Nothing is lost.",
+    "Crossings on the Old Ways have chests that stock themselves the first time they are opened.",
+    "The guild in any city has a board of quests.",
+    "News travels at walking pace. The next town has not heard what you did yet.",
+    "A witness runs to the law. Crime is much cheaper with nobody watching.",
+    "When you pause, the whole world waits. Nothing happens behind your back.",
+    "Marks on the compass follow whoever you are after, even when they move."
+  ],
+  "guide": [
+    {
+      "title": "Your story", "art": "scroll",
+      "text": [
+        "You died on Earth. A god met you in the heavens and sent you down with one job: end the Demon Lord.",
+        "The god cannot touch the world. Gods have no hands, only Laws. She can say a thing out loud and the world will enforce it, and every gift she writes comes with a price.",
+        "The journal ({journal}) always says what to do next, and the compass and the map ({map}) show where."
+      ]
+    },
+    {
+      "title": "Moving", "art": "boot",
+      "text": [
+        "You can step up one block without jumping, fall five blocks unhurt, and fall any distance into water.",
+        "Ropes and ladders hold you. Climb them with {forward} and {back}."
+      ],
+      "keys": "moving"
+    },
+    {
+      "title": "Fighting", "art": "sword",
+      "text": [
+        "Left click strikes. Right click uses what is in your hand, so a shield rises and a bow draws for as long as you hold it.",
+        "{spell1} and {spell2} cast the two spells you have chosen in the bag. A staff in the hand strengthens them.",
+        "Kills in a row build a chain, and each one rings higher than the last. Lamps keep monsters away, and they come out in the dark."
+      ]
+    },
+    {
+      "title": "Gathering and making", "art": "pick",
+      "text": [
+        "Hold left click to mine. What breaks pops out and lands, and you take it by walking over it. If the bag is full it waits on the ground.",
+        "Each block wants a tool. The right one is much faster, and a block above your tool's level takes far longer and gives nothing.",
+        "The first nine slots of the bag ({bag}) are your hotbar. Recipes open once you have held what goes into them, and tables, furnaces and forges open bigger ones."
+      ]
+    },
+    {
+      "title": "People and the law", "art": "talk",
+      "text": [
+        "{talk} talks or trades with whoever is near. People remember what you did, and news reaches other towns at walking pace.",
+        "A crime with a witness puts a bounty on you and sends hunters after you. Crime with nobody watching is a quieter matter.",
+        "The guild in any city has a board of quests, and anyone may ask you a favor."
+      ]
+    },
+    {
+      "title": "Faith and Laws", "art": "scales",
+      "text": [
+        "Every deed fills the Faith bar on your dock. A full bar is a little more health and a Law she owes you.",
+        "Press {pray} to pray. She offers three Laws, each with a gift and a price, and you choose one. That choice is how you set how hard the world is.",
+        "The world can hold only three of her Laws, so a fourth pushes out the oldest. Asking for one you already hold deepens it: the gift grows and the price does not.",
+        "An offering is whatever you hold while you pray, or anything thrown down near a Law Stone."
+      ]
+    },
+    {
+      "title": "Death and rest", "art": "moon",
+      "text": [
+        "Dying drops nothing and costs no Faith. It only ends your run of nights survived.",
+        "A night at an inn is safe, and sometimes it brings a dream.",
+        "The world saves by itself, and when you pause everything waits. Sieges, festivals and raids run on time played, so nothing can happen while you are away."
+      ]
+    },
+    {
+      "title": "All the keys", "art": "keys",
+      "text": [
+        "Every key here can be changed in Options, under Controls."
+      ],
+      "keys": "doing"
+    }
+  ],
+  "credits": [
+    {
+      "title": "Crown Reborn",
+      "lines": ["A Solithix game.", "The story, the people and every line they say are written and shipped with the game. Nothing here needs an AI service, an account or a key."]
+    },
+    {
+      "title": "Made with",
+      "lines": ["three.js, for the drawing.", "FastAPI and Pydantic, for the server.", "Jacquard 24 and Jersey 10, by The Soft Type Project Authors, under the SIL Open Font License."]
+    },
+    {
+      "title": "Built on the work of",
+      "lines": ["Tommaso Checchi, for the cave culling method that decides what gets drawn.", "Minecraft, for its numbers on what falls, what spawns and what a tool is worth.", "Machado, Oliveira and Fernandes, and Fidaner and colleagues, for the colour help."]
+    }
+  ]
+}

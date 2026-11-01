@@ -1,0 +1,25 @@
+Crown Reborn: a new name and a proper way in
+1 November 2026 | Beta 1
+
+The game has a new name, and a real front door: the world itself behind the main menu, room for as many worlds as you like, and far more of the game in your hands.
+
+NEW
+- Crown Reborn. This is the game's name from now on.
+- A living title screen. The menu stands in front of your own world, drifting round the capital at dusk.
+- Many worlds. Each world has its own save. Rename them, copy them, save them to a file, bring them back in, and delete them to a trash folder you can still reach.
+- New World choices. Name your world, use any word as a seed, pick Gentle, Fair or Hard, start in Story or Creative, choose who waits for you, and skip heaven on a second life.
+- Sound, Controls, Screen and Access pages. Separate volumes, invert mouse, toggle sprint, interface size, crosshair styles, a tidier screen, full screen, brightness, colour help, a plain font and less camera shake.
+- How to Play. A short guide that always shows your own keys, on the title screen and on the pause card.
+
+CHANGED
+- Save and quit. The pause card can take you back to the title, and it comes back with a welcome and what you were doing.
+- Loading. A real progress bar, with a tip to read.
+
+FIXED
+- New World no longer replaces your world. It used to write over the only save without asking.
+- Two tabs cannot mix up saves. A tab left open on one world can no longer write into another.
+
+
+Code: https://github.com/Prasad-P2005/Agent-isekai
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}
+Sent from a no-reply address, so replies are not read.

@@ -5,9 +5,12 @@ import random
 
 from ..content import GUILD
 from ..core.state import GuildQuest, World
+from . import faith
 from .chronicle import fame
+from .edicts import rule
 
 RANKS = GUILD["ranks"]
+QUEST_WORTH = 25
 QUEST_TYPES = [(q["kind"], q["title"], q["count"], q["reward"]) for q in GUILD["quests"]]
 
 
@@ -48,11 +51,13 @@ def turn_in(world: World) -> str:
         return "You have no active quest."
     if q.progress < q.count:
         return f"Not done yet: {q.progress}/{q.count} {q.kind}."
-    p.gold += q.reward
+    pay = round(q.reward * rule(world, "bounty"))
+    p.gold += pay
     p.guild_done += 1
     p.active_quest = None
     fame(world, 2)
+    faith.earn(world, QUEST_WORTH)
     if p.guild_done % 2 == 0 and p.guild_rank < len(RANKS) - 1:
         p.guild_rank += 1
-        return f"Quest complete! +{q.reward} {world.currency}. You are promoted to rank {RANKS[p.guild_rank]}!"
-    return f"Quest complete! +{q.reward} {world.currency}."
+        return f"Quest complete! +{pay} {world.currency}. You are promoted to rank {RANKS[p.guild_rank]}!"
+    return f"Quest complete! +{pay} {world.currency}."

@@ -1570,6 +1570,31 @@ def vista():
     return a
 
 
+def crown():
+    """The crown on the logo, drawn at the logo's pixel size: three art pixels to one of these."""
+    a = Art(24, 17)
+    a.ascii([
+        "...........kk...........",
+        "..........kwrk..........",
+        "..kk......krrk......kk..",
+        ".kwbk......kk......kwbk.",
+        ".kbbk.....khdk.....kbbk.",
+        "..kk......khdk......kk..",
+        "..khk....khggdk....kdk..",
+        "..khgk...khggdk...kgdk..",
+        "..khggk.khgggddk.kggdk..",
+        "..khgggkhgggggddkgggdk..",
+        "..khggggggggggggggggdk..",
+        "..khggggggggggggggggdk..",
+        "..kkkkkkkkkkkkkkkkkkkk..",
+        "..khhhhrhhhbbhhhrhhhdk..",
+        "..khgrrwrgbwwbgrwrrgdk..",
+        "..khggrrggbbbbggrrggdk..",
+        "..kkkkkkkkkkkkkkkkkkkk..",
+    ], {"k": "#3a1c20", "h": GOLD_LT, "g": GOLD, "d": GOLD_DK, "r": RED, "w": CREAM, "b": BLUE})
+    return a
+
+
 def hurt():
     """Blood at the edge of the eye, dithered in so that it stays pixel art."""
     W, H = 160, 90
@@ -1597,7 +1622,7 @@ def main():
         "btn-gold": button(GOLD, GOLD_LT, GOLD_DK), "btn-gold-down": button(GOLD, GOLD_LT, GOLD_DK, True),
         "btn-slate": button(S_FACE, S_HI, S_LOW, edge=S_INK), "btn-slate-down": button(S_FACE, S_HI, S_LOW, True, S_INK),
         "slab": slab(), "slab-thin": slab_thin(), "slot": slot_slate(), "slot-on": slot_slate(True), "pane": pane(), "bar": bar_frame(), "minimap-ring": minimap_ring(),
-        "vista": vista(), "hurt": hurt(),
+        "vista": vista(), "hurt": hurt(), "crown": crown(),
     }.items():
         art.save(name)
     icons()

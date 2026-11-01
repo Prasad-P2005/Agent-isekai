@@ -5,9 +5,9 @@ from __future__ import annotations
 
 import random
 
-from ..content import CREATURES, LINES, STORY
+from ..content import CREATURES, ITEMS, LINES, STORY
 from ..core.state import Resident, Settlement, World
-from . import chronicle, favors, story
+from . import bag, chronicle, edicts, faith, favors, story
 from .lines import fill, say, some_of
 
 TRAITS = ("warm", "gruff", "nervous", "cheerful", "weary", "proud", "sly", "dreamy")
@@ -15,6 +15,16 @@ FACETS = ("origin", "dream", "fear", "quirk", "secret")
 TOPICS = STORY["topics"]
 HEAVEN = STORY["heaven"]
 OPENER, CLOSER = 0.3, 0.15  # how often a line is framed by the speaker's own turn of phrase
+HELLO_MOODS = ("blood_moon", "hurting", "wanted", "hunted", "war", "night")  # the first of these that holds is what she opens with, most of the time
+HELLO_MOOD_CHANCE = 0.7
+ABOUT_YOU = ("pray_deeds", "pray_leaning", "pray_news")  # what she knows, which is always on offer
+SMALL_TALK = ("pray_talk", "pray_self", "pray_joke", "pray_thanks", "pray_curse")  # a few of these at a time, so that the box stays small and each visit reads differently
+SMALL_TALK_SHOWN = 3
+STAY_ON = {*ABOUT_YOU, *SMALL_TALK, "pray_sins", "pray_more"}  # after these she goes on chatting, rather than going back to business
+
+
+def is_stone(creature: str) -> bool:
+    return creature in ("cairn", "law_stone") or creature.startswith("echo:")
 
 
 def trait_of(world: World, who: Resident | None, name: str = "") -> str:
@@ -55,6 +65,11 @@ def _moment(world: World) -> list[tuple[str, float]]:
         pools.append(("state:festival", 8))
     if world.war_pressure > 0.12:
         pools.append(("state:war", 3))
+    if world.blood_moon:
+        pools.append(("state:blood_moon", 8))
+    if world.siege:
+        pools.append(("state:siege", 8))
+    pools += [(f"edict:{e.id}", 3) for e in world.edicts]  # people live under what the hero asked for, and they have opinions
     if world.demon_lord_dead and not world.ending:
         pools.append(("state:lord_dead", 6))
     if world.ending:
@@ -124,8 +139,9 @@ def _topic(topic: str, rng: random.Random) -> dict:
 
 def menu(world: World, who: Resident | None, creature: str, speaker: str | None, offering: bool, rng: random.Random) -> list[dict]:
     items = [{"id": beat, "label": story.label(world, beat), "story": True} for beat in story.offered(world, speaker)]
-    if creature in ("cairn", "law_stone"):
-        return items + [_topic("bye", rng)]
+    if is_stone(creature):
+        here = [{**_topic("stone_pray", rng), "story": True}] if creature == "law_stone" and world.ending != "broken" else []
+        return items + here + [_topic("bye", rng)]
     if offering:
         return [_topic("favor_accept", rng), _topic("favor_decline", rng)]
     f = world.player.favor
@@ -154,8 +170,8 @@ def talk(world: World, who: Resident | None, s: Settlement | None, creature: str
     if topic in story.BEATS and topic in story.offered(world, speaker):
         played = story.play(world, topic, rng)
         lines, gift, fx = played["lines"], played["gift"], played["fx"]
-    elif creature in ("cairn", "law_stone"):
-        lines = [say(world, f"stone:{creature}", rng)]
+    elif is_stone(creature):
+        lines = [say(world, "stone:echo_unread" if creature.startswith("echo:") and story.offered(world, speaker) else f"stone:{creature.partition(':')[0]}", rng)]
     elif topic == "hello":
         if who:
             who.met += 1
@@ -191,18 +207,90 @@ def talk(world: World, who: Resident | None, s: Settlement | None, creature: str
     return {"lines": [l for l in lines if l] or ["…"], "gift": gift, "fx": fx, "topics": menu(world, who, creature, speaker, offering, rng)}
 
 
-def pray_menu(world: World, rng: random.Random) -> list[dict]:
+def pray_menu(world: World, rng: random.Random, chatting: bool = False) -> list[dict]:
     items = [{"id": beat, "label": story.label(world, beat), "story": True} for beat in story.offered(world, "god")]
     if world.ending == "broken":
         return items + [_topic("bye", rng)]
-    return items + [_topic("pray_guide", rng), _topic("pray_talk", rng), _topic("pray_aid", rng), _topic("bye", rng)]
+    if edicts.can_ask(world):
+        items.insert(0, {"id": "petition", "label": rng.choice(TOPICS["petition"]), "story": True})
+    if chatting:
+        sins = ["pray_sins"] if world.player.bounty or world.player.notoriety else []
+        return items + [_topic(t, rng) for t in (*ABOUT_YOU, *rng.sample([*SMALL_TALK, *sins], SMALL_TALK_SHOWN), "pray_back")]
+    return items + [_topic(t, rng) for t in ("pray_guide", "pray_aid", "pray_offer", "pray_more", "bye")]
 
 
-def pray(world: World, topic: str, answer_aid, rng: random.Random | None = None) -> dict:
-    """The hero's prayers. `answer_aid` is the god looking for a rule she can lean on."""
+def _hello(world: World, near: str, rng: random.Random) -> str:
+    """She is always watching, so she starts from whatever is happening to the hero."""
+    if near == "stone":
+        return say(world, "pray:stone", rng)
+    now = edicts.moods(world)
+    mood = next((m for m in HELLO_MOODS if m in now), None)
+    return say(world, f"pray:hello:{mood}" if mood and rng.random() < HELLO_MOOD_CHANCE else "pray:hello", rng)
+
+
+def _over_the_cards(world: World, cards: list[dict], first: bool, rng: random.Random) -> str:
+    """What she says as she lays a hand down, which gives away when it is a good one."""
+    pool = "pray:first_law" if first else "pray:hand_fabled" if any(c["tier"] == "fabled" for c in cards) else "pray:hand_ink" if any(c["ink"] for c in cards) else "pray:petition"
+    return say(world, pool, rng)
+
+
+def _her_story(world: World, rng: random.Random) -> str:
+    """Told in order, a little at a time, and it is the one thing in the game nobody else will ever hear."""
+    told, whole = world.player.god_told, LINES["pray:self"]
+    if told >= len(whole):
+        return say(world, "pray:self_done", rng)
+    world.player.god_told += 1
+    return fill(world, whole[told], rng)
+
+
+def _what_she_saw(world: World, rng: random.Random) -> str:
+    p = world.player
+    return say(world, f"pray:deeds:{edicts.leaning(world) or 'none'}", rng, kills=p.kills, deaths=p.deaths, nights=p.best_nights, lands=len(world.visited), gold=p.gold)
+
+
+def _what_she_would_write(world: World, rng: random.Random) -> str:
+    """The mechanism, in her own words: what she has been watching is what she is likely to write, and how far off that is."""
+    if edicts.can_ask(world):
+        return say(world, "pray:leaning:ready", rng)
+    p = world.player
+    return say(world, f"pray:leaning:{edicts.leaning(world) or 'none'}", rng, left=faith.need(p.level) - p.faith)
+
+
+def _news(world: World, rng: random.Random) -> str:
+    if world.siege:
+        return say(world, "pray:news:siege", rng, place=world.settlements[world.siege.settlement].name)
+    if world.blood_moon:
+        return say(world, "pray:news:blood_moon", rng)
+    if world.star:
+        return say(world, "pray:news:star", rng)
+    if world.nemesis:
+        return say(world, "pray:news:nemesis", rng, foe=world.nemesis.name, title=world.nemesis.title)
+    return say(world, "pray:news:quiet", rng)
+
+
+def _offering(world: World, held: dict | None, rng: random.Random) -> str:
+    """What is in the hand, given up whole. It goes as a parcel, so it leaves the bag the same way anything the server takes does."""
+    item, n = (held or {}).get("id"), int((held or {}).get("n", 0))
+    if item not in ITEMS or n <= 0 or bag.count(world.player, item) < n:
+        return say(world, "pray:offer_nothing", rng)
+    if not faith.can_offer(world):
+        return say(world, "pray:offer_soon", rng)
+    bag.take(world, item, n)
+    return faith.offer(world, item, n)
+
+
+def pray(world: World, topic: str, answer_aid, rng: random.Random | None = None, held: dict | None = None, near: str = "") -> dict:
+    """The hero's prayers. `answer_aid` is the god looking for a rule she can lean on, `held` is what is in the hand, and `near` is where they are praying from."""
     rng = rng or random.Random()
-    gift, fx = None, {}
-    if topic in story.BEATS and topic in story.offered(world, "god"):
+    gift, fx, petition, chatting = None, {}, None, topic in STAY_ON
+    if topic == "petition" and edicts.can_ask(world):
+        petition = edicts.offers(world, near == "stone")
+        lines = [_over_the_cards(world, petition, not world.player.written, rng)]
+    elif topic == "law_again" and edicts.redraw(world):
+        lines, petition = [say(world, "pray:other_words", rng)], edicts.offers(world, near == "stone")
+    elif topic.startswith("law:"):
+        lines = [edicts.write(world, topic[4:]) or say(world, "pray:no_loophole", rng)]
+    elif topic in story.BEATS and topic in story.offered(world, "god"):
         played = story.play(world, topic, rng)
         lines, gift, fx = played["lines"], played["gift"], played["fx"]
     elif world.ending == "broken":
@@ -212,12 +300,36 @@ def pray(world: World, topic: str, answer_aid, rng: random.Random | None = None)
     elif topic == "pray_guide":
         lines = [some_of(world, [(f"pray:{story.CHAPTERS[world.story.stage]['id']}", 3), ("pray:guide", 1)], rng)]
     elif topic == "hello":
-        lines = [say(world, "pray:hello", rng)]
+        lines = [_hello(world, near, rng)]
     elif topic == "bye":
         lines = [say(world, "pray:bye", rng)]
+    elif topic == "pray_more":
+        lines = [say(world, "pray:more", rng)]
+    elif topic == "pray_back":
+        lines = [say(world, "pray:back", rng)]
+    elif topic == "pray_offer":
+        lines = [_offering(world, held, rng)]
+    elif topic == "pray_self":
+        lines = [_her_story(world, rng)]
+    elif topic == "pray_deeds":
+        lines = [_what_she_saw(world, rng)]
+    elif topic == "pray_leaning":
+        lines = [_what_she_would_write(world, rng)]
+    elif topic == "pray_news":
+        lines = [_news(world, rng)]
+    elif topic == "pray_joke":
+        lines = [say(world, "pray:joke", rng)]
+    elif topic == "pray_curse":
+        lines = [say(world, "pray:curse", rng)]
+    elif topic == "pray_thanks":
+        faith.kind_word(world)
+        lines = [say(world, "pray:thanks", rng)]
+    elif topic == "pray_sins":
+        faith.kind_word(world)
+        lines = [say(world, "pray:sins", rng, bounty=world.player.bounty) if world.player.bounty or world.player.notoriety else say(world, "pray:clean", rng)]
     else:
         lines = [some_of(world, [(f"pray:act{story.act(world)}", 2), ("pray:chatter", 3)], rng)]
-    return {"lines": [l for l in lines if l] or ["…"], "gift": gift, "fx": fx, "topics": pray_menu(world, rng)}
+    return {"lines": [l for l in lines if l] or ["…"], "gift": gift, "fx": fx, "topics": pray_menu(world, rng, chatting), "petition": petition, "redraw": bool(petition) and edicts.can_redraw(world)}
 
 
 def heaven(world: World, topic: str) -> dict:

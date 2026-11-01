@@ -6,7 +6,7 @@ import { WORLD_EVENTS } from '../../client/js/sim/worldevents.js';
 import { B, REALM } from '../../client/js/sim/terrain.js';
 import { BLOCKS } from '../../client/js/core/content.js';
 import { tileIndex } from '../../client/js/view/blocktex.js';
-import { OUTFITS } from '../../client/js/view/outfits.js';
+import { OUTFITS, lookFor } from '../../client/js/view/outfits.js';
 import { ITEMS, RECIPES } from '../../client/js/core/content.js';
 import { spritePixels } from '../../client/js/view/itemart.js';
 
@@ -22,6 +22,14 @@ test('every job has a body', () => {
   const kinds = Object.values(JOBS.jobs).map(j => j.kind).filter(Boolean);
   const all = [...kinds, ...Object.values(JOBS.elf_kind), ...Object.values(JOBS.base_kind)];
   assert.deepEqual(all.filter(k => !CREATURES[k]), []);
+});
+
+test('everyone who looks like a person can be dressed, with or without a job', () => {
+  for (const [kind, D] of Object.entries(CREATURES)) if (D.avatar) assert.equal(typeof lookFor(kind, undefined, 7, D).top, 'number', kind);
+});
+
+test('whatever a creature can drop is a real item, at chances that make sense', () => {
+  for (const [kind, D] of Object.entries(CREATURES)) for (const [id, chance, least, most] of D.drops ?? []) assert.ok(ITEMS[id] && chance > 0 && chance <= 1 && least >= 1 && most >= least, `${kind}: ${id}`);
 });
 
 test('every service a job offers has a panel', () => {

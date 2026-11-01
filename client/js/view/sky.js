@@ -30,7 +30,8 @@ const MOODS = {
   [B.MIRE]: { zenith: rgb(0x5a7f76), horizon: rgb(0xa8bda0), light: [0.88, 0.96, 0.86], cloud: rgb(0xc4d2bc), haze: 0.7, pull: 0.7 },
 };
 const mood = { zenith: [0, 0, 0], horizon: [0, 0, 0], light: [1, 1, 1], cloud: [1, 1, 1], haze: 1, pull: 0 };
-let moodReady = false, wind = 0, clock = 0, under = 0;
+const BLOOD = { zenith: rgb(0x2a0810), horizon: rgb(0x8a1c1c), light: [0.5, 0.14, 0.12] };
+let moodReady = false, wind = 0, clock = 0, under = 0, blood = 0;
 
 // ---------- the dome and the lights in it ----------
 const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), skyMat);
@@ -173,12 +174,14 @@ export function updateSky(at, dt, underwater) {
   shared.uTurn.value = turn;
   shared.uSunDir.value.set(Math.cos(turn), sun, SUN_TILT).normalize();
   const shaders = shadersActive(), paint = shaders ? glowing : set;
-  const zenith = blend(NIGHT.zenith, mood.zenith, day), horizon = blend(blend(NIGHT.horizon, mood.horizon, day), DUSK.horizon, dusk * 0.85);
+  blood += ((G.rules?.omen === 'blood_moon' ? 1 : 0) - blood) * (1 - Math.exp(-MOOD_EASE * dt));
+  const darkZenith = blend(NIGHT.zenith, BLOOD.zenith, blood), darkHorizon = blend(NIGHT.horizon, BLOOD.horizon, blood), darkLight = blend(NIGHT.light, BLOOD.light, blood);
+  const zenith = blend(darkZenith, mood.zenith, day), horizon = blend(blend(darkHorizon, mood.horizon, day), DUSK.horizon, dusk * 0.85);
   paint(shared.uZenith.value, zenith, SKY_LIFT);
   paint(shared.uHorizon.value, horizon, SKY_LIFT);
   paint(shared.uGlow.value, DUSK.glow.map(v => v * dusk * ss(-0.3, 0.05, sun) + 0.28 * day * (v * 0.3 + 0.7)), SKY_LIFT);
   if (shaders) lightWithShaders(sun, zenith, horizon);
-  set(shared.uDaylight.value, blend(blend(NIGHT.light, mood.light, day), DUSK.light, dusk * 0.6 * ss(-0.3, 0, sun)));
+  set(shared.uDaylight.value, blend(blend(darkLight, mood.light, day), DUSK.light, dusk * 0.6 * ss(-0.3, 0, sun)));
   paint(shared.uCloudColour.value, blend(blend(blend([0.09, 0.11, 0.17], [1, 1, 1], day), DUSK.cloud, dusk * 0.8), mood.cloud, 0.6 * day), CLOUD_LIFT);
   shared.uCloudShade.value = 0.2 * day;
   shared.uSunlit.value = 0.12 + 0.88 * day;
@@ -193,7 +196,7 @@ export function updateSky(at, dt, underwater) {
 
   heavens.position.copy(at);
   heavens.rotation.z = turn;
-  for (const m of moons) { m.material.opacity = 0.25 + 0.75 * night; m.material.color.setScalar(shaders ? MOON_ORB : 1); }
+  for (const m of moons) { m.material.opacity = 0.25 + 0.75 * night; const k = shaders ? MOON_ORB : 1; m.material.color.setRGB(k, k * (1 - 0.72 * blood), k * (1 - 0.76 * blood)); }
 
   // Bodies are lit the ordinary way, so their lights follow the same day.
   const light = 0.25 + 0.75 * ss(-0.25, 0.25, sun);

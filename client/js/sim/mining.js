@@ -1,46 +1,49 @@
 // Aiming at blocks, mining them (hold left mouse) and building (right mouse, uses your inventory).
 import { ITEMS } from '../core/content.js';
 import { G, creative } from '../core/state.js';
+import { rolled, rule } from '../core/rules.js';
 import { emit, toast } from '../core/events.js';
 import { AIR, BL, ID, WATER, dropOf, hardness, pickable, wet } from './blocks.js';
 import { getBlock, setBlock } from './chunks.js';
-import { addBlock, addItem, heldBlock, heldDef, spendHeld, wearHeld } from './inventory.js';
+import { popOut } from './drops.js';
+import { heldBlock, heldDef, itemOfBlock, spendHeld, wearHeld } from './inventory.js';
 import { onBreakBlock } from './people.js';
 import { eye, lookDir, player, raycast } from './player.js';
 import { emptyStation, stationAt } from './stations.js';
 import { SEA } from './terrain.js';
 
 const WRONG_TIER = 3.3, HAMMER_SLOW = 1.5, HAMMER_PLANES = [[[0, 1, 0], [0, 0, 1]], [[1, 0, 0], [0, 0, 1]], [[1, 0, 0], [0, 1, 0]]]; // Minecraft's 5 over 1.5
-const REACH = 7, FREE_BREAK_GAP = 0.18; // creative mode: a click breaks at once, and a held button goes on at this pace
+const ORE = / Ore$/;
+const REACH = 4.5, CREATIVE_REACH = 5, FREE_BREAK_GAP = 0.18; // Minecraft's reach. Creative mode: a click breaks at once, and a held button goes on at this pace
 export const aim = { block: null };
-export const miningBar = { shown: false, progress: 0, text: '' };
+export const digging = { on: false, progress: 0 }; // how far through a block the hand is, which view/fx.js shows as cracks
 let mining = null, breakGap = 0;
 
-export function updateAim() { aim.block = raycast(eye(), lookDir(), REACH, pickable); }
-export function stopAiming() { aim.block = null; mining = null; miningBar.shown = false; breakGap = 0; }
+export function updateAim() { aim.block = raycast(eye(), lookDir(), creative() ? CREATIVE_REACH : REACH, pickable); }
+export function stopAiming() { aim.block = null; mining = null; digging.on = false; breakGap = 0; }
 
 // The right tool divides the time by its speed. A block above the tool's level takes far longer and gives nothing.
 const canHarvest = (b, tool) => b.level == null || (tool?.tool === 'pick' && tool.level >= b.level);
 function timeToBreak(id, tool) {
   const b = BL[id], right = tool && tool.tool && tool.tool === b.tool;
-  return hardness(id) / (right ? tool.speed : 1) * (canHarvest(b, tool) ? 1 : WRONG_TIER) * (tool?.area ? HAMMER_SLOW : 1);
+  return hardness(id) / (right ? tool.speed : 1) * (canHarvest(b, tool) ? 1 : WRONG_TIER) * (tool?.area ? HAMMER_SLOW : 1) / rule('mining');
 }
-function giveDrops(id, tool) {
-  const b = BL[id], cut = tool?.tool === 'shears' && (b.tool === 'hoe' || b.shape === 'cross');
-  let full = false;
-  if (cut) full = !!addBlock(id);
-  else if (b.yield) full = !!addItem(b.yield);
-  else { const drop = dropOf(id); if (drop) full = !!addBlock(drop); }
-  if (!cut) for (const [item, chance] of b.loot ?? []) if (Math.random() < chance) full = !!addItem(item) || full;
-  if (full) toast('Your bag is full.', 2);
+// What a block gives up pops out of the spot it stood in. Ore can be generous or mean, depending on the Laws of the moment.
+function giveDrops(x, y, z, id, tool) {
+  const b = BL[id], cut = tool?.tool === 'shears' && (b.tool === 'hoe' || b.shape === 'cross'), out = (item, n = 1) => { if (item) popOut(item, n, x + 0.5, y + 0.4, z + 0.5); };
+  if (cut) out(itemOfBlock(id));
+  else if (b.yield) out(b.yield, rolled(rule('ore_luck')));
+  else { const drop = dropOf(id); if (drop) out(itemOfBlock(drop), ORE.test(b.name) ? rolled(rule('ore_luck')) : 1); }
+  if (!cut) for (const [item, chance] of b.loot ?? []) if (Math.random() < chance) out(item);
 }
 function breakOne(x, y, z, id) {
+  if (BL[id].station) emptyStation(x, y, z, BL[id].station);
   const nearWater = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, -1]].some(([a, b, c]) => wet(getBlock(x + a, y + b, z + c)));
   setBlock(x, y, z, nearWater && y <= SEA ? WATER : AIR);
   if (BL[getBlock(x, y + 1, z)].rooted) setBlock(x, y + 1, z, AIR); // whatever grew on it goes with it
   emit('block:broken', { x, y, z, id });
   const tool = heldDef();
-  if (!creative() && canHarvest(BL[id], tool)) giveDrops(id, tool);
+  if (!creative() && canHarvest(BL[id], tool)) giveDrops(x, y, z, id, tool);
   onBreakBlock(x, z, id);
 }
 // A hammer takes the eight around the block as well, across the face it struck, if it could have taken them on their own.
@@ -55,23 +58,22 @@ function hammerAround(x, y, z, n, tool) {
 export function updateMining(dt) {
   const t = aim.block;
   breakGap = G.mouseDown ? breakGap - dt : 0;
-  if (!G.mouseDown || !t) { mining = null; miningBar.shown = false; return; }
+  if (!G.mouseDown || !t) { mining = null; digging.on = false; return; }
   const id = getBlock(t.x, t.y, t.z);
   if (!mining || mining.x !== t.x || mining.y !== t.y || mining.z !== t.z) mining = { x: t.x, y: t.y, z: t.z, t: 0 };
   const tool = heldDef(), need = timeToBreak(id, tool);
-  miningBar.shown = true;
-  if (!isFinite(need)) { miningBar.progress = 0; miningBar.text = `${BL[id].name} cannot be broken`; return; }
+  digging.on = true;
+  if (!isFinite(need)) { digging.progress = 0; if (!mining.told) { mining.told = true; toast(`${BL[id].name} cannot be broken.`, 2); } return; }
   if (creative()) {
-    miningBar.shown = false;
+    digging.on = false;
     if (breakGap > 0) return;
     breakGap = FREE_BREAK_GAP;
   } else {
     mining.t += dt;
-    miningBar.progress = Math.min(1, mining.t / need); miningBar.text = BL[id].name;
+    digging.progress = Math.min(1, mining.t / need);
     if (mining.t < need) return;
   }
   const { x, y, z } = mining;
-  if (BL[id].station && !emptyStation(x, y, z)) { mining = null; return; }
   breakOne(x, y, z, id);
   if (tool?.area && !creative()) hammerAround(x, y, z, t.n, tool);
   if (tool?.dur && need > 0.05) wearHeld(tool.tool && tool.tool !== 'blade' ? 1 : 2); // a blade is no pickaxe

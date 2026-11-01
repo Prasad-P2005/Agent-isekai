@@ -5,7 +5,7 @@ from isekai.app import create_app
 from isekai.core import commands
 from isekai.core.game import Game
 from isekai.persistence.saves import load
-from isekai.systems import shop
+from isekai.systems import bag as bags, shop
 from isekai.systems.people.succession import NEWCOMER_DELAY, SUCCESSOR_DELAY
 
 
@@ -39,7 +39,7 @@ def test_full_flow(tmp_path):
         c.post("/api/blocks", json={"blocks": {"3": 12, "2": 0}})
         assert c.get("/api/world").json()["player"]["blocks"] == {"3": 12}
         r = c.post("/api/event", json={"type": "kill", "kind": "orc"}).json()
-        assert "+1 Orc Tusk" in r["messages"] and r["player"]["parcels"][-1]["id"] == "orc_tusk"
+        assert not any(c["id"] == "orc_tusk" for c in r["player"]["parcels"])  # what it leaves lands in the world, which the client owns
 
 
 def event(client, **body) -> dict:
@@ -51,8 +51,21 @@ def talk_to(client, settlement, job: str, topic: str = "hello") -> dict:
     return client.post("/api/talk", json={"settlement": settlement.id, "resident": who.id, "topic": topic}).json()
 
 
+def test_what_lies_on_the_ground_is_saved_with_the_bag(client, world):
+    ground = [{"id": "orc_tusk", "n": 2, "x": 1.5, "y": 70, "z": 3.5, "age": 12, "wait": 0, "thrown": True}, {"id": "no_such_thing", "n": 1, "x": 0, "y": 0, "z": 0}]
+    client.post("/api/blocks", json={"blocks": {}, "pack": {"ground": ground}})
+    assert [g["id"] for g in world.ground] == ["orc_tusk"] and world.ground[0]["thrown"]
+    assert client.get("/api/world").json()["ground"] == world.ground
+
+
+def test_a_thing_thrown_at_a_stone_is_given_to_the_god(client, world):
+    before = world.player.faith
+    r = event(client, type="offer", kind="ruby", n=1)
+    assert r["messages"] and world.player.faith > before
+
+
 def test_the_bag_is_saved_and_parcels_are_acknowledged(client, world):
-    event(client, type="kill", kind="orc")
+    bags.give(world, "orc_tusk")
     seq = world.player.parcels[-1].seq
     bag = [{"id": "orc_tusk", "n": 1}, {"id": "no_such_thing", "n": 1}, {"id": "iron_sword", "n": 5}]
     client.post("/api/blocks", json={"blocks": {}, "pack": {"bag": bag, "taken": seq}})

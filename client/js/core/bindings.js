@@ -2,6 +2,7 @@
 // The mouse buttons, Esc and the number row stay fixed: Esc is how the browser hands the mouse back, and the rest are what the screen shows.
 import { G } from './state.js';
 import { emit } from './events.js';
+import { settings } from './settings.js';
 
 const KEY = 'isekai-keys';
 
@@ -17,7 +18,8 @@ export const ACTIONS = [
   { id: 'pray', group: 'Doing', label: 'Pray to the god', keys: ['KeyT'] },
   { id: 'spell1', group: 'Doing', label: 'First spell', keys: ['KeyQ'] },
   { id: 'spell2', group: 'Doing', label: 'Second spell', keys: ['KeyR'] },
-  { id: 'health', group: 'Doing', label: 'Drink a health potion', keys: ['KeyG'] },
+  { id: 'drop', group: 'Doing', label: 'Throw what is in hand', keys: ['KeyG'] },
+  { id: 'health', group: 'Doing', label: 'Drink a health potion', keys: ['KeyH'] },
   { id: 'mana', group: 'Doing', label: 'Drink a mana potion', keys: ['KeyV'] },
   { id: 'bag', group: 'Menus', label: 'Bag', keys: ['KeyI'] },
   { id: 'journal', group: 'Menus', label: 'Journal', keys: ['KeyJ'] },
@@ -34,6 +36,7 @@ const defaults = () => Object.fromEntries(ACTIONS.map(a => [a.id, [...a.keys]]))
 export const bindings = defaults();
 try {
   const stored = JSON.parse(localStorage.getItem(KEY)) ?? {};
+  if (!stored.drop && stored.health) stored.health = stored.health.map(k => (k === 'KeyG' ? 'KeyH' : k)); // keys saved before throwing had G
   for (const a of ACTIONS) if (Array.isArray(stored[a.id]) && stored[a.id].length) bindings[a.id] = stored[a.id].filter(k => typeof k === 'string');
 } catch { /* no storage, or nothing usable in it */ }
 
@@ -42,6 +45,10 @@ function save() {
   emit('bindings:changed');
 }
 export const held = action => { const k = G.keys; return bindings[action].some(code => k[code]); };
+// Sprint can be a switch instead of a key to keep down. Everything that means "is the hero running" asks here; flying down is still the key itself.
+let running = false;
+export const flipSprint = () => { running = !running; };
+export const sprintWanted = () => (settings.sprintMode ? running : held('sprint'));
 export const pressed = (action, code) => bindings[action].includes(code);
 export const actionOf = code => ACTIONS.find(a => bindings[a.id].includes(code))?.id ?? null;
 export const canBind = code => !FIXED.has(code);

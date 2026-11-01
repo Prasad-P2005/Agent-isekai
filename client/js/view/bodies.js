@@ -28,32 +28,32 @@ const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
 function drawLabel(e) {
   const { canvas: c, tex } = e.view, x = c.getContext('2d');
-  x.clearRect(0, 0, 256, 80);
+  x.clearRect(0, 0, 256, 56);
   x.textAlign = 'center'; x.lineWidth = 4; x.strokeStyle = '#000';
   const name = (e.reportT > 0 ? '❗ ' : e.angryT > 0 ? '⚔ ' : '') + e.name;
   const calm = e.def.friendly || e.def.wild;
   x.font = '30px Jersey, sans-serif'; x.fillStyle = calm ? '#bfffff' : '#ffb0b0';
   x.strokeText(name, 128, 24); x.fillText(name, 128, 24);
   if (e.title) { x.font = '20px Jersey, sans-serif'; x.fillStyle = '#ffe9a8'; x.strokeText(e.title, 128, 46); x.fillText(e.title, 128, 46); }
-  x.fillStyle = '#300'; x.fillRect(48, 56, 160, 9);
-  x.fillStyle = calm ? '#3c3' : '#e33'; x.fillRect(48, 56, 160 * Math.max(0, e.hp / e.maxHp), 9);
   tex.needsUpdate = true;
 }
 // The label changes rarely, so it is only redrawn when something on it does.
-const labelState = e => `${e.hp}|${e.reportT > 0}|${e.angryT > 0}`;
+const labelState = e => `${e.reportT > 0}|${e.angryT > 0}`;
 
-on('entity:spawned', e => {
+function clothe(e) {
   const D = e.def, mats = [], seed = e.res?.id ?? [...e.name].reduce((h, c) => h * 31 + c.charCodeAt(0), 7);
   const { g, extra, pose } = D.avatar ? buildAvatar(lookFor(e.kind, e.res?.job, seed, D), D.h, mats) : buildCreature(e.kind, D, mats);
-  const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 80;
+  const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 56;
   const tex = new THREE.CanvasTexture(canvas), sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, sizeAttenuation: false }));
-  sprite.scale.set(0.24, 0.075, 1); sprite.position.y = D.h + 0.35; g.traverse(o => { if (o.isMesh) o.layers.enable(BODY_LAYER); }); g.add(late(sprite)); // constant on-screen size
+  sprite.scale.set(0.24, 0.0525, 1); sprite.position.y = D.h + 0.3; g.traverse(o => { if (o.isMesh) o.layers.enable(BODY_LAYER); }); g.add(late(sprite)); // constant on-screen size
   e.view = { g, mats, extra, pose, canvas, tex, sprite, motion: newMotion(Math.abs(seed)), yaw: e.yaw, pace: 0, strikeAge: STRIKE_TIME, label: labelState(e), tint: 0, gaze: 0, gazeT: between(GAZE_GAP), workT: between(WORK_GAP) };
   drawLabel(e);
   g.position.set(e.pos.x, e.pos.y, e.pos.z);
   g.rotation.y = e.yaw;
   scene.add(g);
-});
+}
+// A body that cannot be built costs that one body. Thrown from here it would leave a being with no view, and every frame after it would fail drawing that being.
+on('entity:spawned', e => { try { clothe(e); } catch (error) { console.error(`A ${e.kind} could not be drawn.`, error); } });
 function dispose(g) {
   scene.remove(g);
   g.traverse(o => {
@@ -64,6 +64,7 @@ function dispose(g) {
 }
 const fallen = [];
 on('entity:removed', e => {
+  if (!e.view) return;
   if (!e.fell) return dispose(e.view.g);
   const v = e.view, side = Math.random() < 0.5 ? 1 : -1;
   v.sprite.visible = false;
@@ -132,11 +133,11 @@ function syncBody(e, dt, blend) {
   const label = labelState(e);
   if (label !== v.label) { v.label = label; drawLabel(e); }
   const far = Math.hypot(player.pos.x - p.x, player.pos.z - p.z);
-  v.sprite.visible = far < (D.friendly ? 14 : 28) || e.hp < e.maxHp; // no label clutter from afar
+  v.sprite.visible = far < (D.friendly ? 14 : 28); // no label clutter from afar
   if (far < Math.max(STILL_BEYOND, D.seen_from ?? 0) && !(e.frozenT > 0)) moveBody(e, v, dt); // ice holds a body in whatever pose it was caught
 }
 
 export function syncBodies(dt, blend) {
-  for (const e of ents) syncBody(e, dt, blend);
+  for (const e of ents) if (e.view) syncBody(e, dt, blend);
   layDown(dt);
 }

@@ -6,8 +6,8 @@ import random
 
 from ..content import STORY
 from ..core.state import Resident, World
-from . import chronicle
-from .lines import fill
+from . import chronicle, faith
+from .lines import fill, say
 
 CHAPTERS = STORY["chapters"]
 BEATS = STORY["beats"]
@@ -20,7 +20,7 @@ STAGE_RAIDS = 1  # the Demon Lord turns on the world once the hero has been name
 def speaker_of(who: Resident | None, creature: str) -> str | None:
     if who:
         return SPEAKERS.get(who.job)
-    return creature if creature in ("mermaid_queen", "cairn", "law_stone", "god") else None
+    return creature if creature in ("mermaid_queen", "cairn", "law_stone", "god") or creature.startswith("echo:") else None
 
 
 def oaths_sworn(world: World) -> list[str]:
@@ -58,6 +58,8 @@ def _met(world: World, needs: dict) -> bool:
             and not any(getattr(p, k) for k in needs.get("lacks", []))
             and (not needs.get("open_ending") or world.ending is None)
             and (not needs.get("all_oaths") or len(oaths_sworn(world)) == len(OATHS))
+            and p.level >= needs.get("level", 0)
+            and len(oaths_sworn(world)) >= needs.get("oaths", 0)
             and p.guild_done >= needs.get("guild_done", 0)
             and p.guild_done < needs.get("guild_below", p.guild_done + 1)
             and all(p.blocks.get(b, 0) >= n for b, n in needs.get("blocks", {}).items())
@@ -102,6 +104,12 @@ def play(world: World, beat: str, rng: random.Random | None = None) -> dict:
     if (ability := spec.get("learn")) and ability not in p.abilities:
         p.abilities.append(ability)
     chronicle.fame(world, spec.get("renown", 0))
+    faith.earn(world, spec.get("faith", 0))
+    if "tally" in spec:
+        world.story.counts[spec["tally"]] = world.story.counts.get(spec["tally"], 0) + 1
+    if "tell" in spec:  # she has noticed, and what she can say about it depends on what she has admitted so far
+        world.push("narration", say(world, f"tell:{spec['tell']}:{'after' if f.get('god_confessed') else 'before'}"))
+        world.mark("narration")
     if spec.get("deed"):
         chronicle.record(world, spec["deed"])
     if spec.get("ending"):
@@ -115,6 +123,8 @@ def _end(world: World, ending: str) -> None:
     world.player.has_crown = False
     if ending == "broken":
         world.laws = []  # every Law falls silent, so people only have each other now
+        world.edicts = []
+        world.player.petitions = 0
         _god_falls(world)
 
 
@@ -150,6 +160,11 @@ def scene_for(world: World, name: str) -> dict | None:
 def play_scene(world: World, name: str) -> None:
     if scene := scene_for(world, name):
         world.push("scene", scene["title"], lines=scene["lines"])
+
+
+def due_scenes(world: World) -> list[str]:
+    """Scenes that come by themselves, when the story reaches them."""
+    return [name for name, spec in SCENES.items() if spec.get("auto") and not world.story.flags.get(f"scene_{name}") and _met(world, spec)]
 
 
 def advance(world: World) -> list[dict]:

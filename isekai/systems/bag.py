@@ -6,6 +6,8 @@ from __future__ import annotations
 from ..content import ITEMS
 from ..core.state import Parcel, Player, World
 
+MOST_ON_THE_GROUND = 256
+
 
 def give(world: World, item: str, n: int = 1) -> None:
     p = world.player
@@ -44,6 +46,14 @@ def _stack(raw: dict | None) -> dict | None:
     return out
 
 
+def _lying(raw: dict) -> dict | None:
+    """Something on the ground, as the client reported it."""
+    stack = _stack(raw)
+    if not stack:
+        return None
+    return {**stack, **{k: float(raw.get(k, 0)) for k in ("x", "y", "z", "age", "wait")}, "thrown": bool(raw.get("thrown"))}
+
+
 def store(world: World, pack: dict) -> None:
     """The client's report of the bag, and which parcels it has applied. Fields it did not send stay as they are."""
     p = world.player
@@ -58,6 +68,8 @@ def store(world: World, pack: dict) -> None:
         p.spells = [*[str(s) for s in pack["spells"][:2]], "", ""][:2]
     if pack.get("stations") is not None:
         world.stations = pack["stations"]
+    if pack.get("ground") is not None:
+        world.ground = [g for g in map(_lying, pack["ground"][:MOST_ON_THE_GROUND]) if g]
     taken = pack.get("taken") or 0
     p.parcels = [c for c in p.parcels if c.seq > taken]
     p.parcels_taken = max(p.parcels_taken, taken)

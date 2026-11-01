@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Isekai Realms</title>
+<title>Crown Reborn</title>
 <link rel="preload" href="vendor/fonts/jersey-10.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/jacquard-24.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/icons.css">
@@ -11,14 +11,35 @@
 <link rel="icon" href="img/ui/favicon.png">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="helpred" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1.0000 0.0000 0.0000 0 0 0.4789 0.4769 0.0442 0 0 0.5973 -0.6887 1.0914 0 0 0 0 0 1 0"/></filter><filter id="helpgreen" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1.0000 0.0000 0.0000 0 0 0.1628 0.7250 0.1122 0 0 0.4547 -0.6454 1.1907 0 0 0 0 0 1 0"/></filter><filter id="helpblue" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.7412 -0.4072 0.6660 0 0 0.0751 0.5852 0.3397 0 0 0.0000 0.0000 1.0000 0 0 0 0 0 1 0"/></filter></svg>
+
+<div id="loading">
+  <h1 class="logo"><span>Crown</span><span>Reborn</span></h1>
+  <div id="loadbar" class="track"><div id="loadfill"></div></div>
+  <p id="loadline">Loading</p>
+  <p id="loadtip"></p>
+  <button id="loadagain" type="button" class="gold">Back to the title</button>
+</div>
+
+<div id="title">
+  <div id="titleart"></div>
+  <div id="titleshade"></div>
+  <div id="titlecol">
+    <h1 class="logo"><span>Crown</span><span>Reborn</span></h1>
+    <p id="splash"></p>
+    <nav id="titlemenu" aria-label="Main menu"></nav>
+  </div>
+  <footer id="titlefoot"><span id="titleversion"></span><span id="titlestudio"></span></footer>
+</div>
+
 <div id="overlay"><div class="book" id="titlebook"><div class="spread">
   <section class="page left">
-    <h1>Isekai Realms</h1>
-    <p id="lede">You died on Earth. A god is waiting for you in the heavens.</p>
+    <h1></h1>
+    <p id="lede"></p>
     <div id="moves"></div>
   </section>
   <section class="page right">
-    <div id="menu"><p class="go">Connecting to the server…</p></div>
+    <div id="menu"></div>
     <div id="controls"></div>
   </section>
   <i class="clasp"></i>
@@ -26,23 +47,25 @@
   <div id="pausecard" role="dialog" aria-labelledby="pausetitle">
     <h2 id="pausetitle">Paused</h2>
     <p id="pausename"></p>
+    <p id="pausegoal"></p>
     <button id="resume" type="button" class="gold">Resume</button>
     <div class="pausemenu">
       <button type="button" data-open="bag"><i class="ic ic-bag"></i>Bag</button>
       <button type="button" data-open="journal"><i class="ic ic-journal"></i>Journal</button>
       <button type="button" data-open="map"><i class="ic ic-map"></i>Map</button>
       <button type="button" data-open="graphics"><i class="ic ic-gear"></i>Settings</button>
+      <button type="button" data-open="howto"><i class="ic ic-scroll"></i>How to Play</button>
       <button type="button" id="creative">Creative mode: off</button>
+      <button type="button" id="quit"><i class="ic ic-house"></i>Save and quit to title</button>
     </div>
     <p class="note">Click anywhere to resume</p>
   </div>
 </div>
 
 <div id="heaven"><div class="dialogue">
-  <div class="nameplate" id="hname"></div>
-  <div id="hlog"></div>
-  <div id="htopics"></div>
-  <button id="hdescend" class="gold">I'm ready. Send me to the world</button>
+  <div class="talkhead"><b id="hname"></b><button id="hdescend" class="gold">I'm ready. Send me to the world</button></div>
+  <div id="hlog" class="talkline"></div>
+  <div id="htopics" class="talktopics"></div>
 </div></div>
 <div id="fade"></div>
 <div id="card"></div>
@@ -52,6 +75,7 @@
   <div id="hurt"></div>
   <div id="cross"></div>
   <div id="hud"></div>
+  <div id="fps"></div>
   <div id="compass">
     <div id="compasstape"></div>
     <div id="compassnote"></div>
@@ -59,7 +83,6 @@
   <div id="realm"></div>
   <div id="toast"></div>
   <div id="prompt"></div>
-  <div id="minebar"><div class="track"><div id="minefill"></div></div><span id="minetext"></span></div>
   <button id="maptoggle" type="button" aria-label="Open world map">
     <span class="minimap-face"><canvas id="minimap"></canvas><span class="minimap-north">N</span><kbd id="keymap">M</kbd></span>
     <span id="mapplace"></span><small id="maprealm"></small>
@@ -76,9 +99,12 @@
     <div class="lawline" id="lawline"></div>
   </aside>
   <div id="status"></div>
+  <div id="chain"></div>
+  <div id="gains"></div>
   <div id="dock">
     <div id="blockname"></div>
     <div id="dockbody">
+      <div id="faithbar" title="Faith: every deed fills this, and a full bar is a Law"><b id="faithlevel"></b><div class="track"><div id="faithfill"></div></div><span id="faithgain"></span></div>
       <div id="bars">
         <div class="bar" id="hpbar"><i class="ic ic-heart"></i><div class="track"><div id="hpfill"></div></div><span id="hptext"></span></div>
         <div class="bar" id="mpbar"><i class="ic ic-mana"></i><div class="track"><div id="mpfill"></div></div><span id="mptext"></span></div>
@@ -91,6 +117,13 @@
     </div>
   </div>
 </div>
+
+<div id="talk" class="dialogue" role="dialog" aria-labelledby="talkname">
+  <div class="talkhead"><b id="talkname"></b><span id="talkrole"></span></div>
+  <div id="talkline" class="talkline"></div>
+  <div id="talktopics" class="talktopics"></div>
+</div>
+<aside id="side" aria-label="Goods and services"><div id="sidebody"></div></aside>
 
 <div id="cursorstack"></div>
 <div id="bagtip"></div>
@@ -107,7 +140,6 @@
       <section class="page left">
         <h2 id="paneltitle"></h2>
         <div id="panelline"></div>
-        <div id="chat"><div id="chatlog"></div><div id="chattopics"></div></div>
         <div id="pageleft" class="pagebody"></div>
       </section>
       <section class="page right"><div id="pageright" class="pagebody"></div></section>
@@ -125,7 +157,7 @@
         <div class="groove"></div>
         <div id="baghot"></div>
       </div>
-      <aside id="bagside"><nav id="sidetabs"></nav><div id="sidebody"></div></aside>
+      <aside id="bagside"><nav id="sidetabs"></nav><div id="bagbody"></div></aside>
     </div>
     <div id="mapview">
       <div id="mappane">

@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from ..core import commands
-from ..systems import laws
+from ..core.game import seed_of
+from ..persistence import saves
+from ..systems import edicts, laws
 from ..systems.marks import quest_marks
 from ..systems.story import objective, oath_list
 
@@ -20,24 +23,103 @@ def world_of(request: Request):
     g = game(request)
     if not g.world or not g.world.genesis_done:
         raise HTTPException(409, "No world yet: POST /api/new first")
+    if (asked := request.headers.get("x-world")) and asked != g.slot:
+        raise HTTPException(409, "That world is not open any more")  # a tab left open must not write its bag and blocks into another world
     return g, g.world
 
 
 # ---------- world ----------
 @router.get("/status")
 async def status(request: Request):
-    w = game(request).world
-    return {"has_world": bool(w and w.genesis_done), "name": w.name if w else None, "descended": w.player.descended if w else False}
+    g = game(request)
+    w = g.world
+    return {"has_world": bool(w and w.genesis_done), "name": w.name if w else None, "descended": w.player.descended if w else False, "slot": g.slot}
 
 
 class NewWorld(BaseModel):
-    seed: int | None = None
+    seed: int | str | None = None  # a word works as well as a number
+    name: str = ""
+    difficulty: str = "fair"
+    creative: bool = False
+    god_is: str = ""  # god or goddess; left empty, the seed chooses
+    brief: bool = False  # skip heaven
 
 
 @router.post("/new")
 async def new_world(body: NewWorld, request: Request):
-    w = game(request).new_world(body.seed)
-    return {"name": w.name}
+    g = game(request)
+    w = g.new_world(seed_of(body.seed), name=body.name, difficulty=body.difficulty, creative=body.creative, god_is=body.god_is, brief=body.brief)
+    return {"name": w.name, "slot": g.slot}
+
+
+@router.get("/vista")
+async def vista(request: Request):
+    return game(request).vista()
+
+
+# ---------- the saved worlds ----------
+@router.get("/saves")
+async def saved_worlds(request: Request):
+    return game(request).worlds()
+
+
+@router.post("/saves/import")
+async def import_world(body: dict, request: Request):
+    slot = game(request).import_world(body)
+    if slot is None:
+        raise HTTPException(400, "That file is not a saved world")
+    return {"id": slot}
+
+
+@router.post("/saves/{slot}/open")
+async def open_slot(slot: str, request: Request):
+    w = game(request).open_slot(slot)
+    if w is None:
+        raise HTTPException(404, "No such world")
+    return {"name": w.name, "slot": slot}
+
+
+class Rename(BaseModel):
+    name: str
+
+
+@router.post("/saves/{slot}/rename")
+async def rename_slot(slot: str, body: Rename, request: Request):
+    if not game(request).rename_slot(slot, body.name):
+        raise HTTPException(404, "No such world")
+    return {"ok": True}
+
+
+@router.post("/saves/{slot}/copy")
+async def copy_slot(slot: str, request: Request):
+    copy = game(request).copy_slot(slot)
+    if copy is None:
+        raise HTTPException(404, "No such world")
+    return {"id": copy}
+
+
+@router.delete("/saves/{slot}")
+async def delete_slot(slot: str, request: Request):
+    if not game(request).delete_slot(slot):
+        raise HTTPException(404, "No such world")
+    return {"ok": True}
+
+
+@router.get("/saves/{slot}/file")
+async def export_slot(slot: str, request: Request):
+    g = game(request)
+    g.save()
+    path = saves.slot_path(g.folder, slot)
+    if path is None:
+        raise HTTPException(404, "No such world")
+    return FileResponse(path, media_type="application/json", filename=path.name)
+
+
+@router.post("/save")
+async def save_now(request: Request):
+    g, _ = world_of(request)
+    g.save()
+    return {"ok": True}
 
 
 @router.get("/world")
@@ -48,7 +130,10 @@ async def get_world(request: Request):
     data["oaths"] = oath_list(w)
     data["marks"] = quest_marks(w)
     data["law_texts"] = [laws.law_text(l) for l in w.laws]
+    data["law_book"] = edicts.in_force(w)
+    data["rules"] = edicts.for_client(w)
     data["feed_next"] = w.feed_next
+    data["slot"] = g.slot
     return data
 
 
@@ -65,7 +150,8 @@ async def feed(request: Request, since: int = 0):
     _, w = world_of(request)
     return {"items": [i.model_dump() for i in w.feed if i.id >= since], "next": w.feed_next,
             "laws": [l.model_dump() for l in w.laws], "law_texts": [laws.law_text(l) for l in w.laws],
-            "beats": w.story.beats[-3:], "objective": objective(w), "oaths": oath_list(w), "marks": quest_marks(w)}
+            "beats": w.story.beats[-3:], "objective": objective(w), "oaths": oath_list(w), "marks": quest_marks(w),
+            "rules": edicts.for_client(w), "law_book": edicts.in_force(w)}
 
 
 class Context(BaseModel):
@@ -108,16 +194,11 @@ async def descend(request: Request):
     return commands.descend(g)
 
 
-@router.post("/pray")
-async def pray(body: Say, request: Request):
-    g, _ = world_of(request)
-    return commands.pray(g, body.topic)
-
-
 # ---------- events ----------
 class Event(BaseModel):
-    type: str  # kill | death | enter_land | boss_phase | cast | dragon | spotted
+    type: str  # kill | death | enter_land | boss_phase | cast | dragon | spotted | found | dawn | star | offer | threw
     kind: str = ""
+    chain: int = 0
     by_player: bool = True
     resident: dict | None = None
     named: str = ""
@@ -126,13 +207,14 @@ class Event(BaseModel):
     by: str = ""
     phase: int = 0
     mana: float = 0
+    n: int = 1
 
 
 @router.post("/event")
 async def event(body: Event, request: Request):
     g, _ = world_of(request)
     if body.type == "kill":
-        return commands.kill(g, body.kind, body.resident, body.by_player, body.named)
+        return commands.kill(g, body.kind, body.resident, body.by_player, body.named, body.chain)
     if body.type == "death":
         return commands.death(g, body.by, body.kind)
     if body.type == "enter_land":
@@ -145,6 +227,16 @@ async def event(body: Event, request: Request):
         return commands.dragon_mood(g, body.kind)
     if body.type == "spotted":
         return commands.spotted(g, body.kind)
+    if body.type == "found":
+        return commands.found(g, body.kind)
+    if body.type == "dawn":
+        return commands.dawn(g)
+    if body.type == "star":
+        return commands.reached_star(g)
+    if body.type == "offer":
+        return commands.offered(g, body.kind, body.n)
+    if body.type == "threw":
+        return commands.threw(g)
     raise HTTPException(400, "unknown event")
 
 
@@ -189,7 +281,21 @@ class Pack(BaseModel):
     seen: list[str] | None = None
     spells: list[str] | None = None
     stations: dict[str, dict] | None = None
+    ground: list[dict] | None = None
     taken: int = 0
+
+
+class Prayer(BaseModel):
+    topic: str = "hello"
+    held: dict | None = None  # what is in the hand, for an offering
+    near: str = ""  # stone, at a Law Stone
+    pack: Pack | None = None
+
+
+@router.post("/pray")
+async def pray(body: Prayer, request: Request):
+    g, _ = world_of(request)
+    return commands.pray(g, body.topic, body.held, body.near, body.pack.model_dump() if body.pack else None)
 
 
 class Talk(BaseModel):

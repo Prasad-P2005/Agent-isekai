@@ -80,16 +80,16 @@ TIERS = {
 }
 # name, class, damage, seconds a swing, durability, reach, motion, units of metal, shape
 KINDS = {
-    "pickaxe": ("Pickaxe", "pick", 0.6, 0.55, 1, 4.5, "pendulum", 3, ["mmm", ".s.", ".s."]),
-    "axe": ("Axe", "axe", 1.3, 0.7, 1, 4.5, "chop", 3, ["mm.", "ms.", ".s."]),
-    "shovel": ("Shovel", "shovel", 0.5, 0.55, 1, 4.5, "scoop", 1, ["m", "s", "s"]),
-    "hoe": ("Hoe", "hoe", 0.3, 0.45, 1, 4.5, "sweep", 2, ["mm", ".s", ".s"]),
-    "hammer": ("Hammer", "pick", 1.3, 0.9, 3, 4.5, "slam", 6, ["mmm", "mmm", ".s."]),
-    "sword": ("Sword", "blade", 1, 0.4, 1, 4.5, "slash", 2, ["m", "m", "s"]),
-    "greatsword": ("Greatsword", "blade", 1.7, 0.85, 1.5, 5, "cleave", 4, [".m.", ".m.", "msm"]),
-    "dagger": ("Dagger", "blade", 0.6, 0.25, 0.8, 4, "stab", 1, ["m", "s"]),
-    "spear": ("Spear", "blade", 0.9, 0.5, 1, 6, "thrust", 1, ["..m", ".s.", "s.."]),
-    "mace": ("Mace", "blade", 1.4, 0.75, 1, 4.5, "bash", 4, [".mm", ".mm", "s.."]),
+    "pickaxe": ("Pickaxe", "pick", 0.6, 0.55, 1, 3, "pendulum", 3, ["mmm", ".s.", ".s."]),
+    "axe": ("Axe", "axe", 1.3, 0.7, 1, 3, "chop", 3, ["mm.", "ms.", ".s."]),
+    "shovel": ("Shovel", "shovel", 0.5, 0.55, 1, 3, "scoop", 1, ["m", "s", "s"]),
+    "hoe": ("Hoe", "hoe", 0.3, 0.45, 1, 3, "sweep", 2, ["mm", ".s", ".s"]),
+    "hammer": ("Hammer", "pick", 1.3, 0.9, 3, 3, "slam", 6, ["mmm", "mmm", ".s."]),
+    "sword": ("Sword", "blade", 1, 0.4, 1, 3, "slash", 2, ["m", "m", "s"]),
+    "greatsword": ("Greatsword", "blade", 1.7, 0.85, 1.5, 3.5, "cleave", 4, [".m.", ".m.", "msm"]),
+    "dagger": ("Dagger", "blade", 0.6, 0.25, 0.8, 2.5, "stab", 1, ["m", "s"]),
+    "spear": ("Spear", "blade", 0.9, 0.5, 1, 4, "thrust", 1, ["..m", ".s.", "s.."]),
+    "mace": ("Mace", "blade", 1.4, 0.75, 1, 3, "bash", 4, [".mm", ".mm", "s.."]),
 }
 SILVER_BANE = 1.5
 
@@ -136,7 +136,7 @@ STAFFS = {
 
 def ranged_and_arcane():
     for id_, (name, art, pal, dur, dmg, (arm, cord), at) in BOWS.items():
-        item(id_, name, "weapons", art, pal, stack=1, dur=dur, dmg=dmg, reach=4.5, cd=0.3, motion="draw", ammo=True)
+        item(id_, name, "weapons", art, pal, stack=1, dur=dur, dmg=dmg, reach=3, cd=0.3, motion="draw", ammo=True)
         shaped(id_, at, [".at", "a.t", ".at"], {"a": arm, "t": cord})
     for id_, (name, pal, dmg, (tip, shaft), n) in ARROWS.items():
         item(id_, name, "weapons", "arrow", pal, arrow=dmg)
@@ -147,9 +147,9 @@ def ranged_and_arcane():
         item(id_, name, "weapons", art, pal, stack=1, dur=dur, slot="off", block=block, motion="guard")
         shaped(id_, at, ["fbf", "fff", ".f."], {"f": face, "b": boss})
     for id_, (name, art, pal, power, (shaft, gem), at) in STAFFS.items():
-        item(id_, name, "weapons", art, pal, stack=1, dmg=1, cd=0.5, reach=4.5, spell=power, motion="channel")
+        item(id_, name, "weapons", art, pal, stack=1, dmg=1, cd=0.5, reach=3, spell=power, motion="channel")
         shaped(id_, at, ["..g", ".s.", "s.."], {"g": gem, "s": shaft})
-    item("shears", "Shears", "tools", "shears", "iron", stack=1, tool="shears", speed=6, level=0, dur=238, dmg=0, cd=0.4, reach=4.5, motion="snip")
+    item("shears", "Shears", "tools", "shears", "iron", stack=1, tool="shears", speed=6, level=0, dur=238, dmg=0, cd=0.4, reach=3, motion="snip")
     shaped("shears", "table", [".i", "i."], {"i": "iron_ingot"})
 
 

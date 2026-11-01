@@ -1,17 +1,20 @@
 // Keyboard and mouse buttons. Who holds the mouse is decided in pointer.js.
-import { actionOf } from '../core/bindings.js';
+import { actionOf, flipSprint } from '../core/bindings.js';
 import { toast } from '../core/events.js';
 import { setSetting, settings } from '../core/settings.js';
 import { G, controlsActive } from '../core/state.js';
 import { castSlot, doubleJump, toggleFlight } from '../sim/abilities.js';
 import { meleeHit, pickEntity, reachOfHand } from '../sim/entities.js';
+import { tossHeld } from '../sim/drops.js';
 import { drinkBest, pressUse, releaseUse } from '../sim/hands.js';
 import { cycleSlot, selectSlot } from '../sim/inventory.js';
 import { aim } from '../sim/mining.js';
 import { talkToNearest } from '../sim/people.js';
 import { toggleDebug, toggleHud } from './hud.js';
 import './inventory.js';
+import './extras.js';
 import './journal.js';
+import './look.js';
 import './map.js';
 import './settings.js';
 import { closePanel, menuOpen, openPrayer, togglePage } from './panels.js';
@@ -25,9 +28,11 @@ export function resetInput() {
   G.keys = {};
 }
 
+const typing = e => e.target.matches?.('input[type=search], input[type=text]');
 addEventListener('keydown', e => {
+  if (typing(e) && e.code !== 'Escape') return; // I closes the bag, unless the I is part of the word "iron"
   G.keys[e.code] = true;
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+  if (!menuOpen() && G.phase !== 'title' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); // in a menu these belong to its sliders and buttons
   if (e.code === 'Escape' && e.repeat) return; // Esc held after closing a menu must not go on to pause
   const act = actionOf(e.code);
   if (/^F\d/.test(e.code) && act) e.preventDefault();
@@ -46,10 +51,12 @@ addEventListener('keydown', e => {
   }
   if (e.code === 'Escape' && G.focused && !G.locked) { pause(); return; }
   if (!controlsActive()) return;
+  if (act === 'sprint' && !e.repeat && settings.sprintMode) flipSprint();
   if (act === 'fly') toggleFlight();
   if (act === 'jump') doubleJump();
   if (!e.repeat && act === 'spell1') castSlot(0); // a held key must not pour a whole well away
   if (!e.repeat && act === 'spell2') castSlot(1);
+  if (act === 'drop') { e.preventDefault(); tossHeld(e.ctrlKey); } // Ctrl+G is the browser's too, and held down this goes on throwing, as Minecraft's does
   if (act === 'health') drinkBest(['potion', 'greater_health']);
   if (act === 'mana') drinkBest(['mana', 'greater_mana']);
   if (act === 'talk') talkToNearest();
@@ -58,7 +65,7 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { G.keys[e.code] = false; });
 
-addEventListener('wheel', e => { if (controlsActive() && !G.uiOpen) cycleSlot(e.deltaY > 0 ? 1 : -1); });
+addEventListener('wheel', e => { if (controlsActive() && !G.uiOpen) cycleSlot((e.deltaY > 0) !== !!settings.wheelFlip ? 1 : -1); });
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('mouseup', e => { if (e.button === 0) G.mouseDown = false; if (e.button === 2) { G.mouseRight = false; releaseUse(); } });
 addEventListener('mousedown', e => {

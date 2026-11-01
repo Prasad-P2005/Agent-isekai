@@ -1,19 +1,22 @@
 // Creatures and people: bodies moving through the world and hitting each other. What they want is brains.js, what arrives spawning.js,
 // and what leaves lifetime.js. Their bodies are drawn in view/bodies.js.
 import { G, creative } from '../core/state.js';
+import { rule } from '../core/rules.js';
 import { CREATURES, WORLD } from '../core/content.js';
 import { emit, toast } from '../core/events.js';
 import { Vec3 } from '../core/vec3.js';
 import { ents, isMonsterKind, isNight, killerName } from './beings.js';
 import { alarmKin, callForHelp, shoot, think } from './brains.js';
 import { getBlock, chunkReady } from './chunks.js';
+import { leaveBehind } from './drops.js';
 import { solid, wet } from './blocks.js';
 import { IDLE_FROM, despawns, offDuty } from './lifetime.js';
 import { skyLight } from './light.js';
+import { landedKill } from './momentum.js';
 import { updatePaths } from './paths.js';
 import { hintQueue, heightAt } from './terrain.js';
 import { heldDef, wearHeld } from './inventory.js';
-import { player, damagePlayer, has, eye, inView, lookDir } from './player.js';
+import { player, damagePlayer, has, heal, eye, inView, lookDir } from './player.js';
 
 export { ents, isNight } from './beings.js';
 export const ENT = CREATURES;
@@ -135,12 +138,17 @@ function updateEntity(e, dt) {
     if (Math.hypot(td, tp.y - p.y + 0.5) < reach + 0.6 && e.cd <= 0) {
       e.cd = D.fly ? 1.6 : 1.0;
       emit('entity:struck', e);
-      if (tgt === 'player') { damagePlayer(D.dmg, killerName(e), e); player.kb.set(tdx / td * 7, 0, tdz / td * 7); player.vel.y = Math.max(player.vel.y, 5); }
+      if (tgt === 'player') { damagePlayer(D.dmg, killerName(e), e); player.kb.set(tdx / td * 7, 0, tdz / td * 7); player.vel.y = Math.max(player.vel.y, 5); strikeBack(e); }
       else hurtEntity(tgt, D.dmg, tdx / td, tdz / td, e);
       if (D.brain === 'pack' || D.brain === 'skirmisher') e.backT = BITE_AND_BACK;
     }
   }
   if (tgt === 'player' && D.boss) bossTurn(e, dt);
+}
+// Only foes, or a Law of thorns could commit a crime the player never chose.
+function strikeBack(e) {
+  const back = rule('thorns') - 1, dx = e.pos.x - player.pos.x, dz = e.pos.z - player.pos.z, l = Math.hypot(dx, dz) || 1;
+  if (back > 0 && isFoe(e)) hurtEntity(e, Math.ceil(e.def.dmg * back), dx / l, dz / l);
 }
 // Small things fly into walls and rise over them. Ghosts and the Wyrm go where they please.
 function flyEnt(e, tp, dt) {
@@ -181,8 +189,10 @@ export function hurtEntity(e, dmg, dirx, dirz, by = 'player') {
     if (!byPlayer) return; // only the hero can end this, or the world would never hear of it
     if (!G.profile?.oathbound) { e.flash = 0.2; toast(D.warded, 2); return; }
   }
-  e.hp -= dmg; e.flash = 0.2;
-  e.kb.set(dirx * 7, 0, dirz * 7); if (!D.fly) e.vel.y = 4;
+  e.hp -= byPlayer ? dmg * rule('blow') : dmg; e.flash = 0.2;
+  if (byPlayer) emit('entity:hit', { e, killed: e.hp <= 0 });
+  const shove = byPlayer ? KNOCK * rule('shove') : KNOCK;
+  e.kb.set(dirx * shove, 0, dirz * shove); if (!D.fly) e.vel.y = 4;
   if (byPlayer && D.friendly) {
     if (D.lawful) { e.angryT = 25; callForHelp(e); } else e.fleeT = 12;
     if (!e.attacked && e.hp > 0) { e.attacked = true; emit('crime:committed', { type: 'attack_civilian', victim: e }); }
@@ -190,6 +200,8 @@ export function hurtEntity(e, dmg, dirx, dirz, by = 'player') {
   if (byPlayer && D.wild) { if (D.brain === 'prey') e.fleeT = 8; else e.angryT = 30; alarmKin(e); }
   if (!byPlayer && D.friendly && !D.lawful) e.fleeT = 8;
   if (e.hp > 0) return;
+  if (byPlayer && isMonsterKind(D)) { landedKill(); heal(rule('leech') - 1); }
+  if (byPlayer && !e.res) leaveBehind(e);
   e.fell = true; // the view lets the body drop before it goes
   removeEntity(e);
   if (e.home && !D.unique && !D.boss && !D.sacred) hintQueue.push({ ...e.home, hp: undefined, due: RESTOCK_AFTER }); // a garrison fills up again, in time
@@ -214,9 +226,9 @@ export function pickEntity(max) {
   }
   return best;
 }
-const FIST_CD = 0.35, FIST_REACH = 4.5, SWEEP_REACH = 2.6, SWEEP_SHARE = 0.4, CLEAVE_REACH = 3.8, CLEAVE_SHARE = 0.7, STRONG = 4;
+const KNOCK = 7, FIST_CD = 0.35, FIST_REACH = 3, CREATIVE_REACH = 2, LUCKY_BLOW = 2, SWEEP_REACH = 2.6, SWEEP_SHARE = 0.4, CLEAVE_REACH = 3.8, CLEAVE_SHARE = 0.7, STRONG = 4;
 const blowOf = (it, e) => ((has('giant_strength') ? 9 : 4) + (it?.dmg ?? 0) + (player.buffs.strength > 0 ? STRONG : 0)) * (it?.bane && (e.def.demon || e.def.undead) ? it.bane : 1);
-export const reachOfHand = () => heldDef()?.reach ?? FIST_REACH;
+export const reachOfHand = () => (heldDef()?.reach ?? FIST_REACH) + (creative() ? CREATIVE_REACH : 0); // three blocks, as in Minecraft, and creative mode adds two
 // A sword clips what stands beside the target and a greatsword cleaves it. Only foes: a swing must never commit a crime the player did not aim.
 function sweep(it, target, dmg) {
   const [range, share] = it.motion === 'cleave' ? [CLEAVE_REACH, CLEAVE_SHARE] : it.motion === 'slash' ? [SWEEP_REACH, SWEEP_SHARE] : [0, 0];
@@ -229,8 +241,8 @@ function sweep(it, target, dmg) {
 }
 export function meleeHit(e) {
   if (player.atkCd > 0) return;
-  const it = heldDef(), dmg = Math.round(blowOf(it, e));
-  player.atkCd = it?.cd ?? FIST_CD;
+  const it = heldDef(), dmg = Math.round(blowOf(it, e) * (Math.random() < rule('crit') - 1 ? LUCKY_BLOW : 1));
+  player.atkCd = (it?.cd ?? FIST_CD) * rule('swing');
   emit('player:struck');
   const dx = e.pos.x - player.pos.x, dz = e.pos.z - player.pos.z, l = Math.hypot(dx, dz) || 1;
   hurtEntity(e, dmg, dx / l, dz / l);

@@ -10,6 +10,7 @@ export const G = {
   mouseDown: false,
   objective: '',
   marks: [],        // what the hero is after, from the server; sim/marks.js says where it is now
+  rules: {},        // what the Laws in force do, from the server; core/rules.js reads them
   dayTime: 0.08,    // 0 sunrise, 0.25 noon, 0.5 sunset, 0.75 midnight
 };
 export const controlsActive = () => G.locked || G.focused;

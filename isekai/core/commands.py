@@ -4,7 +4,7 @@ from __future__ import annotations
 import time
 
 from ..content import BLOCK_IDS, CHUNK_VOLUME, CREATURES, ITEMS, WORLD
-from ..systems import bag, chronicle, dialogue, favors, guild, laws, magic, shop, story, storyteller
+from ..systems import bag, chronicle, dialogue, edicts, faith, favors, guild, laws, magic, shop, siege, story, storyteller
 from ..systems.people.succession import delay_for
 from .game import Game
 from .state import Vec3
@@ -13,6 +13,8 @@ DRAGON_HOARD, DRAGON_HEART = 600, 10  # what killing the Wyrm is worth
 DRAGON_MOODS = {"wakes", "chases", "warns"}
 
 MURDER_RENOWN = 6  # lost on top of what the law takes, when a killing is seen
+NEMESIS_WORTH, NAMED_WORTH, GREAT_WORTH = 50, 20, 150  # in Faith
+BLOCKS_A_DEED, MANA_A_DEED = 8, 20  # how much digging or casting she counts as one deed
 
 
 def _finish(game: Game, **extra) -> dict:
@@ -56,9 +58,12 @@ def enter_land(game: Game, lx: int, lz: int) -> dict:
             story.play_scene(w, "lord_voice_ready" if w.player.oathbound else "lord_voice_early")
         if (m := favors.on_enter(w, lx, lz)):
             messages.append(m)
+        siege.entered(w, lx, lz)
         k = f"{lx},{lz}"
         if k not in w.visited:
             w.visited.append(k)
+            faith.earn(w, faith.LAND_WORTH)
+            edicts.noted(w, "road", 2)
             if land.settlement is not None:
                 s = w.settlements[land.settlement]
                 storyteller.narrate(w, f"arrive:{s.type}", place=s.name)
@@ -78,6 +83,7 @@ def sync_blocks(game: Game, blocks: dict[str, int], edits: dict[str, dict[str, i
         valid = {i: id_ for i, id_ in changes.items() if i.isdigit() and int(i) < CHUNK_VOLUME and id_ in BLOCK_IDS}
         if chunk.isdigit() and valid:
             w.block_edits.setdefault(chunk, {}).update(valid)
+            edicts.noted(w, "stone", len(valid) / BLOCKS_A_DEED)
     game.save()
 
 
@@ -102,22 +108,32 @@ def descend(game: Game) -> dict:
     return game.state_payload()
 
 
-def pray(game: Game, topic: str) -> dict:
-    out = dialogue.pray(game.world, topic, lambda: storyteller.answer_prayer(game))
+def pray(game: Game, topic: str, held: dict | None = None, near: str = "", pack: dict | None = None) -> dict:
+    if pack:
+        bag.store(game.world, pack)
+    out = dialogue.pray(game.world, topic, lambda: storyteller.answer_prayer(game), held=held, near=near)
     return _finish(game, **_exchange(out))
 
 
+def threw(game: Game) -> dict:
+    storyteller.saw_a_throw(game.world)
+    return _finish(game)
+
+
+def offered(game: Game, item: str, n: int) -> dict:
+    """Something thrown down at a Law Stone. It has already left the bag, so it is hers whether or not it earns anything."""
+    if item not in ITEMS or n <= 0:
+        return _finish(game)
+    return _finish(game, messages=[faith.offer(game.world, item, n)])
+
+
 # ---------- fighting ----------
-def _claim_kill(game: Game, kind: str, named: str) -> list[str]:
+def _claim_kill(game: Game, kind: str, named: str, chain: int) -> list[str]:
     w, p, msgs = game.world, game.world.player, []
     p.kills += 1
-    if kind in shop.LOOT:
-        item = shop.LOOT[kind]
-        bag.give(w, item)
-        msgs.append(f"+1 {ITEMS[item]['name']}")
-    if "meat" in CREATURES.get(kind, {}):
-        bag.give(w, CREATURES[kind]["meat"])
-    for hook in (guild.on_kill, favors.on_kill, story.on_kill):
+    edicts.noted(w, "blade")
+    faith.earn(w, faith.for_kill(kind, chain))
+    for hook in (guild.on_kill, favors.on_kill, story.on_kill, siege.on_kill):
         if (m := hook(w, kind)):
             msgs.append(m)
     if named == "nemesis":
@@ -125,9 +141,11 @@ def _claim_kill(game: Game, kind: str, named: str) -> list[str]:
         if line:
             w.push("narration", line)
             msgs.append(f"+{reward} {w.currency}")
+            faith.earn(w, NEMESIS_WORTH)
     elif named:
         w.player.gold += 40
         chronicle.fame(w, 2)
+        faith.earn(w, NAMED_WORTH)
         chronicle.record(w, "named_foe", foe=named)
         msgs.append(f"{named} is slain! +40 {w.currency}")
     if kind == "demon_lord":
@@ -136,6 +154,7 @@ def _claim_kill(game: Game, kind: str, named: str) -> list[str]:
         p.has_crown = True
         chronicle.fame(w, 25)
         chronicle.record(w, "demon_lord")
+        faith.earn(w, GREAT_WORTH)
         story.play_scene(w, "lord_falls")
     elif kind == "dragon":
         w.dragon_dead = True
@@ -145,13 +164,14 @@ def _claim_kill(game: Game, kind: str, named: str) -> list[str]:
         msgs.append(f"The Wyrm is dead. +{DRAGON_HOARD} {w.currency} from its hoard, and +{DRAGON_HEART} health")
         chronicle.fame(w, 12)
         chronicle.record(w, "dragon")
+        faith.earn(w, GREAT_WORTH)
         storyteller.narrate(w, "dragon", important=True)
     elif p.kills % 8 == 0:
         storyteller.narrate(w, "kills", kills=p.kills)
     return msgs
 
 
-def kill(game: Game, kind: str, resident: dict | None, by_player: bool, named: str = "") -> dict:
+def kill(game: Game, kind: str, resident: dict | None, by_player: bool, named: str = "", chain: int = 0) -> dict:
     w, msgs = game.world, []
     if resident:
         s = w.settlements[resident["settlement"]]
@@ -160,7 +180,7 @@ def kill(game: Game, kind: str, resident: dict | None, by_player: bool, named: s
             r.dead = True
             w.after(delay_for(r), "successor", settlement=s.id, resident=r.id)
     elif by_player:
-        msgs = _claim_kill(game, kind, named)
+        msgs = _claim_kill(game, kind, named, chain)
     return _finish(game, messages=msgs)
 
 
@@ -175,6 +195,7 @@ def spotted(game: Game, kind: str) -> dict:
     book = game.world.player.bestiary
     if kind in CREATURES and kind not in book:
         book.append(kind)
+        faith.earn(game.world, faith.SIGHT_WORTH)
     return _finish(game)
 
 
@@ -184,16 +205,39 @@ def boss_phase(game: Game, phase: int) -> dict:
 
 
 def death(game: Game, by: str, kind: str = "") -> dict:
+    """Nothing earned is lost, because a death should cost a moment and not an hour. It takes the run of nights, it moves the story on, and it gives something a name."""
     w = game.world
     w.player.deaths += 1
-    storyteller.narrate(w, "death", important=True, by=by)
+    w.player.nights = 0
+    edicts.noted(w, "flesh", 3)
+    storyteller.mourn(w, by, kind)
     chronicle.record(w, "hero_fell", by=by)
     storyteller.nemesis_rises(w, kind, by)
+    close = faith.so_close(w)
+    return _finish(game, messages=[close] if close else [])
+
+
+def dawn(game: Game) -> dict:
+    """The sun came up on a hero who did not fall."""
+    edicts.noted(game.world, "dark", 2)
+    return _finish(game, banner=faith.dawn(game.world))
+
+
+def found(game: Game, item: str) -> dict:
+    """The first time the hero has held a kind of thing."""
+    if faith.found(game.world, item):
+        storyteller.noticed_find(game.world, item)
     return _finish(game)
+
+
+def reached_star(game: Game) -> dict:
+    line = storyteller.star_found(game.world)
+    return _finish(game, messages=[line] if line else [])
 
 
 def cast(game: Game, mana: float) -> dict:
     """The client reports spent mana a handful at a time, and spending it is how a well deepens by itself."""
+    edicts.noted(game.world, "spell", mana / MANA_A_DEED)
     grown = magic.practice(game.world, mana)
     return _finish(game, messages=[grown] if grown else [])
 
@@ -210,6 +254,8 @@ def crime(game: Game, name: str, in_city: bool, realm: str, lawmen: list[str], c
         if who:
             who.grudge = True
     seen = any(r["outcome"] != "unseen" for r in results)
+    if seen:
+        edicts.noted(w, "dark")
     if seen and name.startswith("kill_"):
         chronicle.fame(w, -MURDER_RENOWN)
         chronicle.record(w, "murder", victim=victim, place=game.ctx.get("place", "the wilds"))
@@ -235,7 +281,7 @@ def report(game: Game, law_name: str, by: str) -> dict | None:
 
 # ---------- people ----------
 def _exchange(out: dict) -> dict:
-    return {"lines": out["lines"], "gift": out["gift"], "effects": out["fx"], "topics": out["topics"]}
+    return {"lines": out["lines"], "gift": out["gift"], "effects": out["fx"], "topics": out["topics"], "petition": out.get("petition"), "redraw": out.get("redraw")}
 
 
 def talk(game: Game, settlement: int | None, resident: int | None, creature: str, name: str, topic: str, blocks: dict[str, int] | None, pack: dict | None = None) -> dict:
@@ -269,16 +315,20 @@ def service_action(game: Game, type_: str, action: str, item: str, all_: bool, s
         bag.store(w, pack)
     if action == "buy":
         msg = shop.buy(w, item)
+        edicts.noted(w, "coin")
     elif action == "sell":
         msg = shop.sell(w, item, all_)
+        edicts.noted(w, "coin")
     elif action == "accept":
         msg = guild.accept(w, settlement, index)
     elif action == "turnin":
         msg = guild.turn_in(w)
     else:
         msg, effects = shop.use_service(w, type_, action, npc)
+        if effects.get("morning"):
+            storyteller.dream(w)
     return _finish(game, message=msg, effects=effects)
 
 
 def rules(game: Game) -> dict:
-    return {"laws": [laws.law_text(l) for l in game.world.laws], "allowed_events_now": storyteller.allowed_events(game)}
+    return {"laws": [laws.law_text(l) for l in game.world.laws], "allowed_events_now": storyteller.allowed_events(game), "codex": edicts.codex(game.world), "watching": edicts.watching(game.world)}

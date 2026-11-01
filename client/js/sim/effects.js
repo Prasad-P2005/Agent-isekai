@@ -4,17 +4,26 @@ import { emit, toast } from '../core/events.js';
 import { ents } from './entities.js';
 import { applyParcels, takeBlock } from './inventory.js';
 import { fillSpells } from './abilities.js';
+import { sleptThrough } from './momentum.js';
 import { has, heal, maxMana, player } from './player.js';
 import { spawnNear } from './spawning.js';
 import { LAND, SEA, heightAt } from './terrain.js';
 
+// Faith only moves on the server, so what the screen makes of it is worked out from the difference.
+function faithMoved(was, now) {
+  if (now.level > was.level) emit('level:up', now);
+  else if (now.faith > was.faith) emit('faith:gained', now.faith - was.faith);
+}
 export function applyState(res) {
   if (!res) return;
+  if (res.rules) G.rules = res.rules;
+  if (res.player && G.profile) faithMoved(G.profile, res.player);
   // The client owns the block inventory: the server's copy can be a moment behind what was just mined.
   if (res.player) G.profile = { ...res.player, blocks: G.profile?.blocks ?? res.player.blocks, bag: G.profile?.bag ?? res.player.bag, worn: G.profile?.worn ?? res.player.worn, seen: G.profile?.seen ?? res.player.seen, spells: G.profile?.spells ?? res.player.spells, bestiary: [...new Set([...res.player.bestiary ?? [], ...G.profile?.bestiary ?? []])] };
   if (res.player) { applyParcels(res.player.parcels); fillSpells(); }
   if (res.story) { G.objective = res.story.objective; G.oaths = res.story.oaths; G.marks = res.story.marks; emit('objective:changed', G.objective); }
   for (const o of res.reached || []) toast(`📜 New objective: ${o}`, 7);
+  if (res.banner) emit('banner', { title: res.banner, line: '' });
 }
 // The moment the mode changes. Going back, the hero keeps only what they really have: real blocks, and flight if they learned it.
 export function creativeChanged() {
@@ -46,6 +55,6 @@ export function applyEffects(fx) {
   }
   if (fx.heal) heal(fx.heal);
   if (fx.mana) player.mana = maxMana();
-  if (fx.morning) G.dayTime = 0.05;
+  if (fx.morning) { G.dayTime = 0.05; sleptThrough(); }
   for (const [id, n] of Object.entries(fx.take_blocks || {})) for (let i = 0; i < n; i++) takeBlock(Number(id));
 }

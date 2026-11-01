@@ -1,7 +1,8 @@
 <!doctype html>
 <!-- The changelog email, dressed as the game's book: a leather cover around peach paper, in the interface's palette.
      Filled in by tools/make_changelog.py. Email clients ignore most CSS, so this is tables and inline styles on purpose.
-     Most of them drop web fonts too, so the title is an image set in the game's own fonts (emails/title.png), sent inline as cid:title. -->
+     Most of them drop web fonts too, so the title is an image set in the game's own fonts (emails/title.png), loaded from GitHub because a Resend broadcast carries no attachments.
+     RESEND_UNSUBSCRIBE_URL is filled in by Resend, and only in a broadcast. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -15,7 +16,7 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2e2d3f" style="background:#2e2d3f">
 <tr><td align="center" style="padding:24px 8px">
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#7a3f33" style="width:600px;max-width:100%;background:#7a3f33;border:4px solid #3f2029">
-    <tr><td style="padding:0 6px"><img src="cid:title" width="580" alt="Isekai Realms changelog" style="display:block;width:580px;max-width:100%;height:auto;border:0;color:#fac13c;font:bold 32px Georgia,serif"></td></tr>
+    <tr><td style="padding:0 6px"><img src="{{title}}" width="580" alt="Crown Reborn changelog" style="display:block;width:580px;max-width:100%;height:auto;border:0;color:#fac13c;font:bold 32px Georgia,serif"></td></tr>
     <tr><td style="padding:0 10px 10px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f7caa0" style="background:#f7caa0;border:3px solid #3f2029">
         <tr><td style="padding:20px 22px 6px;border-top:3px solid #fde0c2;font:17px/1.5 Georgia,'Times New Roman',serif;color:#3f2029">
@@ -43,7 +44,7 @@
       </table>
     </td></tr>
     <tr><td align="center" style="padding:2px 12px 14px;font:13px/1.5 Verdana,sans-serif;color:#f7caa0">
-      <a href="{{repo}}" style="color:#fac13c">See the code on GitHub</a><br>Sent from a no-reply address, so replies are not read.
+      <a href="{{repo}}" style="color:#fac13c">See the code on GitHub</a> &middot; <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#fac13c">Unsubscribe</a><br>Sent from a no-reply address, so replies are not read.
     </td></tr>
   </table>
 </td></tr>

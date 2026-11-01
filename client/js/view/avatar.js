@@ -2,14 +2,12 @@
 // pixels (see paint.js), with armour, capes and hair as chunky layers on top. Men are grown and serious, and every girl is cute.
 import * as THREE from 'three';
 
-import { COAL, COVER, CREAM, DUSK, GOLD, LEAF, LEATHER, LILAC, LINEN, MAUVE, PALE, PLUM, RED, ROSE, SKY, SLATE, lookFor } from './outfits.js';
+import { COAL, COVER, CREAM, DUSK, GOLD, LEAF, LEATHER, LILAC, LINEN, MAUVE, PALE, PLUM, RED, ROSE, SKY, SLATE, heroLook, lookFor } from './outfits.js';
 import { both, cloth, drape, flesh, hair, leather, metal, plain, torn, wood } from './paint.js';
 import { poseFigure } from './pose.js';
 import { INK, LIFT, Rig, figureBones, held, mixHex } from './voxel.js';
 
-export { lookFor };
-// The player's own character, seen in the bag and in the hand at the corner of the view.
-export const heroLook = () => lookFor('villager', 'adventurer', 23, { race: 'human' });
+export { heroLook, lookFor };
 
 // ---------------- the face: 8x8 as on a skin, and 15x15 on a girl, because cute needs the extra pixels ----------------
 const FACE = 8, GIRL_FACE = 15, faces = new Map();

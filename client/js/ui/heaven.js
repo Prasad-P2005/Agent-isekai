@@ -65,27 +65,41 @@ export function renderHeaven(dt) {
   renderer.render(heavenScene, camera);
 }
 
-function say(who, text, cls) { const d = document.createElement('div'); d.className = cls; d.innerHTML = `<b>${esc(who)}:</b> ${rich(text)}`; $('hlog').appendChild(d); $('hlog').scrollTop = 1e9; }
+// Heaven talks the way everyone does: one line at a time in the same small box, and then what to say back.
+let lines = [], replies = [];
+const CONTINUE = { id: 'continue', label: 'Continue' };
+const showTopics = topics => { $('htopics').innerHTML = topics.map((t, i) => `<button type="button" data-topic="${esc(t.id)}"><kbd>${i + 1}</kbd><span>${esc(t.label)}</span></button>`).join(''); };
+function nextLine() {
+  $('hlog').innerHTML = rich(lines.shift());
+  $('hlog').scrollTop = 0;
+  showTopics(lines.length ? [CONTINUE] : replies);
+}
+addEventListener('keydown', e => {
+  if (G.phase !== 'heaven') return;
+  const lone = (e.code === 'Enter' || e.code === 'Space') && $('htopics').children.length === 1;
+  const pick = /^Digit([1-9])$/.exec(e.code)?.[1] ?? (lone ? 1 : 0);
+  if (pick) $('htopics').children[pick - 1]?.click();
+});
 export function startHeaven(onDescend) {
   G.phase = 'heaven';
   let descending = false;
   $('heaven').style.display = 'flex';
   const w = G.world;
   makeDeity(w.god_is === 'god' ? 'god' : 'goddess');
-  $('hlog').innerHTML = '';
+  $('hlog').textContent = '';
   $('hname').textContent = w.god_name;
   const hear = async topic => {
     try {
       const r = await api.heaven(topic);
-      for (const line of r.lines) say(w.god_name, line, 'god');
-      $('htopics').innerHTML = r.topics.map(t => `<button data-topic="${esc(t.id)}">${esc(t.label)}</button>`).join('');
-    } catch { say(w.god_name, 'The light flickers…', 'god'); }
+      lines = [...r.lines]; replies = r.topics;
+      nextLine();
+    } catch { lines = ['The light flickers…']; replies = []; nextLine(); }
   };
   $('htopics').onclick = e => {
     const b = e.target.closest('button[data-topic]');
     if (!b) return;
-    say('You', b.textContent, 'me');
-    $('htopics').innerHTML = '';
+    if (b.dataset.topic === 'continue') return nextLine();
+    showTopics([]);
     hear(b.dataset.topic);
   };
   hear('hello');
@@ -143,7 +157,6 @@ export function startHeaven(onDescend) {
         $('heaven').style.display = 'none';
         $('card').style.opacity = 0;
         const overlay = $('overlay');
-        overlay.classList.add('in-world');
         overlay.querySelector('h1').textContent = w.name;
         $('lede').textContent = 'Your new life begins here. Click to enter the world.';
         $('menu').innerHTML = '<p class="go">Click anywhere to begin</p>';
@@ -151,7 +164,8 @@ export function startHeaven(onDescend) {
       } else {
         G.phase = 'heaven';
         $('heaven').style.display = 'flex';
-        say(w.god_name, `The passage could not open: ${error.message || 'please try again in a moment.'}`, 'god');
+        lines = [`The passage could not open: ${error.message || 'please try again in a moment.'}`];
+        nextLine();
       }
     } finally {
       fade.style.opacity = 0;
